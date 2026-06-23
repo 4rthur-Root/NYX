@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NyxSOC Alert",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "alert_id", "timestamp", "rule_id", "severity",
+    "attacker_ip", "target_host", "target_ip",
+    "mitre_tactic", "mitre_technique", "events"
+  ],
+  "properties": {
+    "alert_id":        { "type": "string", "format": "uuid" },
+    "timestamp":       { "type": "integer", "description": "Unix ms" },
+    "rule_id":         { "type": "string" },
+    "severity":        { "type": "string", "enum": ["WARNING", "CRITICAL"] },
+    "attacker_ip":     { "type": "string", "format": "ipv4" },
+    "target_host":     { "type": "string" },
+    "target_ip":       { "type": "string", "format": "ipv4" },
+    "mitre_tactic":    { "type": "string", "pattern": "^TA[0-9]{4}$" },
+    "mitre_technique": { "type": "string", "pattern": "^T[0-9]{4}$" },
+    "events": {
+      "type": "object",
+      "required": ["count", "details"],
+      "properties": {
+        "count":   { "type": "integer", "minimum": 1 },
+        "details": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["timestamp", "event_type", "source_host", "raw_log"],
+            "properties": {
+              "timestamp":   { "type": "integer" },
+              "event_type":  { "type": "string" },
+              "source_host": { "type": "string" },
+              "actor_user":  { "type": ["string", "null"] },
+              "raw_log":     { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "yara_match": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["rule_name", "file_path", "file_hash", "ruleset"],
+          "properties": {
+            "rule_name": { "type": "string" },
+            "file_path": { "type": "string" },
+            "file_hash": { "type": "string" },
+            "ruleset":   { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}
