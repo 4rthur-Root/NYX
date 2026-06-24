@@ -35,7 +35,8 @@
           <!-- If you *do* set a key, ensure it's for the right platform: -->
           <!-- otherwise you will get the dreaded "No images are available" -->
           <!-- which actually means "No images are available for this ProductKey! -->
-          <!-- <Key>SET_KEY_HERE</Key> -->
+          <Key>W269N-WFGWX-YVC9B-4J6C9-T83GX</Key>
+          <WillShowUI>Never</WillShowUI>
         </ProductKey>
       </UserData>
       <ImageInstall>
@@ -44,7 +45,7 @@
             <DiskID>0</DiskID>
             <PartitionID>1</PartitionID>
           </InstallTo>
-          <WillShowUI>OnError</WillShowUI>
+          <WillShowUI>Never</WillShowUI>
           <InstallToAvailablePartition>false</InstallToAvailablePartition>
           <InstallFrom>
             <MetaData wcm:action="add">
