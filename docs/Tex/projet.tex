@@ -1,0 +1,590 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{caption}
+\usepackage{booktabs}
+
+\geometry{
+    left=1cm,
+    right=1cm,
+    top=1.5cm,
+    bottom=1.5cm
+}
+
+\definecolor{themeblue}{RGB}{35,78,145}
+\definecolor{lightblue}{RGB}{108,150,220}
+
+\hypersetup{colorlinks=true, linkcolor=themeblue, urlcolor=themeblue, citecolor=themeblue}
+
+% Pied de page numérotation
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\textcolor{gray}{\thepage\ / \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{document}
+
+% ======================================================================
+%  PAGE DE GARDE
+% ======================================================================
+\pagestyle{empty}
+
+% LOGOS — même hauteur fixe
+\begin{center}
+\begin{tabular}{p{0.48\textwidth} p{0.48\textwidth}}
+\centering\arraybackslash
+\includegraphics[height=7.2cm]{logo.jpeg}
+&
+\centering\arraybackslash
+\includegraphics[height=5.2cm]{embleme-togo.png}
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\vspace{0.2cm}
+
+\noindent
+
+\begin{center}
+\textbf{Parcours} : Licence Fondamentale\\
+\textbf{Domaine} : Sciences et Technologies\\
+\textbf{Mention} : Science de l'Ingénieur\\
+\textbf{Spécialité} : Informatique et Systèmes
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{center}
+\colorbox{lightblue}{
+\parbox{0.92\textwidth}{
+\vspace{0.5cm}
+\begin{center}
+{\LARGE\bfseries
+Conception et implémentation d'un Mini-SOC \\[0.2cm]
+pour PME Togolaises \\[0.2cm]
+}
+\end{center}
+\vspace{0.5cm}
+}
+}
+\end{center}
+
+\vspace{0.6cm}
+
+\begin{center}
+{\large\bfseries Projet soumis par :}\\[0.2cm]
+{\large\bfseries KPODONOU Kossigan Gaël God-Love\\[0.2cm]
+GAHOUNZO Komlan Honoré}\\[0.15cm]
+\end{center}
+
+\vspace{0.6cm}
+
+\begin{flushright}
+{\large\bfseries Directeur de mémoire :}\\[0.15cm]
+Dr  DJEKI Essohanam
+\end{flushright}
+
+\vfill
+
+\begin{center}
+{\large\bfseries\itshape
+Année Universitaire 2025--2026
+}
+\end{center}
+
+\newpage
+\pagestyle{fancy}
+\setcounter{page}{1}
+
+% ======================================================================
+%  CONTENU
+% ======================================================================
+
+\section{Contexte}
+
+Le Togo connaît une transformation numérique progressive de son tissu
+économique. Selon la CCI-Togo et ProDigiT,
+les petites et moyennes entreprises adoptent de plus en plus des outils
+numériques pour la facturation, la gestion commerciale, les paiements
+électroniques, la circulation des documents et la communication interne
+\cite{togo_first_digitalisation_pme},
+au point que la CCI-Togo s'est fixé l'objectif d'accompagner 150~PME dans
+cette transition \cite{togo_first_150_pme}. Face à cette évolution, l'Agence
+Nationale de la Cybersécurité (ANCy) s'est rapprochée des PME numériques
+pour renforcer leur résilience face aux cybermenaces
+\cite{ancy_pme_numeriques,ancy_renforce_resilience}.
+Cette mutation accroît en effet l'exposition des entreprises aux cyberrisques,
+notamment à la compromission de comptes, à l'altération de données, aux
+accès non autorisés et aux perturbations de services.
+D'après la Stratégie nationale de cybersécurité 2024--2028 et le Rapport
+d'activités 2024 de l'ANCy,
+ces menaces constituent désormais un enjeu prioritaire pour le tissu
+économique togolais \cite{ancy_strategie_2024_2028,ancy_report_2024}.
+
+Dans les PME, les activités numériques génèrent quotidiennement de nombreux
+événements techniques provenant de sources variées telles que les journaux
+système, les équipements réseau, les services applicatifs et les outils de
+travail collaboratif. Pris isolément, ces événements peuvent sembler anodins,
+alors qu'ils peuvent parfois appartenir à une même chaîne d'attaque. Selon
+le Centre canadien pour la cybersécurité, la gestion
+des informations et des événements de sécurité (SIEM) est précisément conçue
+pour répondre à ce défi de supervision unifiée \cite{cyber_canada_siem}. Leur volume, leur diversité
+et leur dispersion rendent toutefois leur exploitation complexe, comme le
+montrent les analyses d'OpenText et de ManageEngine sur la corrélation
+d'événements de sécurité \cite{opentext_event_correlation,manageengine_correlation}.
+
+C'est dans ce cadre que s'inscrit le présent travail : concevoir et évaluer
+un système de détection et de réponse automatisée capable d'agréger des
+événements multi-sources hétérogènes et de corréler des indicateurs
+appartenant à une même chaîne d'attaque.
+
+\section{Problématique}
+
+Les infrastructures numériques des PME togolaises produisent chaque jour
+une grande quantité de logs issus de sources variées. Pourtant, ces
+événements restent difficiles à exploiter de manière unifiée : des indices
+liés à une même attaque peuvent apparaître séparément, à des moments
+différents, sur des équipements distincts, et n'être identifiés comme
+coordonnés qu'après que le dommage est causé.
+
+\textbf{Question centrale :} Comment corréler efficacement des événements
+de sécurité issus de sources hétérogènes pour détecter des chaînes
+d'attaque multi-étapes et déclencher une réponse automatisée au niveau
+réseau, dans le contexte des PME togolaises ?
+
+\section{Objectif général}
+
+L'objectif général de ce projet est de concevoir, implémenter et évaluer
+un système de détection et de réponse automatisée capable de corréler des
+événements multi-sources afin d'identifier des chaînes d'attaque et d'y
+répondre sans intervention manuelle, dans le contexte des PME togolaises.
+
+\section{Objectifs spécifiques}
+
+Le projet poursuivra les objectifs spécifiques suivants :
+
+\begin{itemize}
+    \item Identifier les principales sources de logs générées dans un
+    environnement de PME togolaises et définir un pipeline de collecte
+    unifié.
+
+    \item Concevoir un moteur de corrélation stateful capable de relier
+    des événements issus de sources hétérogènes sur des fenêtres
+    temporelles définies.
+
+    \item Définir des règles de détection externalisées, adaptables au
+    contexte métier local sans modification du code source.
+
+    \item Mettre en place un module de réponse automatisée déclenchant
+    une action réseau à partir des alertes corrélées.
+
+    \item Évaluer la pertinence du système proposé à travers des scénarios
+    d'attaque simulés en environnement virtualisé.
+\end{itemize}
+
+\section{Résultats attendus}
+
+Le projet sera considéré comme réussi dans les cas suivants :
+
+\begin{itemize}
+    \item Un système de détection et de réponse automatisée fonctionnel
+    est conçu et mis en œuvre pour traiter des événements de sécurité
+    issus de plusieurs sources hétérogènes.
+
+    \item Les événements collectés peuvent être corrélés de manière
+    cohérente afin de relier des indices appartenant à une même chaîne
+    d'attaque, indépendamment de leur source d'origine.
+
+    \item Les règles de détection sont définies de manière simple,
+    lisible et adaptables au contexte des PME togolaises, sans nécessiter
+    de modification du code source.
+
+    \item Le système permet de déclencher automatiquement des actions de
+    réponse au niveau réseau à partir des alertes générées.
+
+    \item La solution proposée est déployable rapidement dans un
+    environnement existant sans reconfiguration majeure de l'infrastructure.
+
+    \item Des scénarios d'attaque simulés permettent de vérifier le bon
+    fonctionnement du système en conditions représentatives.
+
+    \item Le projet produit une base méthodologique et technique pouvant
+    servir de référence pour des travaux futurs sur la supervision de
+    sécurité dans les PME togolaises.
+\end{itemize}
+
+\section{Solution proposée}
+
+Face à la difficulté d'exploiter de manière unifiée des événements de
+sécurité dispersés sur des sources hétérogènes, le présent projet propose
+la conception et l'implémentation d'un \textbf{Mini-SOC} : un système de
+détection et de réponse automatisée conçu pour fonctionner dans un
+environnement de PME togolaise. D'après SentinelOne et le Centre canadien
+pour la cybersécurité,
+des solutions SIEM légères et open source constituent une approche pertinente
+pour des organisations disposant de ressources limitées
+\cite{sentinelone_open_source_siem,cyber_canada_siem}.
+
+La solution repose sur quatre principes fondateurs :
+
+\begin{itemize}
+    \item \textbf{Agrégation multi-sources :} les événements provenant de
+    sources variées -- journaux système, équipements réseau, services
+    applicatifs -- sont collectés et acheminés vers un point central de
+    traitement via un pipeline de collecte unifié.
+
+    \item \textbf{Corrélation stateful :} un moteur de corrélation Python
+    maintient un état persistant des événements sur des fenêtres
+    temporelles définies. Conformément aux principes décrits par OpenText
+    et ManageEngine,
+    cette approche permet de relier des indices appartenant à une même
+    chaîne d'attaque même lorsqu'ils sont dispersés dans le temps et dans
+    l'espace \cite{opentext_event_correlation,manageengine_correlation}.
+
+    \item \textbf{Règles adaptables :} les règles de détection sont
+    externalisées dans des fichiers de configuration lisibles, modifiables
+    sans toucher au code source, afin de s'adapter rapidement aux
+    spécificités du contexte métier local.
+
+    \item \textbf{Réponse automatisée :} à partir des alertes confirmées,
+    le système orchestre une réponse au niveau réseau via l'API du
+    pare-feu, enrichie par une vérification externe de la réputation de
+    la source malveillante, sans nécessiter d'intervention humaine
+    immédiate.
+\end{itemize}
+
+L'ensemble du système est déployé dans un laboratoire virtualisé isolé,
+reproduisant la topologie d'une PME disposant d'un serveur interne, d'un
+pare-feu et de postes clients.
+
+\section{Architecture de la solution}
+
+Le pipeline du Mini-SOC se décompose en quatre couches successives.
+
+\subsection*{Couche de collecte}
+
+Les sources de logs du laboratoire sont au nombre de trois :
+
+\begin{itemize}
+    \item \textbf{Journaux système et authentification} (serveur cible
+    Debian~12) : événements SSH, PAM, sudo -- facilities
+    \texttt{auth} et \texttt{authpriv}.
+
+    \item \textbf{Journaux applicatifs} (service Samba sur le serveur
+    cible) : accès aux partages, échecs d'authentification SMB --
+    facility \texttt{daemon}.
+
+    \item \textbf{Journaux réseau} (pare-feu OPNsense) : trafic filtré,
+    scans réseau, connexions bloquées -- format \texttt{filterlog}.
+\end{itemize}
+
+L'ensemble est acheminé via \texttt{rsyslog} en UDP vers le serveur SOC
+(Ubuntu 24.04) qui centralise la réception.
+
+\subsection*{Couche de normalisation}
+
+Les événements bruts, hétérogènes par nature (formats syslog RFC~3164,
+RFC~5424, filterlog BSD), sont normalisés en événements JSON structurés
+et homogènes. Cette normalisation permet au moteur de corrélation de
+traiter toutes les sources de manière uniforme, indépendamment de leur
+format d'origine.
+
+\subsection*{Couche de corrélation stateful}
+
+Le moteur de corrélation est implémenté en Python~3.12 et repose sur
+deux composants centraux :
+
+\begin{itemize}
+    \item \textbf{StateStore (SQLite) :} les états temporels des
+    événements en cours d'analyse sont persistés dans une base SQLite
+    locale. Ce choix garantit une consommation mémoire bornée, une
+    reprise sur erreur sans perte d'état, et une robustesse aux
+    redémarrages du processus.
+
+    \item \textbf{RuleEngine :} les règles de détection sont externalisées
+    dans des fichiers de configuration, évaluées en continu contre les
+    événements entrants. Une règle définit une condition (type
+    d'événement, seuil, fenêtre temporelle) et une action (génération
+    d'alerte). La modification ou l'ajout d'une règle ne nécessite aucune
+    modification du code source.
+\end{itemize}
+
+\subsection*{Couche de réponse automatisée}
+
+Lorsqu'une alerte est confirmée par le moteur, le module de réponse
+orchestre la séquence suivante :
+
+\begin{enumerate}
+    \item \textbf{Enrichissement :} interrogation de l'API AbuseIPDB pour
+    évaluer la réputation de l'adresse IP source identifiée.
+    \item \textbf{Décision :} la réponse est déclenchée sur la base de
+    l'alerte corrélée, l'enrichissement venant qualifier la décision.
+    \item \textbf{Remédiation réseau :} appel de l'API REST du pare-feu
+    OPNsense pour injecter une règle de blocage au niveau de
+    l'infrastructure réseau, offrant une protection globale et non
+    limitée au seul hôte concerné.
+\end{enumerate}
+
+\section{Méthodologie de mise en oeuvre}
+
+Le projet est conduit en trois phases successives.
+
+\medskip
+\textbf{Phase~1 -- Cadrage théorique et infrastructure (semaines~1--2).}
+Cette phase couvre l'étude bibliographique des mécanismes de corrélation
+d'événements de sécurité, la prise en main des technologies retenues, et
+la mise en place du laboratoire virtualisé. Elle aboutit à une
+infrastructure opérationnelle avec pipeline de collecte validé de bout
+en bout.
+
+\medskip
+\textbf{Phase~2 -- Développement (semaines~3--7).}
+Développement itératif des composants du système : normalisation,
+moteur de corrélation, StateStore SQLite, règles de détection, module
+de réponse automatisée. Chaque composant est validé unitairement avant
+intégration. Des scénarios d'attaque simulés sont exécutés pour
+alimenter les tests.
+
+\medskip
+\textbf{Phase~3 -- Évaluation et rédaction (semaines~8--9).}
+Exécution des scénarios de validation en conditions représentatives,
+mesure des métriques de détection, analyse des résultats et rédaction
+du mémoire final. Le code est gelé à l'entrée de cette phase.
+
+\section{Livrables}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{0.18\textwidth}|p{0.52\textwidth}|p{0.20\textwidth}|}
+\hline
+\textbf{Catégorie} & \textbf{Livrable} & \textbf{Échéance} \\
+\hline
+\multirow{5}{*}{Techniques}
+ & Dépôt GitHub : moteur de corrélation Python, StateStore SQLite, RuleEngine & S7 \\
+\cline{2-3}
+ & Module de réponse automatisée (enrichissement AbuseIPDB, remédiation API OPNsense) & S7 \\
+\cline{2-3}
+ & Fichiers de règles de détection externalisées & S7 \\
+\cline{2-3}
+ & Scripts d'infrastructure (Vagrant, provisioning) pour reproduction du laboratoire & S2 \\
+\cline{2-3}
+ & Dataset de logs annoté pour la validation des scénarios d'attaque & S3 \\
+\hline
+\multirow{3}{*}{Académiques}
+ & Cahier des charges validé & S1 \\
+\cline{2-3}
+ & Mémoire de fin de formation documentant l'architecture, les choix techniques et les résultats & S9 \\
+\cline{2-3}
+ & Rapport d'évaluation des scénarios simulés avec métriques de détection & S9 \\
+\hline
+\end{tabular}
+\caption*{Livrables du projet et échéances prévisionnelles}
+\end{table}
+
+\section{Répartition des tâches}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{0.18\textwidth}|p{0.37\textwidth}|p{0.37\textwidth}|}
+\hline
+\textbf{Domaine} & \textbf{KPODONOU Kossigan Gaël} & \textbf{GAHOUNZO Honoré} \\
+\hline
+Infrastructure &
+Architecture KVM/libvirt, pipeline rsyslog multi-sources, validation end-to-end &
+Reproduction de la topologie, étude et intégration de l'API OPNsense \\
+\hline
+Normalisation &
+Parser multi-format (syslog RFC~3164/5424, filterlog) vers JSON &
+Conception du schéma JSON unifié, tests de conformité \\
+\hline
+Corrélation &
+Moteur Python, StateStore SQLite, RuleEngine, règles de détection &
+-- \\
+\hline
+Réponse automatisée &
+-- &
+Module AbuseIPDB, remédiation via API OPNsense, gestion des timeouts et fallbacks \\
+\hline
+Validation &
+Scénarios d'attaque, dataset de test, métriques de détection &
+Analyse des résultats de réponse \\
+\hline
+Rapport &
+Architecture, moteur, corrélation, infrastructure &
+Module de réponse, enrichissement, analyse des résultats \\
+\hline
+\end{tabular}
+\caption*{Répartition des responsabilités}
+\end{table}
+
+\section{Technologies et outils}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{0.22\textwidth}|p{0.38\textwidth}|p{0.32\textwidth}|}
+\hline
+\textbf{Domaine} & \textbf{Outils / Technologies} & \textbf{Rôle} \\
+\hline
+Collecte & rsyslog, UDP syslog & Agrégation multi-sources \\
+\hline
+Normalisation & Python~3.12 & Parsing et structuration JSON \\
+\hline
+Corrélation & Python~3.12, SQLite, PyYAML & Moteur stateful, persistance des états, règles \\
+\hline
+Réponse automatisée & API REST OPNsense, API AbuseIPDB, Requests & Remédiation réseau, enrichissement \\
+\hline
+Infrastructure & KVM/libvirt, Vagrant, OPNsense & Laboratoire virtualisé isolé \\
+\hline
+Versioning & Git (GitHub) & Gestion du code source \\
+\hline
+Tests & pytest & Validation unitaire et d'intégration \\
+\hline
+\end{tabular}
+\caption*{Stack technique du projet}
+\end{table}
+
+\section{Planning macro}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{0.10\textwidth}|p{0.42\textwidth}|p{0.40\textwidth}|}
+\hline
+\textbf{Semaine} & \textbf{KPODONOU Kossigan Gaël} & \textbf{GAHOUNZO Honoré} \\
+\hline
+S1--S2 & Infrastructure lab, pipeline syslog, étude bibliographique & Étude bibliographique, prise en main API OPNsense \\
+\hline
+S3 & Parser multi-format, normalisation JSON & Schéma JSON unifié, premiers tests de collecte \\
+\hline
+S4--S5 & StateStore SQLite, RuleEngine, premières règles & Module AbuseIPDB, premiers appels API OPNsense \\
+\hline
+S6--S7 & Intégration complète, scénarios d'attaque, métriques & Module de réponse complet, tests de remédiation \\
+\hline
+S8 & Gel du code, validation finale des scénarios & Gel du module de réponse \\
+\hline
+S9 & Rédaction mémoire -- partie technique & Rédaction mémoire -- partie réponse et analyse \\
+\hline
+\end{tabular}
+\caption*{Planning prévisionnel sur 9 semaines}
+\end{table}
+
+% ======================================================================
+%  BIBLIOGRAPHIE — Norme IEEE
+%  Règles appliquées :
+%    - Numérotation [N] par ordre d'apparition dans le texte
+%    - Auteurs institutionnels : nom complet (pas de majuscules forcées)
+%    - Titre du document : entre guillemets anglais "..."
+%    - Nom du site/éditeur : en italique (\textit{})
+%    - Mention [En ligne] obligatoire pour les ressources web
+%    - Disponible sur : <URL>
+%    - [Consulté le : JJ mois AAAA]
+%    - Absence de date connue : s.d.
+% ======================================================================
+\newpage
+\begin{thebibliography}{99}
+
+\bibitem{togo_first_digitalisation_pme}
+CCI-Togo et ProDigiT,
+``La CCI-Togo et ProDigiT : un pas vers la transformation numérique des TPME togolaises,''
+\textit{CCI-Togo}, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.ccit.tg/content/la-cci-togo-et-prodigit-un-pas-vers-la-transformation-numerique-des-tpme-togolaises}
+[Consulté le : 4 juin 2026].
+
+\bibitem{togo_first_150_pme}
+Togo First,
+``Digitalisation : la CCI-Togo veut accompagner 150 PME,''
+\textit{Togo First}, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.togofirst.com/fr/tic/2910-15082-transformation-digitale-la-cci-togo-veut-accompagner-150-pme}
+[Consulté le : 4 juin 2026].
+
+\bibitem{ancy_pme_numeriques}
+Togo First,
+``Cybersécurité : l'ANCy se rapproche des PME numériques,''
+\textit{Togo First}, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.togofirst.com/fr/tic/0507-14394-cybersecurite-l-ancy-se-rapproche-des-pme-numeriques}
+[Consulté le : 4 juin 2026].
+
+\bibitem{ancy_renforce_resilience}
+Agence Nationale de la Cybersécurité du Togo,
+``Sécurité numérique des entreprises togolaises : l'ANCy renforce la résilience face aux cybermenaces,''
+\textit{ANCy}, 2024.
+[En ligne]. Disponible sur :
+\url{https://ancy.gouv.tg/securite-numerique-des-entreprises-togolaises-lancy-renforce-la-resilience-face-aux-cybermenaces/}
+[Consulté le : 4 juin 2026].
+
+\bibitem{ancy_strategie_2024_2028}
+Agence Nationale de la Cybersécurité du Togo,
+``Stratégie nationale de cybersécurité 2024--2028,''
+\textit{ANCy}, Lomé, Togo, Rapp. stratégique, 2024.
+[En ligne]. Disponible sur :
+\url{https://ancy.gouv.tg/publication-de-la-strategie-nationale-de-cybersecurite-pour-le-togo/}
+[Consulté le : 4 juin 2026].
+
+\bibitem{ancy_report_2024}
+Agence Nationale de la Cybersécurité du Togo,
+``Rapport d'activités 2024,''
+\textit{ANCy}, Lomé, Togo, Rapp. tech., 2025.
+[En ligne]. Disponible sur :
+\url{https://ancy.gouv.tg/wp-content/uploads/2025/07/RAPPORT-DACTIVITES-2024-ANCy.pdf}
+[Consulté le : 4 juin 2026].
+
+\bibitem{cyber_canada_siem}
+Centre canadien pour la cybersécurité,
+``Utiliser la gestion des informations et des événements de sécurité pour gérer les risques de cybersécurité,''
+\textit{Gouvernement du Canada}, 2025.
+[En ligne]. Disponible sur :
+\url{https://www.cyber.gc.ca/fr/orientation/utiliser-gestion-informations-evenements-securite-gerer-risques-cybersecurite-itsm80024}
+[Consulté le : 4 juin 2026].
+
+\bibitem{opentext_event_correlation}
+OpenText,
+``Qu'est-ce que la corrélation d'événements,''
+\textit{OpenText}, s.d.
+[En ligne]. Disponible sur :
+\url{https://www.opentext.com/fr/what-is/event-correlation}
+[Consulté le : 4 juin 2026].
+
+\bibitem{manageengine_correlation}
+ManageEngine,
+``Corrélation d'événements de journal et SIEM,''
+\textit{ManageEngine}, s.d.
+[En ligne]. Disponible sur :
+\url{https://www.manageengine.com/fr/log-management/event-correlation-siem.html}
+[Consulté le : 4 juin 2026].
+
+\bibitem{sentinelone_open_source_siem}
+SentinelOne,
+``Les 9 meilleurs outils SIEM open source pour 2025,''
+\textit{SentinelOne}, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.sentinelone.com/fr/cybersecurity-101/data-and-ai/open-source-siem-tools/}
+[Consulté le : 4 juin 2026].
+
+\end{thebibliography}
+
+\end{document}
