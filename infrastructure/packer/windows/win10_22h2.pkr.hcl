@@ -34,7 +34,7 @@ variable "disk_size" {
 
 variable "headless" {
   type    = string
-  default = "true"
+  default = "false"
 }
 
 variable "iso_checksum" {
@@ -77,11 +77,14 @@ source "qemu" "win10_22h2" {
   iso_url          = "${var.iso_url}"
   memory           = "${var.memory_size}"
   net_device       = "virtio-net"
-  qemuargs         = [["-vga", "qxl"]]
+  qemuargs = [
+    ["-vga", "qxl"],
+    ["-boot", "order=dc,once=d"]
+  ]
   shutdown_command = "${var.shutdown_command}"
   winrm_insecure   = "true"
   winrm_password   = "vagrant"
-  winrm_timeout    = "80m"
+  winrm_timeout    = "120m"
   winrm_use_ssl    = "true"
   winrm_username   = "vagrant"
   output_directory = "output-${var.vm_name}"
