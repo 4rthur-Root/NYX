@@ -8,3 +8,5 @@ auto eth1
 iface eth1 inet static
     address {{ ansible_default_ipv4.address }}
     netmask {{ ansible_default_ipv4.netmask }}
+    # Force la route par défaut via OPNsense (Out-of-Band management sur eth0 préservé)
+    post-up ip route replace default via 10.0.1.1 dev eth1
