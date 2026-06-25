@@ -6,7 +6,7 @@
     - common
 
 - name: Configuration de OPNsense
-  hosts: opnsense
+  hosts: firewalls
   become: true
   roles:
     - opnsense
