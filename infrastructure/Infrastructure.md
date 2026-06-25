@@ -7,7 +7,7 @@ This document describes the infrastructure of the NYX laboratory, its components
 
 ## Technologies used
 
-![Vagrant](https://shields.io) ![Ansible](https://shields.io) ![Libvirt/KVM](https://shields.io) ![Packer](https://shields.io)
+[![Vagrant](https://shields.io)](https://hashicorp.com) [![Ansible](https://shields.io)](https://ansible.com) [![Libvirt/KVM](https://shields.io)](https://libvirt.org) [![Packer](https://shields.io)](https://hashicorp.com)
 
 ---
 
