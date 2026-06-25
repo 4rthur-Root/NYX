@@ -1,68 +1,107 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# ==================================================
+# NYX — Installation des dépendances (Fedora 44+)
+# Usage: bash scripts_shell/install_tools.sh
+# ==================================================
+set -euo pipefail
+
+VAGRANT_VERSION="2.4.9"
+VAGRANT_RPM="vagrant-${VAGRANT_VERSION}-1.x86_64.rpm"
+VAGRANT_URL="https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/${VAGRANT_RPM}"
 
 echo "======================================"
-echo "    Installing DevSecOps Lab Tools"
+echo "   NYX — Installation des outils"
+echo "   Cible : Fedora $(rpm -E %fedora)"
 echo "======================================"
 
-# Update packages
-echo "[*] Updating system packages..."
-sudo apt-get update
+# 1. KVM / Libvirt───
+echo ""
+echo "[1/5] KVM / Libvirt..."
+sudo dnf install -y \
+  qemu-kvm libvirt libvirt-daemon-kvm libvirt-client \
+  virt-install virt-viewer libguestfs-tools \
+  bridge-utils
 
-# Install prerequisites for Vagrant-libvirt
-echo "[*] Installing KVM/Libvirt and prerequisites..."
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils curl software-properties-common apt-transport-https wget
-
-# Start and enable libvirtd
 sudo systemctl enable --now libvirtd
 
-# Install Ansible
-echo "[*] Installing Ansible..."
-if ! command -v ansible >/dev/null 2>&1; then
-    sudo apt-add-repository --yes --update ppa:ansible/ansible
-    sudo apt-get install -y ansible
+# Ajouter l'utilisateur courant aux groupes nécessaires
+sudo usermod -aG libvirt,kvm "$USER"
+
+# URI libvirt par défaut (évite le problème qemu:///session vs system)
+if ! grep -q 'LIBVIRT_DEFAULT_URI' ~/.bashrc; then
+  echo 'export LIBVIRT_DEFAULT_URI="qemu:///system"' >> ~/.bashrc
+  echo "[INFO] LIBVIRT_DEFAULT_URI ajouté à ~/.bashrc"
+fi
+export LIBVIRT_DEFAULT_URI="qemu:///system"
+
+# 2. Packe─
+echo ""
+echo "[2/5] Packer..."
+if ! command -v packer &>/dev/null; then
+  sudo dnf install -y dnf-plugins-core
+  sudo dnf config-manager addrepo \
+    --from-repofile=https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
+  sudo dnf install -y packer
 else
-    echo "Ansible already installed."
+  echo "[INFO] Packer déjà installé : $(packer version)"
 fi
 
-# Install Vagrant
-echo "[*] Installing Vagrant..."
-if ! command -v vagrant >/dev/null 2>&1; then
-    wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-    sudo apt-get update
-    sudo apt-get install -y vagrant
+# 3. Vagran
+echo ""
+echo "[3/5] Vagrant ${VAGRANT_VERSION}..."
+if command -v vagrant &>/dev/null; then
+  INSTALLED=$(vagrant --version | grep -oP '\d+\.\d+\.\d+')
+  if [[ "$INSTALLED" == "$VAGRANT_VERSION" ]]; then
+    echo "[INFO] Vagrant ${VAGRANT_VERSION} déjà installé."
+  else
+    echo "[WARN] Version installée : ${INSTALLED} — mise à jour vers ${VAGRANT_VERSION}..."
+    wget -q "$VAGRANT_URL" -O "/tmp/${VAGRANT_RPM}"
+    sudo dnf install -y "/tmp/${VAGRANT_RPM}"
+    rm -f "/tmp/${VAGRANT_RPM}"
+  fi
 else
-    echo "Vagrant already installed."
+  echo "[INFO] Téléchargement de Vagrant ${VAGRANT_VERSION}..."
+  wget -q "$VAGRANT_URL" -O "/tmp/${VAGRANT_RPM}"
+  sudo dnf install -y "/tmp/${VAGRANT_RPM}"
+  rm -f "/tmp/${VAGRANT_RPM}"
 fi
 
-# Install vagrant-libvirt plugin
-echo "[*] Installing vagrant-libvirt plugin..."
-# Installing via apt is recommended for debian/ubuntu to match system ruby
-sudo apt-get install -y vagrant-libvirt ruby-libvirt
+# 4. Dépendances de compilation pour vagrant-libvirt
+echo ""
+echo "[4/5] Dépendances de compilation..."
+sudo dnf install -y \
+  gcc make \
+  libvirt-devel libxml2-devel \
+  ruby-devel libguestfs-tools
 
-# Sometimes we still need to install the plugin directly if apt version is outdated or user prefers
-vagrant plugin install vagrant-libvirt || echo "Plugin vagrant-libvirt already installed or managed by apt."
+# 5. Plugin vagrant-libvirt
+echo ""
+echo "[5/5] Plugin vagrant-libvirt..."
+if vagrant plugin list | grep -q 'vagrant-libvirt'; then
+  echo "[INFO] Plugin vagrant-libvirt déjà installé."
+else
+  vagrant plugin install vagrant-libvirt
+fi
 
+# Ansible
+echo ""
+echo "[+] Ansible..."
+if ! command -v ansible &>/dev/null; then
+  sudo dnf install -y ansible
+else
+  echo "[INFO] Ansible déjà installé : $(ansible --version | head -n1)"
+fi
+
+# Vérification finale
 echo ""
 echo "======================================"
-echo "          Verification Phase"
+echo "          Vérification"
 echo "======================================"
-
-echo "[*] Ansible Version:"
-ansible --version | head -n 1
-
-echo "[*] Vagrant Version:"
-vagrant --version
-
-echo "[*] Vagrant Plugins:"
-vagrant plugin list
-
-echo "[*] Libvirt Status:"
-systemctl status libvirtd --no-pager | grep Active || true
-
+echo "Vagrant      : $(vagrant --version)"
+echo "Packer       : $(packer version)"
+echo "Ansible      : $(ansible --version | head -n1)"
+echo "Libvirt      : $(systemctl is-active libvirtd)"
+echo "Plugins      : $(vagrant plugin list | grep libvirt || echo 'NON INSTALLÉ')"
 echo ""
-echo "Installation and verification complete!"
-echo "Note: If you encounter permission issues with libvirt, ensure your user is added to the libvirt and kvm groups:"
-echo "sudo usermod -aG libvirt,kvm \$USER"
-echo "Then log out and log back in."
+echo "[!] Reconnecte-toi pour que les groupes libvirt/kvm soient effectifs."
+echo "[!] Source ~/.bashrc ou relance le shell pour LIBVIRT_DEFAULT_URI."
