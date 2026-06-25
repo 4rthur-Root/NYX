@@ -1,0 +1,5 @@
+---
+ansible_connection: ssh
+ansible_user: vagrant
+ansible_become: true
+ansible_become_method: sudo

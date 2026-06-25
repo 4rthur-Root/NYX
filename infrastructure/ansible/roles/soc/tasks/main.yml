@@ -1,0 +1,39 @@
+---
+- name: Installation des paquets SOC
+  apt:
+    name:
+      - rsyslog
+      - python3
+      - python3-pip
+      - python3-venv
+      - auditd
+      - aide
+    state: present
+
+- name: Configuration de rsyslog pour la collecte centralisée
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: "^#{{ item }}"
+    line: "{{ item }}"
+  loop:
+    - module(load="imudp")
+    - input(type="imudp" port="514")
+    - module(load="imtcp")
+    - input(type="imtcp" port="514")
+  notify: restart rsyslog
+
+- name: Création du répertoire pour les logs centralisés
+  file:
+    path: /var/log/remote
+    state: directory
+    owner: syslog
+    group: adm
+    mode: 0755
+
+- name: Création du répertoire pour le moteur Python
+  file:
+    path: /opt/soc-engine
+    state: directory
+    owner: root
+    group: root
+    mode: 0755

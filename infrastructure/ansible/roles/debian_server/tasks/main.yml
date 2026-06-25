@@ -1,0 +1,31 @@
+---
+- name: Installation des paquets pour Samba AD et Dolibarr
+  apt:
+    name:
+      - samba
+      - samba-ad-dc
+      - bind9
+      - bind9utils
+      - krb5-user
+      - krb5-config
+      - apache2
+      - mariadb-server
+      - mariadb-client
+      - php
+      - php-mysql
+      - php-gd
+      - php-intl
+      - php-curl
+      - php-xml
+      - php-zip
+      - unzip
+    state: present
+
+- name: Démarrage des services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - apache2
+    - mariadb

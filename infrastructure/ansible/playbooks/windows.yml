@@ -1,0 +1,5 @@
+---
+- name: Configuration de Windows 10 (Sysmon, NXLog)
+  hosts: windows
+  roles:
+    - windows

@@ -1,0 +1,5 @@
+---
+timezone: Europe/Paris
+ntp_servers:
+  - 0.fr.pool.ntp.org
+  - 1.fr.pool.ntp.org
