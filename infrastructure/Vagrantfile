@@ -1,0 +1,72 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.require_version ">= 2.4.9"
+
+Vagrant.configure("2") do |config|
+  # Provider par défaut pour toutes les VMs
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.cpus = 1
+    libvirt.memory = 1024
+  end
+
+  # SOC (Debian 12) 
+  config.vm.define "soc" do |soc|
+    soc.vm.box = "debian-12"
+    soc.vm.provider "libvirt" do |vb|
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+    soc.vm.network "private_network",
+      ip: "10.0.1.10",
+      netmask: "255.255.255.0",
+      libvirt__network_name: "nyx",
+      libvirt__forward_mode: "none"
+  end
+
+  # Debian Server (Samba AD + Dolibarr)
+  config.vm.define "debian-server" do |server|
+    server.vm.box = "debian-12"
+    server.vm.provider "libvirt" do |vb|
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+    server.vm.network "private_network",
+      ip: "10.0.1.20",
+      netmask: "255.255.255.0",
+      libvirt__network_name: "nyx",
+      libvirt__forward_mode: "none"
+  end
+
+  # Windows 10
+  config.vm.define "windows10" do |win|
+    win.vm.box = "windows-10"
+    win.vm.provider "libvirt" do |vb|
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+    win.vm.network "private_network",
+      ip: "10.0.1.30",
+      netmask: "255.255.255.0",
+      libvirt__network_name: "nyx",
+      libvirt__forward_mode: "none"
+    # Pour Windows, utiliser WinRM au lieu de SSH
+    win.vm.communicator = "winrm"
+    win.winrm.username = "vagrant"
+    win.winrm.password = "vagrant"
+  end
+
+  # Provisionnement Ansible global
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/playbooks/site.yml"
+    ansible.inventory_path = "ansible/inventory.ini"
+    ansible.extra_vars = {
+      ansible_python_interpreter: "/usr/bin/python3"
+    }
+    ansible.groups = {
+      "linux_servers" => ["soc", "debian-server"],
+      "windows" => ["windows10"]
+    }
+  end
+end
