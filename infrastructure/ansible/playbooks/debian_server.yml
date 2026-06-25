@@ -1,0 +1,6 @@
+---
+- name: Configuration du serveur Debian (Samba AD, Dolibarr)
+  hosts: debian-server
+  become: true
+  roles:
+    - debian_server

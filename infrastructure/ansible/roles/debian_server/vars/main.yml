@@ -1,0 +1,5 @@
+---
+domain: lab.local
+realm: LAB.LOCAL
+admin_password: "{{ vault_ad_admin_password | default('P@ssw0rd') }}"
+dolibarr_version: 18.0

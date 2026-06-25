@@ -1,0 +1,4 @@
+---
+sysmon_url: https://download.sysinternals.com/files/Sysmon.zip
+nxlog_server: 10.0.1.10
+nxlog_port: 514

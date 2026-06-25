@@ -1,0 +1,10 @@
+# Géré par Ansible - {# ansible_managed #}
+# Loopback
+auto lo
+iface lo inet loopback
+
+# Interface LAN
+auto eth1
+iface eth1 inet static
+    address {{ ansible_default_ipv4.address }}
+    netmask {{ ansible_default_ipv4.netmask }}

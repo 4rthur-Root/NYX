@@ -1,0 +1,9 @@
+---
+hostname: windows10
+ip_address: 10.0.1.30
+netmask: 255.255.255.0
+gateway: 10.0.1.1
+dns_servers:
+  - 10.0.1.1
+ansible_user: vagrant
+ansible_password: vagrant

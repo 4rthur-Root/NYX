@@ -1,0 +1,29 @@
+---
+- name: Configuration commune à toutes les VMs Linux
+  hosts: linux_servers
+  become: true
+  roles:
+    - common
+
+- name: Configuration de OPNsense
+  hosts: opnsense
+  become: true
+  roles:
+    - opnsense
+
+- name: Configuration du serveur Debian (Samba AD, Dolibarr)
+  hosts: debian-server
+  become: true
+  roles:
+    - debian_server
+
+- name: Configuration du SOC (rsyslog)
+  hosts: soc
+  become: true
+  roles:
+    - soc
+
+- name: Configuration de Windows 10
+  hosts: windows
+  roles:
+    - windows

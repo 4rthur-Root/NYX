@@ -1,0 +1,5 @@
+---
+wan_interface: em0
+lan_interface: em1
+lan_network: 10.0.1.0/24
+lan_ip: 10.0.1.1
