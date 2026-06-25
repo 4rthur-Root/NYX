@@ -17,7 +17,7 @@
 
 - name: Déploiement de la configuration Sysmon
   win_template:
-    src: sysmon-config.xml
+    src: sysmon-config.xml.j2
     dest: C:\ProgramData\Sysmon\sysmon-config.xml
   when: sysmon_check.stat.exists
 

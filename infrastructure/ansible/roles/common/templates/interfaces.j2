@@ -1,12 +1,14 @@
-# Géré par Ansible - {# ansible_managed #}
+# {{ ansible_managed }}
 # Loopback
 auto lo
 iface lo inet loopback
 
-# Interface LAN
+# Interface LAN — réseau nyx (10.0.1.0/24)
 auto eth1
 iface eth1 inet static
-    address {{ ansible_default_ipv4.address }}
-    netmask {{ ansible_default_ipv4.netmask }}
-    # Force la route par défaut via OPNsense (Out-of-Band management sur eth0 préservé)
-    post-up ip route replace default via 10.0.1.1 dev eth1
+    address {{ ip_address }}
+    netmask {{ netmask }}
+    gateway {{ gateway }}
+    dns-nameservers {{ dns_servers | join(' ') }}
+    # Force la route par défaut via OPNsense — eth0 (Vagrant) reste pour OOB management
+    post-up ip route replace default via {{ gateway }} dev eth1

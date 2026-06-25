@@ -10,27 +10,6 @@
       - aide
     state: present
 
-- name: Configuration de rsyslog pour la collecte centralisée
-  lineinfile:
-    path: /etc/rsyslog.conf
-    regexp: "^#{{ item }}"
-    line: "{{ item }}"
-  loop:
-    - module(load="imudp")
-    - input(type="imudp" port="514")
-    - module(load="imtcp")
-    - input(type="imtcp" port="514")
-  notify: restart rsyslog
-
-- name: Configuration de rsyslog pour la séparation des logs par hôte
-  template:
-    src: 10-remote.conf.j2
-    dest: /etc/rsyslog.d/10-remote.conf
-    owner: root
-    group: root
-    mode: 0644
-  notify: restart rsyslog
-
 - name: Création du répertoire pour les logs centralisés
   file:
     path: /var/log/remote
@@ -46,3 +25,24 @@
     owner: root
     group: root
     mode: 0755
+
+- name: Activation de rsyslog UDP/TCP 514
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: "^#{{ item }}"
+    line: "{{ item }}"
+  loop:
+    - module(load="imudp")
+    - input(type="imudp" port="514")
+    - module(load="imtcp")
+    - input(type="imtcp" port="514")
+  notify: restart rsyslog
+
+- name: Déploiement de la règle de routage des logs distants
+  template:
+    src: 10-remote.conf.j2
+    dest: /etc/rsyslog.d/10-remote.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
