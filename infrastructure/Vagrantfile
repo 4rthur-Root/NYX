@@ -31,12 +31,26 @@ Vagrant.configure("2") do |config|
     server.vm.provider "libvirt" do |vb|
       vb.memory = 3072 # 3 gigas octets
       vb.cpus = 2
+      vb.machine_virtual_size = 30
     end
     server.vm.network "private_network",
       ip: "10.0.1.20",
       netmask: "255.255.255.0",
       libvirt__network_name: "nyx",
       libvirt__forward_mode: "none"
+    server.vm.provision "shell", inline: <<-SHELL
+      ROOT_DEV=$(findmnt -n -o SOURCE /)
+      if [[ "$ROOT_DEV" =~ ^/dev/(sd[a-z]|vd[a-z]|nvme[0-9]n[0-9])p?([0-9]+)$ ]]; then
+          DISK="/dev/${BASH_REMATCH[1]}"
+          PART="${BASH_REMATCH[2]}"
+          echo "Resizing root partition on $DISK $PART..."
+          apt-get update && apt-get install -y cloud-guest-utils
+          growpart "$DISK" "$PART" || true
+          resize2fs "$ROOT_DEV" || true
+      else
+          echo "Could not parse root device: $ROOT_DEV"
+      fi
+    SHELL
   end
 
   # Windows 10

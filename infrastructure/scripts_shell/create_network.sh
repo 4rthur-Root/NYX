@@ -4,12 +4,6 @@ cat > /tmp/nyx.xml << 'EOF'
   <name>nyx</name>
   <forward mode='none'/>
   <bridge name='virbr2' stp='on' delay='0'/>
-  <domain name='nyx'/>
-  <ip address='10.0.1.1' netmask='255.255.255.0'>
-    <dhcp>
-      <range start='10.0.1.100' end='10.0.1.200'/>
-    </dhcp>
-  </ip>
 </network>
 EOF
 
