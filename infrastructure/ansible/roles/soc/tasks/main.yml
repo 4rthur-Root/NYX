@@ -22,6 +22,15 @@
     - input(type="imtcp" port="514")
   notify: restart rsyslog
 
+- name: Configuration de rsyslog pour la séparation des logs par hôte
+  template:
+    src: 10-remote.conf.j2
+    dest: /etc/rsyslog.d/10-remote.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
+
 - name: Création du répertoire pour les logs centralisés
   file:
     path: /var/log/remote
