@@ -1,9 +1,0 @@
----
-hostname: debian-server
-ip_address: 10.0.1.20
-netmask: 255.255.255.0
-gateway: 10.0.1.1
-dns_servers:
-  - 10.0.1.1
-domain: lab.local
-realm: LAB.LOCAL

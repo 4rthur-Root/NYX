@@ -1,6 +1,0 @@
----
-- name: Configuration du pare-feu OPNsense
-  hosts: opnsense
-  become: true
-  roles:
-    - opnsense
