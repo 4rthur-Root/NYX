@@ -1,0 +1,14 @@
+rule_id: SSH_BRUTEFORCE_001
+description: "Brute-force SSH détecté"
+severity: CRITICAL
+source_host_pattern: "debian*"
+
+trigger:
+  event_type: ssh_failure
+  threshold: 10
+  window_seconds: 60
+  group_by: actor_ip        # comptage par IP source
+
+response:
+  alert: true
+  soar_action: block_ip
