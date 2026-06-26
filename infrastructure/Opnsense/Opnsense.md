@@ -26,6 +26,8 @@ Par défaut, **SSH ne répond pas** sur `192.168.121.254`. Deux causes possibles
 
 #### Activation depuis le shell OPNsense (option 8 dans virt-viewer)
 
+[![Activation SSH OPNsense](../Screenshots/SSH-opnsense.png)](../Screenshots/SSH-opnsense.png)
+
 ```bash
 # 1. Vérifier si sshd tourne
 ps aux | grep sshd
@@ -69,10 +71,14 @@ Ce script automatise :
 Les règles firewall, NAT et routage se configurent via l'**interface web** OPNsense (`https://192.168.121.254`) :
 
 1. Se connecter en admin sur l'interface web
-2. Configurer les règles souhaitées (interfaces, NAT, règles de filtrage)
-3. Une fois la configuration validée, lancer le script de post-configuration ci-dessus pour sauvegarder automatiquement `config.xml` dans le dépôt
+   [![Dashboard OPNsense](../Screenshots/Opnsense-dashboard.png)](../Screenshots/Opnsense-dashboard.png)
+
+2. Configurer le routage sortant (NAT Outbound) pour permettre aux VMs internes d'accéder à Internet :
+   [![Règles NAT Outbound](../Screenshots/opnsense-outbound.png)](../Screenshots/opnsense-outbound.png)
+
+3. Configurer la redirection de ports (Port Forward) si nécessaire :
+   [![Règles Port Forward](../Screenshots/Opnsense-forward.png)](../Screenshots/Opnsense-forward.png)
+
+4. Une fois la configuration validée, lancer le script de post-configuration ci-dessus pour sauvegarder automatiquement `config.xml` dans le dépôt
 
 Le fichier `config.xml` est alors versionné et peut être réinjecté en cas de recréation de la VM.
-
-![Activation SSH OPNsense](../Screenshots/SSH-opnsense.png)
-![Dashboard OPNsense](../Screenshots/Opnsense-dashboard.png)
