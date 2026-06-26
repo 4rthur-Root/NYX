@@ -1,5 +1,0 @@
----
-- name: restart nxlog
-  win_service:
-    name: NXLog
-    state: restarted

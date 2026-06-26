@@ -1,6 +1,0 @@
----
-- name: Configuration commune à toutes les machines Linux
-  hosts: linux_servers
-  become: true
-  roles:
-    - common

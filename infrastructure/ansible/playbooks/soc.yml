@@ -1,6 +1,0 @@
----
-- name: Configuration du SOC (rsyslog, moteur Python)
-  hosts: soc
-  become: true
-  roles:
-    - soc
