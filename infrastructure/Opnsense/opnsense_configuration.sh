@@ -12,7 +12,7 @@ OPNSENSE_IP="192.168.121.254"
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTime=10"
 
 # 1. Vérification connectivité SSH
-echo "[1/4] Vérification SSH sur ${OPNSENSE_IP}..."
+echo "[1/5] Vérification SSH sur ${OPNSENSE_IP}..."
 if ! ssh $SSH_OPTS root@"${OPNSENSE_IP}" "echo ok" &>/dev/null; then
   echo "[ERROR] Impossible de joindre OPNsense via SSH."
   echo "        Vérifiez que la VM tourne et que SSH est activé :"
@@ -23,7 +23,7 @@ fi
 echo "[OK] SSH opératiel."
 
 # 2. Configuration SSH persistante
-echo "[2/4] Configuration SSH persistante..."
+echo "[2/5] Configuration SSH persistante..."
 ssh $SSH_OPTS root@"${OPNSENSE_IP}" 'bash -s' << 'REMOTE'
 set -e
 
@@ -45,7 +45,7 @@ echo "[OK] SSH configuré et redémarré."
 REMOTE
 
 # 3. Configuration rsyslog filterlog vers SOC
-echo "[3/4] Configuration rsyslog filterlog..."
+echo "[3/5] Configuration rsyslog filterlog..."
 ssh $SSH_OPTS root@"${OPNSENSE_IP}" 'bash -s' << 'REMOTE'
 set -e
 
@@ -72,7 +72,7 @@ echo "[OK] syslogd redémarré."
 REMOTE
 
 # 4. Snapshot virsh
-echo "[4/4] Création du snapshot baseline..."
+echo "[4/5] Création du snapshot baseline..."
 
 # Supprimer l'ancien snapshot s'il existe
 if virsh snapshot-info "$VM_NAME" snap-baseline &>/dev/null; then
@@ -84,10 +84,17 @@ virsh snapshot-create-as "$VM_NAME" snap-baseline \
   --description "OPNsense 26.1.6 — SSH + syslog forward vers SOC configurés" \
   --atomic
 
+# 5. Extraction et versioning de config.xml
+echo "[5/5] Extraction de la configuration OPNsense..."
+CONFIG_BACKUP="config.xml"
+ssh $SSH_OPTS root@"${OPNSENSE_IP}" "cat /conf/config.xml" > "$CONFIG_BACKUP"
+echo "[OK] Configuration sauvegardée dans ${CONFIG_BACKUP}"
+
 echo ""
 echo "======================================"
 echo "[OK] OPNsense configuré avec succès."
 echo "     Snapshot : snap-baseline"
 echo "     SSH      : root@${OPNSENSE_IP}"
 echo "     Syslog   : → 10.0.1.10:514 (UDP)"
+echo "     Config   : ${CONFIG_BACKUP}"
 echo "======================================"
