@@ -1,5 +1,5 @@
 rule_id: SSH_BRUTEFORCE_001
-description: "Brute-force SSH détecté"
+description: "Brute-force SSH détectée"
 severity: CRITICAL
 source_host_pattern: "debian*"
 
@@ -11,4 +11,3 @@ trigger:
 
 response:
   alert: true
-  soar_action: block_ip
