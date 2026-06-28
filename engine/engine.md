@@ -834,17 +834,19 @@ sudo chown nyxsoc:nyxsoc /var/log/nyxsoc/
 ## 11. Ordre d'implémentation
 
 ```
-Étape 1  — rules/*.yaml            Écrire les 3 règles finales AVANT de coder le RuleEngine
-Étape 2  — parsers/base_parser.py  BaseParser ABC + parse_timestamp() utilitaire
-Étape 3  — syslog_parser.py        + tests/unit/test_syslog_parser.py
-Étape 4  — filterlog_parser.py     + tests/unit/test_filterlog_parser.py
-Étape 5  — windows_parser.py       + tests/unit/test_windows_parser.py
-Étape 6  — state_manager.py        + tests/unit/test_state_manager.py
-Étape 7  — validator.py            + tests/unit/test_validator.py
-Étape 8  — dispatcher.py           + tests/integration/test_dispatcher_to_state.py
-Étape 9  — rule_engine.py          + tests/unit/test_rule_engine.py
-Étape 10 — yara_scanner.py
-Étape 11 — alerter.py
-Étape 12 — main.py
-Étape 13 — tests/integration/test_engine_full.py
+Étape 1   — rules/*.yaml            Écrire les 3 règles finales AVANT de coder le RuleEngine
+Étape 1.5 — config.yaml & fixtures  Créer la config de base et les fichiers logs synthétiques (tests/fixtures/)
+Étape 2   — parsers/base_parser.py  BaseParser ABC + parse_timestamp() utilitaire
+Étape 3   — syslog_parser.py        + tests/unit/test_syslog_parser.py
+Étape 4   — filterlog_parser.py     + tests/unit/test_filterlog_parser.py
+Étape 5   — windows_parser.py       + tests/unit/test_windows_parser.py
+Étape 6   — state_manager.py        + tests/unit/test_state_manager.py
+Étape 7   — validator.py            + tests/unit/test_validator.py
+Étape 8   — dispatcher.py           + tests/integration/test_dispatcher_to_state.py
+Étape 8.5 — reader.py               Watchdog inotify + tests d'intégration avec la queue
+Étape 9   — rule_engine.py          + tests/unit/test_rule_engine.py
+Étape 10  — yara_scanner.py
+Étape 11  — alerter.py
+Étape 12  — main.py
+Étape 13  — tests/integration/test_engine_full.py
 ```
