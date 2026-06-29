@@ -1,40 +1,46 @@
-# infra/provision/soc.sh
+#!/usr/bin/env bash
+# NYX — SOC provisioning script
+# À exécuter en root sur la VM
+# Usage : sudo bash soc.sh
+
 set -euo pipefail
 
-source /vagrant/provision/common.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 
-echo "[soc] Installation rsyslog + Python 3.12 + Docker..."
-apt-get install -y -qq \
-  rsyslog \
-  python3 python3-pip python3-venv \
-  docker.io docker-compose-v2
+log "=== Provisioning SOC ==="
 
-echo "[soc] Configuration rsyslog — écoute UDP 514..."
-cat >> /etc/rsyslog.conf <<'EOF'
+# 1. Mise à jour
+log "Mise à jour des paquets..."
+apt_install
 
-# Réception logs distants
-module(load="imudp")
-input(type="imudp" port="514")
-$template RemoteLogs,"/var/log/remote/%HOSTNAME%.log"
-if $fromhost-ip != '127.0.0.1' then ?RemoteLogs
-& stop
-EOF
+# 2. Installation des paquets
+log "Installation rsyslog + python3..."
+apt_install rsyslog python3 python3-pip
 
-mkdir -p /var/log/remote
-chown syslog:adm /var/log/remote/
-chmod 755 /var/log/remote/
+# 3. Création de l'utilisateur soc
+log "Création de l'utilisateur soc..."
+ensure_user soc
+usermod -aG adm soc
+
+# 4. Configuration rsyslog
+log "Configuration rsyslog..."
+cp "$SCRIPT_DIR/rsyslog.conf" /etc/rsyslog.conf
+cp "$SCRIPT_DIR/10-remote.conf" /etc/rsyslog.d/10-remote.conf
+
+# 5. Création des répertoires et permissions
+log "Création des répertoires de logs..."
+mkdir -p /var/log/remote /var/log/nyxsoc/alerts
+chown -R soc:soc /var/log/remote /var/log/nyxsoc
+chmod 750 /var/log/remote /var/log/nyxsoc
+
+# 6. Redémarrage
+log "Redémarrage rsyslog..."
 systemctl restart rsyslog
 
-echo "[soc] Ajout utilisateur vagrant au groupe docker..."
-usermod -aG docker vagrant
+# 7. Vérification
+log "Vérification rsyslog..."
+systemctl status rsyslog --no-pager
+ss -tulpn | grep 514 || log "ATTENTION : rsyslog n'écoute pas sur le port 514"
 
-echo "[soc] Environnement Python du moteur..."
-cd /home/vagrant
-python3 -m venv .venv
-.venv/bin/pip install --quiet \
-  "pyyaml>=6.0" \
-  "watchdog>=4.0" \
-  "jsonschema>=4.0" \
-  "pytest>=8.0"
-
-echo "[soc] Done."
+log "=== Provisionning terminé ==="
