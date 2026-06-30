@@ -1,0 +1,25 @@
+[global]
+	dns forwarder = 10.0.1.1
+	netbios name = SRV-PME
+	realm = NYX.TG
+	server role = active directory domain controller
+	workgroup = NYX
+	idmap_ldb:use rfc2307 = yes
+
+
+workgroup = NYX : Le nom court du domaine (NetBIOS). C'est ce que les utilisateurs voient quand ils se connectent (NYX\Utilisateur).
+realm = NYX.TG : Le nom complet du domaine en majuscules (DNS). C'est crucial pour le protocole Kerberos (l'authentification moderne).
+server role = active directory domain controller : C'est la ligne la plus importante. Elle dit à Samba : "Arrête de fonctionner comme un serveur Linux simple, deviens un contrôleur de domaine Windows complet". Cela active le DNS intégré, le LDAP, Kerberos, et le SYSVOL.
+dns forwarder = 10.0.1.1 :
+Ton serveur Samba fait office de serveur DNS pour le réseau.
+Quand un client demande "Où est google.com ?", Samba ne sait pas. Il a donc besoin d'un "passeur" (forwarder) pour demander à un vrai DNS public (comme celui de ton routeur OPNsense 10.0.1.1 ou Google 8.8.8.8).
+Sans cette ligne, ton AD ne pourrait pas résoudre les noms externes (internet).
+idmap_ldb:use rfc2307 = yes :
+C'est un pont entre le monde Windows et Linux.
+Windows n'utilise pas les UID/GID (les numéros d'utilisateurs Linux). Il utilise les SID.
+Cette ligne dit à Samba : "Si un utilisateur Linux veut accéder à un fichier, génère un UID/GID basé sur les attributs RFC2307 stockés dans l'AD".
+Pourquoi c'est utile ? Si tu veux plus tard monter des partages Linux (via NFS) ou utiliser des scripts bash avec des utilisateurs AD, cette ligne permet de garder une cohérence des permissions.
+
+
+
+map to guest = never est une ligne explicite qu'on ajoute parfois dans les configs "standalone" pour être sûr à 100% que personne ne peut se connecter sans mot de passe. En mode AD, c'est implicite et sécurisé par défaut. Tu n'as pas besoin de l'ajouter, mais si tu veux être paranoïaque sur la sécurité, tu peux l'ajouter sans risque.
