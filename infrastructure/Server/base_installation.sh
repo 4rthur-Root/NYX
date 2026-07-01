@@ -10,7 +10,10 @@ INTERFACE_PRIV="enp2s0"  # À adapter selon le système
 # 1. Hostname
 echo "=== Configuration du hostname ==="
 hostnamectl set-hostname $HOSTNAME
-echo "10.0.1.20   $HOSTNAME   srv-pme" >> /etc/hosts
+
+# 2. Fichier hosts
+echo "=== Configuration du fichier hosts ==="
+cp /tmp/server-provision/hosts.conf /etc/hosts
 
 # 2. Interface privée statique
 echo "=== Configuration de l'interface privée ==="
@@ -25,16 +28,17 @@ EOF
 
 systemctl restart networking
 
-# 3. Mise à jour et outils
+# 4. Mise à jour et outils de base
 echo "=== Mise à jour des paquets ==="
 apt update && apt upgrade -y
 apt install -y vim curl net-tools acl git
 
-# 4. Chrony
-echo "=== Installation et configuration de Chrony ==="
+# 5. Installation de la configuration Chrony
+echo "=== Installation de la configuration Chrony ==="
 apt install -y chrony
-sed -i 's/^pool.*/server 10.0.1.1 iburst/' /etc/chrony/chrony.conf
+cp /tmp/server-provision/chrony.conf /etc/chrony/chrony.conf
 systemctl restart chrony
 
-echo "=== Phase 1 terminée ==="
-echo "Vérifie avec : chronyc tracking"
+# 6. Installation de Docker
+echo "=== Installation de Docker ==="
+bash /tmp/server-provision/docker_install.sh
