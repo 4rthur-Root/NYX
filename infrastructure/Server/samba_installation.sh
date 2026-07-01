@@ -1,111 +1,120 @@
 #!/bin/bash
-# Déploie Samba sur la VM debian server.
-# Exécuter directement sur la VM target via SSH :
-#   ssh target@10.0.1.20
-#   sudo bash target-samba.sh
-#
-# Prérequis : target.sh déjà exécuté (SSH, rsyslog, chrony en place)
+# ============================================================
+# Phase 4 - Configuration des partages Samba (AD DC)
+# ============================================================
 
-set -euo pipefail
+set -e
 
-echo "[samba] Installation Samba..."
-apt-get update -qq
-apt-get install -y -qq samba
+echo "============================================================"
+echo "PHASE 4 : Configuration des partages Samba"
+echo "============================================================"
 
-echo "[samba] Création des groupes Linux..."
-groupadd -f direction
-groupadd -f technique
+DOMAIN="NYX"
+USER_PASS="Nyx2026!"
 
-echo "[samba] Création des utilisateurs..."
-for user in dir1 dir2; do
-    id "$user" >/dev/null 2>&1 || useradd -m -G direction -s /bin/bash "$user"
-    echo "$user:Samba2026!" | chpasswd
-    (echo "Samba2026!"; echo "Samba2026!") | smbpasswd -a "$user" >/dev/null 2>&1
-    smbpasswd -e "$user" >/dev/null 2>&1
-done
+# 1. Création des répertoires
+echo "→ Création des répertoires de partage"
+mkdir -p /srv/samba/{direction,comptabilite,technique,commun}
 
-for user in tech1 tech2; do
-    id "$user" >/dev/null 2>&1 || useradd -m -G technique -s /bin/bash "$user"
-    echo "$user:Samba2026!" | chpasswd
-    (echo "Samba2026!"; echo "Samba2026!") | smbpasswd -a "$user" >/dev/null 2>&1
-    smbpasswd -e "$user" >/dev/null 2>&1
-done
-
-echo "[samba] Création des partages..."
-mkdir -p /srv/samba/direction
-mkdir -p /srv/samba/technique
-mkdir -p /srv/samba/commun
-
-chown root:direction /srv/samba/direction
+# 2. Permissions Unix + ACL
+echo "→ Configuration des permissions"
+chown root:"domain users" /srv/samba/direction
 chmod 2770 /srv/samba/direction
+setfacl -m g:direction:rwx /srv/samba/direction
 
-chown root:technique /srv/samba/technique
+chown root:"domain users" /srv/samba/comptabilite
+chmod 2770 /srv/samba/comptabilite
+setfacl -m g:comptabilite:rwx /srv/samba/comptabilite
+
+chown root:"domain users" /srv/samba/technique
 chmod 2770 /srv/samba/technique
+setfacl -m g:technique:rwx /srv/samba/technique
 
-chown root:users /srv/samba/commun
+chown root:"domain users" /srv/samba/commun
 chmod 2777 /srv/samba/commun
+setfacl -m g:direction:rwx /srv/samba/commun
+setfacl -m g:comptabilite:rwx /srv/samba/commun
+setfacl -m g:technique:rwx /srv/samba/commun
 
-echo "[samba] Écriture de smb.conf..."
-cp /etc/samba/smb.conf /etc/samba/smb.conf.bak 2>/dev/null || true
+# 3. Ajout des partages dans smb.conf
+echo "→ Ajout des partages dans smb.conf"
+cat >> /etc/samba/smb.conf << EOF
 
-cat > /etc/samba/smb.conf <<'EOF'
-[global]
-   workgroup = WORKGROUP
-   server string = TargetPME
-   security = user
-   map to guest = never
-   restrict anonymous = 2
-   min protocol = SMB2
-   max protocol = SMB3
-   smb encrypt = required
-   logging = syslog
-   syslog = 2
-   syslog only = yes
-   log file = /var/log/samba/log.%m
-   max log size = 500
+# =====================
+#     PARTAGES PME
+# =====================
 
 [direction]
    path = /srv/samba/direction
-   valid users = @direction
+   valid users = @$DOMAIN\\direction
    read only = no
    create mask = 0660
    directory mask = 2770
+   force group = direction
+   browseable = yes
+
+[comptabilite]
+   path = /srv/samba/comptabilite
+   valid users = @$DOMAIN\\comptabilite
+   read only = no
+   create mask = 0660
+   directory mask = 2770
+   force group = comptabilite
+   browseable = yes
 
 [technique]
    path = /srv/samba/technique
-   valid users = @technique
+   valid users = @$DOMAIN\\technique
    read only = no
    create mask = 0660
    directory mask = 2770
+   force group = technique
+   browseable = yes
 
 [commun]
    path = /srv/samba/commun
-   valid users = @direction @technique
+   valid users = @$DOMAIN\\direction @$DOMAIN\\comptabilite @$DOMAIN\\technique
    read only = no
    create mask = 0664
    directory mask = 2777
+   force group = domain\ users
+   browseable = yes
 EOF
 
-echo "[samba] Extension pipeline rsyslog (daemon.*)..."
-cat > /etc/rsyslog.d/50-forward.conf <<'EOF'
-auth,authpriv.*  @10.0.1.10:514
-syslog.*         @10.0.1.10:514
-daemon.*         @10.0.1.10:514
-EOF
+# 4. Validation et redémarrage
+echo "→ Validation de la configuration"
+testparm -s
 
-systemctl restart rsyslog
-systemctl enable --now smbd nmbd
+echo "→ Redémarrage de Samba AD DC"
+systemctl restart samba-ad-dc
 
-echo "[samba] Validation..."
-testparm -s 2>/dev/null | grep -E "^\[|encrypt|protocol|syslog" || true
-systemctl is-active smbd && echo "[samba] smbd : actif" || echo "[samba] ERREUR : smbd inactif"
-systemctl is-active nmbd && echo "[samba] nmbd : actif" || echo "[samba] ERREUR : nmbd inactif"
-
-echo "[samba] Done."
+# 5. Vérifications
 echo ""
-echo "Utilisateurs créés : dir1, dir2 (groupe direction) | tech1, tech2 (groupe technique)"
-echo "Mot de passe Samba : Samba2026!"
-echo "Partages : /direction /technique /commun"
+echo "========================"
+echo "   VÉRIFICATIONS   "
+echo "========================"
+
+echo "→ Test partage direction (dir1) :"
+smbclient //localhost/direction -U dir1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+
 echo ""
-echo "Vérification depuis l'hôte :"
-echo "  smbclient //10.0.1.20/direction -U dir1%Samba2026! -m SMB3 -c 'ls'"
+echo "→ Test partage comptabilite (comptal) :"
+smbclient //localhost/comptabilite -U comptal --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+
+echo ""
+echo "→ Test partage technique (tech1) :"
+smbclient //localhost/technique -U tech1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+
+echo ""
+echo "→ Test partage commun (soc_reader) :"
+smbclient //localhost/commun -U soc_reader --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+
+echo ""
+echo "============================================================"
+echo "✅ PHASE 4 TERMINÉE"
+echo "============================================================"
+echo "Partages disponibles :"
+echo "  - //10.0.1.20/direction    (groupe direction)"
+echo "  - //10.0.1.20/comptabilite (groupe comptabilite)"
+echo "  - //10.0.1.20/technique    (groupe technique)"
+echo "  - //10.0.1.20/commun       (tous les groupes)"
