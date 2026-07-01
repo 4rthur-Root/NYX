@@ -104,3 +104,31 @@ Pour déployer depuis votre poste :
 scp infrastructure/Server/docker_install.sh user@10.0.1.20:/tmp/
 ssh user@10.0.1.20 'sudo bash /tmp/docker_install.sh'
 ```
+
+## Samba AD DC
+
+Le script [samba-ad_installation.sh](samba-ad_installation.sh) transforme le serveur en contrôleur de domaine Active Directory.
+
+### Installation
+
+```bash
+make server-samba-ad
+```
+
+Ce script :
+- Installe Samba 4, Kerberos, Winbind et les dépendances
+- Provisionne le domaine `NYX.TG` avec `samba-tool domain provision`
+- Crée les groupes `direction`, `comptabilite`, `technique`
+- Crée les utilisateurs `dir1`, `comptal`, `tech1`, `soc_reader`
+
+### Vérification
+
+```bash
+make server-samba-verify
+```
+
+[![Samba AD en cours d'exécution](../Screenshots/samba-ad_running.png)](../Screenshots/samba-ad_running.png)
+
+[![Kerberos fonctionnel](../Screenshots/kerberos_working.png)](../Screenshots/kerberos_working.png)
+
+[![Connexion utilisateur](../Screenshots/connexion_dir1.png)](../Screenshots/connexion_dir1.png)
