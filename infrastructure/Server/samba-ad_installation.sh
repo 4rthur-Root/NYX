@@ -49,7 +49,7 @@ echo ""
 
 if [ -f /etc/samba/smb.conf ]; then
     echo "→ Sauvegarde de /etc/samba/smb.conf vers smb.conf.bak"
-    mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
+    sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
 else
     echo "→ Aucun fichier smb.conf existant, pas besoin de sauvegarde."
 fi
