@@ -1,12 +1,10 @@
 #!/bin/bash
-# infra/provision/target-samba.sh
-# Déploie Samba sur la VM target Debian 12 pour le scénario S2.
+# Déploie Samba sur la VM debian server.
 # Exécuter directement sur la VM target via SSH :
 #   ssh target@10.0.1.20
 #   sudo bash target-samba.sh
 #
 # Prérequis : target.sh déjà exécuté (SSH, rsyslog, chrony en place)
-# Décision : S1-D4 (vecteur exfiltration SMB), S1-D3 (RAM 1 Go maintenue)
 
 set -euo pipefail
 
