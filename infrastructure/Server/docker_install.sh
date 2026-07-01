@@ -1,3 +1,8 @@
+#!/bin/bash
+# Script for installing Docker and Docker Compose on the debian server.
+# That will serve for dolibarr 
+# Usage:
+#   sudo bash docker_install.sh
 # 1. Prérequis
 sudo apt install -y ca-certificates curl
 
