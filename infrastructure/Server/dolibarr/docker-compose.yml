@@ -1,0 +1,54 @@
+services:
+  # Base de données MariaDB
+  mariadb:
+    image: mariadb:latest
+    container_name: dolibarr_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dolibarr
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - dolibarr_network
+
+  # Application Dolibarr
+  web:
+    image: tuxgasy/dolibarr:latest
+    container_name: dolibarr_web
+    environment:
+      # Connexion à la base de données
+      DOLI_DB_HOST: mariadb
+      DOLI_DB_USER: root
+      DOLI_DB_PASSWORD: root
+      DOLI_DB_NAME: dolibarr
+      # Configuration de l'instance
+      DOLI_URL_ROOT: 'http://10.0.1.20'
+      DOLI_ADMIN_LOGIN: admin
+      DOLI_ADMIN_PASSWORD: admin
+      DOLI_COMPANY_NAME: "PME Togo"
+      DOLI_COMPANY_COUNTRYCODE: TG
+      PHP_INI_DATE_TIMEZONE: 'Africa/Lome'
+      # Activer l'installation automatique au premier démarrage
+      DOLI_INSTALL_AUTO: 1
+      DOLI_PROD: 1
+    ports:
+      - "80:80"
+    volumes:
+      - ./data/dolibarr_documents:/var/www/documents
+      - ./data/dolibarr_custom:/var/www/html/custom
+      - ./dolibarr.conf:/etc/apache2/conf-enabled/dolibarr.conf  # Pour config Apache si besoin
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "udp://127.0.0.1:514"
+        tag: "dolibarr"
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+    networks:
+      - dolibarr_network
+
+networks:
+  dolibarr_network:
+    driver: bridge
