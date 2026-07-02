@@ -1,0 +1,99 @@
+# This docker-compose.yml file is used to build and test quickly
+# a specific version of Dolibarr.
+#
+# Before build, define the variable DOLI_VERSION as following:
+# $ export DOLI_VERSION=19.0.3
+# And then, you can run :
+# $ docker-compose up
+#
+# OR run the script ./test.sh dolversion [phpversion]
+# sudo ./test.sh develop
+# sudo ./test.sh 19.0.3  8.2
+#  
+# More information about Docker-compose : https://docs.docker.com/compose/
+
+networks:
+    internal-pod:
+        internal: true
+    external-pod:
+        internal: false
+
+secrets:
+    mysql-user:
+        file: ./examples/with-secrets/secrets/mysql_user.secret
+    mysql-password:
+        file: ./examples/with-secrets/secrets/mysql_password.secret
+
+services:
+    mariadb:
+        image: mariadb:latest
+        secrets:
+            - mysql-user
+            - mysql-password
+        command: >
+            --character-set-server=utf8mb4
+            --collation-server='utf8mb4_unicode_ci'
+            --init-connect='SET NAMES utf8mb4'
+        environment:
+            #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+            MYSQL_RANDOM_ROOT_PASSWORD: "1"
+            MYSQL_DATABASE: "dolidb"
+            MYSQL_USER_FILE: "/run/secrets/mysql-user"
+            MYSQL_PASSWORD_FILE: "/run/secrets/mysql-password"
+        networks:
+            - internal-pod
+
+    cron:
+        build:
+            context: ./docker-compose-links/${DOLI_VERSION}${PHP_VERSION}
+        image: dolibarr/dolibarr:${DOLI_VERSION}${PHP_VERSION}
+        secrets:
+            - mysql-user
+            - mysql-password
+        environment:
+            WWW_USER_ID: 1000
+            WWW_GROUP_ID: 1000
+            DOLI_DB_HOST: mariadb
+            DOLI_DB_NAME: dolidb
+            DOLI_DB_USER_FILE: /run/secrets/mysql-user
+            DOLI_DB_PASSWORD_FILE: /run/secrets/mysql-password
+            DOLI_ADMIN_LOGIN: admintest
+            DOLI_ADMIN_PASSWORD: admintest
+            DOLI_URL_ROOT: http://0.0.0.0:81
+            DOLI_INSTANCE_UNIQUE_ID: myinstanceuniqueid
+            DOLI_CRON: 1
+            DOLI_CRON_KEY: mycronsecurekey
+            DOLI_CRON_USER: admintest
+        networks:
+            - internal-pod
+
+    web:
+        build:
+            context: ./docker-compose-links/${DOLI_VERSION}${PHP_VERSION}
+        image: dolibarr/dolibarr:${DOLI_VERSION}${PHP_VERSION}
+        secrets:
+            - mysql-user
+            - mysql-password
+        volumes:
+            - ./.volumes/dolibarr/custom:/var/www/html/custom
+            - ./.volumes/dolibarr/documents:/var/www/documents
+        depends_on:
+            - mariadb
+        environment:
+            WWW_USER_ID: 1000
+            WWW_GROUP_ID: 1000
+            DOLI_DB_HOST: mariadb
+            DOLI_DB_NAME: dolidb
+            DOLI_DB_USER_FILE: "/run/secrets/mysql-user"
+            DOLI_DB_PASSWORD_FILE: "/run/secrets/mysql-password"
+            DOLI_ADMIN_LOGIN: "admintest"
+            DOLI_ADMIN_PASSWORD: "admintest"
+            DOLI_URL_ROOT: 'http://0.0.0.0:81'
+            DOLI_INSTANCE_UNIQUE_ID: myinstanceuniqueid
+            DOLI_INIT_DEMO: 1
+            DOLI_CRON_KEY: mycronsecurekey
+        ports:
+            - "81:80"
+        networks:
+            - internal-pod
+            - external-pod
