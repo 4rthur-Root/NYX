@@ -2,93 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "NyxSOC Detection Rule",
   "description": "Schéma de validation des règles de détection YAML du moteur NyxSOC. Toute règle doit être conforme à ce schéma avant d'être chargée par le RuleEngine.",
-  "version": "1.0.0",
+  "version": "1.1.0",
 
   "definitions": {
 
     "severity": {
       "type": "string",
-      "enum": ["WARNING", "CRITICAL"],
-      "description": "WARNING : pattern suspect, pas d'action SOAR automatique. CRITICAL : chaîne confirmée, déclenche l'évaluation du playbook SOAR."
+      "enum": ["WARNING", "CRITICAL"]
     },
 
     "event_type": {
       "type": "string",
       "enum": [
-        "ssh_failure",
-        "logon_success",
-        "logon_failure",
-        "samba_read",
-        "smb_failure",
-        "http_request",
-        "net_scan",
-        "firewall_block",
-        "file_create",
-        "process_exec",
-        "net_connect"
+        "ssh_failure", "logon_success", "logon_failure",
+        "samba_read", "samba_write", "smb_failure",
+        "http_request", "net_scan", "firewall_block",
+        "file_create", "process_exec", "net_connect"
       ],
-      "description": "Taxonomie fermée des types d'événements normalisés par les parsers."
+      "description": "samba_write : création ou modification d'un fichier sur partage Samba. Déclenche YARA systématiquement dans le Dispatcher."
     },
 
-    "mitre_tactic": {
-      "type": "string",
-      "pattern": "^TA[0-9]{4}$",
-      "description": "Identifiant de tactique MITRE ATT&CK. Référence : https://attack.mitre.org/tactics/"
-    },
-
-    "mitre_technique": {
-      "type": "string",
-      "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$",
-      "description": "Identifiant de technique MITRE ATT&CK, avec sous-technique optionnelle. Ex: T1110 ou T1110.001"
-    },
-
-    "source_host_pattern": {
-      "type": "string",
-      "description": "Pattern fnmatch sur source_host de l'événement. Ex: 'debian*', 'DESKTOP*', '*' pour toutes sources."
-    },
+    "mitre_tactic":    { "type": "string", "pattern": "^TA[0-9]{4}$" },
+    "mitre_technique": { "type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$" },
+    "source_host_pattern": { "type": "string" },
 
     "response": {
       "type": "object",
       "required": ["alert"],
       "properties": {
-        "alert": {
-          "type": "boolean",
-          "description": "Si true, une alerte est générée et envoyée à l'Alerter."
-        }
+        "alert": { "type": "boolean" }
       },
-      "additionalProperties": false,
-      "description": "La décision de réponse (blocage, isolation) appartient exclusivement au module SOAR via son playbook. Le moteur ne dicte pas d'action."
+      "additionalProperties": false
     },
 
     "trigger_type1": {
       "type": "object",
       "required": ["event_type", "threshold", "window_seconds", "group_by"],
       "properties": {
-        "event_type": { "$ref": "#/definitions/event_type" },
-        "threshold": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Nombre d'occurrences à dépasser pour déclencher l'alerte."
-        },
-        "window_seconds": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Fenêtre temporelle en secondes dans laquelle le seuil est évalué."
-        },
-        "group_by": {
-          "type": "string",
-          "enum": ["actor_ip", "actor_user", "source_host"],
-          "description": "Champ sur lequel grouper le comptage. group_by: actor_ip compte les occurrences par IP source."
-        },
+        "event_type":      { "$ref": "#/definitions/event_type" },
+        "threshold":       { "type": "integer", "minimum": 1 },
+        "window_seconds":  { "type": "integer", "minimum": 1 },
+        "group_by":        { "type": "string", "enum": ["actor_ip", "actor_user", "source_host"] },
         "filter": {
           "type": "object",
-          "description": "Filtres optionnels sur les champs de l'événement avant comptage.",
           "properties": {
-            "http_status": {
-              "type": "array",
-              "items": { "type": "integer" },
-              "description": "Filtrer sur des codes HTTP spécifiques (ex: [401, 403] pour les échecs d'auth web)."
-            }
+            "http_status": { "type": "array", "items": { "type": "integer" } }
           },
           "additionalProperties": false
         }
@@ -100,32 +58,21 @@
       "type": "object",
       "required": ["step", "event_type"],
       "properties": {
-        "step": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Numéro de l'étape dans la séquence. Doit être consécutif depuis 1."
-        },
-        "event_type": { "$ref": "#/definitions/event_type" },
-        "source_host_pattern": { "$ref": "#/definitions/source_host_pattern" },
-        "window_seconds": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Fenêtre maximale en secondes entre cette étape et la précédente."
-        },
-        "match_on": {
-          "type": "string",
-          "enum": ["actor_ip", "actor_user", "source_host"],
-          "description": "Champ qui doit correspondre entre cette étape et la précédente pour maintenir la corrélation."
-        },
-        "check_yara": {
-          "type": "boolean",
-          "default": false,
-          "description": "Si true, appelle yara_scanner sur le fichier référencé par l'événement."
-        },
-        "yara_match_required": {
-          "type": "boolean",
-          "default": false,
-          "description": "Si false, l'alerte est générée même si YARA ne trouve pas de match (fichier supprimé, accès refusé)."
+        "step":                  { "type": "integer", "minimum": 1 },
+        "event_type":            { "$ref": "#/definitions/event_type" },
+        "source_host_pattern":   { "$ref": "#/definitions/source_host_pattern" },
+        "window_seconds":        { "type": "integer", "minimum": 1 },
+        "match_on":              { "type": "string", "enum": ["actor_ip", "actor_user", "source_host"] },
+        "condition": {
+          "type": "object",
+          "properties": {
+            "yara_match": {
+              "type": "string",
+              "enum": ["required", "optional", "none"],
+              "description": "required : step validé seulement si yara_match != null dans l'événement stocké."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -135,105 +82,53 @@
       "type": "object",
       "required": ["event_types", "window_seconds", "group_by"],
       "properties": {
-        "event_types": {
-          "type": "array",
-          "minItems": 2,
-          "items": { "$ref": "#/definitions/event_type" },
-          "description": "Liste des event_types qui doivent tous être présents dans la fenêtre, sans ordre imposé."
-        },
-        "window_seconds": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Fenêtre temporelle dans laquelle tous les event_types doivent coexister."
-        },
-        "group_by": {
+        "event_types":        { "type": "array", "minItems": 2, "items": { "$ref": "#/definitions/event_type" } },
+        "window_seconds":     { "type": "integer", "minimum": 1 },
+        "group_by":           { "type": "string", "enum": ["actor_ip", "actor_user"] },
+        "min_count_per_type": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "additionalProperties": false
+    },
+
+    "trigger_type4": {
+      "type": "object",
+      "required": ["event_type", "yara_match"],
+      "properties": {
+        "event_type": {
           "type": "string",
-          "enum": ["actor_ip", "actor_user"],
-          "description": "Champ commun qui lie les événements entre eux."
+          "enum": ["samba_write"],
+          "description": "Type 4 est exclusivement déclenché sur samba_write. YARA tourne sur tous les samba_write dans le Dispatcher — cette règle filtre ceux où il y a eu un match."
         },
-        "min_count_per_type": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 1,
-          "description": "Nombre minimum d'occurrences requis pour chaque event_type."
-        }
+        "yara_match":          { "type": "string", "enum": ["required"] },
+        "source_host_pattern": { "$ref": "#/definitions/source_host_pattern" }
       },
       "additionalProperties": false
     }
-
   },
 
   "type": "object",
-  "required": [
-    "rule_id",
-    "type",
-    "description",
-    "severity",
-    "mitre_tactic",
-    "mitre_technique",
-    "source_host_pattern",
-    "response"
-  ],
+  "required": ["rule_id", "type", "description", "severity", "mitre_tactic", "mitre_technique", "response"],
 
   "properties": {
-
-    "rule_id": {
-      "type": "string",
-      "pattern": "^[A-Z][A-Z0-9_]+_[0-9]{3}$",
-      "description": "Identifiant unique de la règle. Format: NOM_DESCRIPTIF_NNN. Ex: SSH_BRUTEFORCE_001. Le suffixe numérique permet plusieurs variantes d'un même pattern."
-    },
-
-    "type": {
-      "type": "integer",
-      "enum": [1, 2, 3],
-      "description": "Type de règle. 1: seuil simple sur un event_type. 2: étapes séquentielles ordonnées. 3: cooccurrence multi-event_types sans ordre."
-    },
-
-    "description": {
-      "type": "string",
-      "description": "Description humaine de ce que détecte la règle. Doit être compréhensible sans lire le code."
-    },
-
-    "severity": { "$ref": "#/definitions/severity" },
-
-    "mitre_tactic":    { "$ref": "#/definitions/mitre_tactic" },
-    "mitre_technique": { "$ref": "#/definitions/mitre_technique" },
-
+    "rule_id":             { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+_[0-9]{3}$" },
+    "type":                { "type": "integer", "enum": [1, 2, 3, 4] },
+    "description":         { "type": "string" },
+    "severity":            { "$ref": "#/definitions/severity" },
+    "mitre_tactic":        { "$ref": "#/definitions/mitre_tactic" },
+    "mitre_technique":     { "$ref": "#/definitions/mitre_technique" },
     "source_host_pattern": { "$ref": "#/definitions/source_host_pattern" },
-
-    "trigger": {
-      "$ref": "#/definitions/trigger_type1",
-      "description": "Requis si type == 1. Définit le seuil de déclenchement."
-    },
-
-    "steps": {
-      "type": "array",
-      "minItems": 2,
-      "items": { "$ref": "#/definitions/step_type2" },
-      "description": "Requis si type == 2. Liste des étapes ordonnées de la kill-chain."
-    },
-
-    "condition": {
-      "$ref": "#/definitions/condition_type3",
-      "description": "Requis si type == 3. Définit les event_types qui doivent coexister."
-    },
-
-    "response": { "$ref": "#/definitions/response" }
+    "trigger":             { "$ref": "#/definitions/trigger_type1" },
+    "steps":               { "type": "array", "minItems": 2, "items": { "$ref": "#/definitions/step_type2" } },
+    "condition":           { "$ref": "#/definitions/condition_type3" },
+    "yara_trigger":        { "$ref": "#/definitions/trigger_type4" },
+    "response":            { "$ref": "#/definitions/response" }
   },
 
   "allOf": [
-    {
-      "if": { "properties": { "type": { "const": 1 } } },
-      "then": { "required": ["trigger"] }
-    },
-    {
-      "if": { "properties": { "type": { "const": 2 } } },
-      "then": { "required": ["steps"] }
-    },
-    {
-      "if": { "properties": { "type": { "const": 3 } } },
-      "then": { "required": ["condition"] }
-    }
+    { "if": { "properties": { "type": { "const": 1 } } }, "then": { "required": ["trigger"] } },
+    { "if": { "properties": { "type": { "const": 2 } } }, "then": { "required": ["steps"] } },
+    { "if": { "properties": { "type": { "const": 3 } } }, "then": { "required": ["condition"] } },
+    { "if": { "properties": { "type": { "const": 4 } } }, "then": { "required": ["yara_trigger"] } }
   ],
 
   "additionalProperties": false
