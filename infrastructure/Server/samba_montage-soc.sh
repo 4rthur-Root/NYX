@@ -5,6 +5,9 @@
 # Usage : sudo ./mount_samba_soc.sh
 # ============================================================
 
+# Ceci n'est pas un script d'installation, mais un script de montage des partages Samba pour le SOC.
+# le moteur pourra se reférer à ce script pour monter les partages Samba en lecture seule.
+
 set -e
 
 echo "============================================================"
