@@ -1,0 +1,30 @@
+# Mapping nom de fichier source → type de parser
+# Ajouter une source = ajouter une ligne ici, zéro modification du code
+sources:
+  "debian.log":              "syslog"
+  "OPNsense.internal.log":   "filterlog"
+  "DESKTOP-PME.log":         "windows"
+
+# Rétention des données SQLite
+retention:
+  events_hours: 24
+  context_cleanup_interval_seconds: 3600
+
+# Queue en mémoire reader → dispatcher
+queue:
+  maxsize: 10000
+
+# Chemins filesystem
+log_dir:    "/var/log/remote"
+db_path:    "engine/engine.db"
+alerts_dir: "/var/log/nyxsoc/alerts"
+alerts_log: "/var/log/nyxsoc/engine.log"
+
+# Canal de communication vers le module SOAR
+soar:
+  channel: "file"               # écriture atomique fichier JSON
+  alerts_dir: "/var/log/nyxsoc/alerts"
+
+# Chemins vers les règles de détection
+rules:
+  attack: "engine/rules/attack"

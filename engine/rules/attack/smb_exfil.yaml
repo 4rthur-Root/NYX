@@ -1,0 +1,17 @@
+rule_id: SMB_EXFIL_001
+type: 3
+description: "Exfiltration de données via SMB détectée"
+event_type: smb_exfil
+mitre_tactic: TA001
+mitre_technique: T1041
+source_host_pattern: "debian*"
+response:
+  alert: true
+
+trigger:
+  severity: CRITICAL
+  treshold: 10
+  windows_seconds: 60
+  group_by:  
+    actor_ip
+    actor_user
