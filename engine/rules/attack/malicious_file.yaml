@@ -1,5 +1,8 @@
 rule_id: MALICIOUS_FILE_EXEC_001
-description: "Fichier malveillant déposé et exécuté"
+type: 2
+description: "
+  Fichier malveillant déposé et exécuté
+  "
 severity: CRITICAL
 
 steps:

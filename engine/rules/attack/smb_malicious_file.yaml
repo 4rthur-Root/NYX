@@ -1,0 +1,15 @@
+rule_id: SMB_MALICIOUS_FILE_001
+type: 4
+description: " Fichier malveillant détecté sur le partage Samba par YARA."
+severity: CRITICAL
+mitre_tactic: "T1080"
+mitre_technique: "T1204.002"
+
+yara_trigger: 
+  event_type: samba_write
+  yara_match: required
+  source_host_pattern: "debian*"
+
+response:
+  alert: true
+  
