@@ -1,112 +1,175 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "NyxSOC SOAR Response",
-  "version": "1.0.1",
-  "type": "object",
-  "required": [
-    "response_id",
-    "alert_id",
-    "alert_timestamp",
-    "response_timestamp",
-    "latency_ms",
-    "action",
-    "status"
-  ],
-  "properties": {
-    "response_id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Identifiant unique de cette réponse"
-    },
-    "alert_id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "UUID de l'alerte traitée — clé de liaison avec alert.json"
-    },
-    "alert_timestamp": {
-      "type": "integer",
-      "description": "Copie du timestamp de l'alerte source, pour calculer latency_ms sans relire alert.json"
-    },
-    "response_timestamp": {
-      "type": "integer",
-      "description": "Horodatage de fin de traitement SOAR en Unix ms"
-    },
-    "latency_ms": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Délai entre alerte et action effective en ms. Mesure directe de H4 (cible <= 5000 ms)"
-    },
-    "action": {
-      "type": "string",
-      "enum": ["block_ip", "notify", "none"],
-      "description": "Action déclenchée. block_ip = règle OPNsense injectée, notify = alerte dashboard uniquement, none = sévérité insuffisante ou IP null"
-    },
-    "status": {
-      "type": "string",
-      "enum": ["success", "failed", "skipped"],
-      "description": "Résultat de l'action. skipped si action=none ou attacker_ip=null"
-    },
-    "skip_reason": {
-      "type": ["string", "null"],
-      "enum": ["severity_warning", "attacker_ip_null", "whitelisted", null],
-      "description": "Raison du skip si status=skipped. Null si status != skipped"
-    },
-    "enrichment": {
-      "type": "object",
-      "description": "Résultat de l'enrichissement AbuseIPDB. Absent si attacker_ip=null",
-      "properties": {
-        "source": {
-          "type": "string",
-          "enum": ["abuseipdb", "cache", "unavailable"],
-          "description": "Source de l'enrichissement. cache si réponse issue du cache local, unavailable si API injoignable"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "NyxSOC SOAR Response",
+    "version": "1.0.1",
+    "type": "object",
+    "required": [
+        "response_id",
+        "alert_id",
+        "alert_timestamp",
+        "response_timestamp",
+        "latency_ms",
+        "action",
+        "status"
+    ],
+    "properties": {
+        "response_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifiant unique de cette réponse"
         },
-        "abuseipdb_score": {
-          "type": ["integer", "null"],
-          "minimum": 0,
-          "maximum": 100,
-          "description": "Score de réputation AbuseIPDB (0=propre, 100=malveillant). Null si unavailable"
+        "alert_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID de l'alerte traitée — clé de liaison avec alert.json"
         },
-        "country_code": {
-          "type": ["string", "null"],
-          "description": "Code pays ISO 3166-1 alpha-2 de l'IP. Ex: TG, NG, CI"
+        "alert_timestamp": {
+            "type": "integer",
+            "description": "Copie du timestamp de l'alerte source, pour calculer latency_ms sans relire alert.json"
         },
-        "isp": {
-          "type": ["string", "null"],
-          "description": "Fournisseur d'accès de l'IP selon AbuseIPDB"
+        "response_timestamp": {
+            "type": "integer",
+            "description": "Horodatage de fin de traitement SOAR en Unix ms"
         },
-        "fallback_used": {
-          "type": "boolean",
-          "description": "True si le fallback local a été utilisé (API injoignable ou rate-limitée)"
+        "latency_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Délai entre alerte et action effective en ms. Mesure directe de H4 (cible <= 5000 ms)"
+        },
+        "action": {
+            "type": "string",
+            "enum": [
+                "block_ip",
+                "notify",
+                "none"
+            ],
+            "description": "Action déclenchée. block_ip = règle OPNsense injectée, notify = alerte dashboard uniquement, none = sévérité insuffisante ou IP null"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "success",
+                "failed",
+                "skipped"
+            ],
+            "description": "Résultat de l'action. skipped si action=none ou attacker_ip=null"
+        },
+        "skip_reason": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "enum": [
+                "severity_warning",
+                "attacker_ip_null",
+                "whitelisted",
+                null
+            ],
+            "description": "Raison du skip si status=skipped. DOIT être null si status != skipped. Cohérence validée côté code Python, pas par le schéma."
+        },
+        "enrichment": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "description": "Null si attacker_ip=null (S3) ou action=none"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "source",
+                        "fallback_used"
+                    ],
+                    "description": "Résultat de l'enrichissement AbuseIPDB. Présent si attacker_ip != null",
+                    "properties": {
+                        "source": {
+                            "type": "string",
+                            "enum": [
+                                "abuseipdb",
+                                "cache",
+                                "unavailable"
+                            ],
+                            "description": "Source de l'enrichissement. cache si réponse issue du cache local, unavailable si API injoignable"
+                        },
+                        "abuseipdb_score": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 0,
+                            "maximum": 100,
+                            "description": "Score de réputation AbuseIPDB (0=propre, 100=malveillant). Null si unavailable"
+                        },
+                        "country_code": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "Code pays ISO 3166-1 alpha-2 de l'IP. Ex: TG, NG, CI"
+                        },
+                        "isp": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "Fournisseur d'accès de l'IP selon AbuseIPDB"
+                        },
+                        "fallback_used": {
+                            "type": "boolean",
+                            "description": "True si le fallback local a été utilisé (API injoignable ou rate-limitée)"
+                        }
+                    }
+                }
+            ]
+        },
+        "opnsense": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "description": "Null si action != block_ip"
+                },
+                {
+                    "type": "object",
+                    "required": [
+                        "blocked_ip",
+                        "api_status_code",
+                        "retry_count"
+                    ],
+                    "description": "Détail de l'action OPNsense. Présent uniquement si action=block_ip",
+                    "properties": {
+                        "rule_id": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "description": "Identifiant de la règle de blocage injectée dans OPNsense. Non null si api_status_code=200"
+                        },
+                        "blocked_ip": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "ipv4",
+                            "description": "IP effectivement bloquée"
+                        },
+                        "api_status_code": {
+                            "type": "integer",
+                            "description": "Code HTTP retourné par l'API OPNsense. 200=succès"
+                        },
+                        "retry_count": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Nombre de tentatives avant succès ou abandon"
+                        }
+                    }
+                }
+            ]
+        },
+        "error": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "description": "Message d'erreur si status=failed. Null sinon"
         }
-      }
-    },
-    "opnsense": {
-      "type": "object",
-      "description": "Détail de l'action OPNsense. Absent si action != block_ip",
-      "properties": {
-        "rule_id": {
-          "type": ["string", "null"],
-          "description": "Identifiant de la règle de blocage injectée dans OPNsense. Non null si api_status_code=200"
-        },
-        "blocked_ip": {
-          "type": ["string", "null"],
-          "format": "ipv4",
-          "description": "IP effectivement bloquée"
-        },
-        "api_status_code": {
-          "type": "integer",
-          "description": "Code HTTP retourné par l'API OPNsense. 200=succès"
-        },
-        "retry_count": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Nombre de tentatives avant succès ou abandon"
-        }
-      }
-    },
-    "error": {
-      "type": ["string", "null"],
-      "description": "Message d'erreur si status=failed. Null sinon"
     }
-  }
 }
