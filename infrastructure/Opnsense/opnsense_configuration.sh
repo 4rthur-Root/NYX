@@ -8,7 +8,7 @@
 set -euo pipefail
 
 VM_NAME="Opnsense"
-OPNSENSE_IP="192.168.121.254"
+OPNSENSE_IP="192.168.122.254"
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTime=10"
 
 # 1. Vérification connectivité SSH
