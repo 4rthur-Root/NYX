@@ -1,44 +1,68 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ============================================================
-# Phase 4 - Configuration des partages Samba (AD DC)
+# Phase 4 — Configuration des partages Samba (AD DC)
+# Idempotent : vérifie l'existence des partages avant création
+# Usage : sudo bash samba_installation.sh
 # ============================================================
 
-set -e
-
-echo "============================================================"
-echo "PHASE 4 : Configuration des partages Samba"
-echo "============================================================"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 
 DOMAIN="NYX"
 USER_PASS="Nyx2026!"
 
-# 1. Création des répertoires
-echo "→ Création des répertoires de partage"
-mkdir -p /srv/samba/{direction,comptabilite,technique,commun}
+log "=== Configuration des partages Samba ==="
 
-# 2. Permissions Unix + ACL
-echo "→ Configuration des permissions"
-chown root:"domain users" /srv/samba/direction
-chmod 2770 /srv/samba/direction
-setfacl -m g:direction:rwx /srv/samba/direction
+# ── 1. Création des répertoires ────────────────────────────
 
-chown root:"domain users" /srv/samba/comptabilite
-chmod 2770 /srv/samba/comptabilite
-setfacl -m g:comptabilite:rwx /srv/samba/comptabilite
+log "Création des répertoires de partage"
+for share in direction comptabilite technique commun; do
+  ensure_dir "/srv/samba/$share"
+done
 
-chown root:"domain users" /srv/samba/technique
-chmod 2770 /srv/samba/technique
-setfacl -m g:technique:rwx /srv/samba/technique
+# ── 2. Permissions Unix + ACL ──────────────────────────────
 
-chown root:"domain users" /srv/samba/commun
+log "Configuration des permissions"
+
+# S'assurer que le répertoire parent est traversable
+chmod 755 /srv/samba
+
+# Récupérer les GIDs mappés par winbind pour les groupes AD
+DIR_GID=$(wbinfo --group-info=direction 2>/dev/null | cut -d: -f3)
+COMPTA_GID=$(wbinfo --group-info=comptabilite 2>/dev/null | cut -d: -f3)
+TECH_GID=$(wbinfo --group-info=technique 2>/dev/null | cut -d: -f3)
+
+for share in direction comptabilite technique; do
+  case "$share" in
+    direction)   GID="$DIR_GID" ;;
+    comptabilite) GID="$COMPTA_GID" ;;
+    technique)   GID="$TECH_GID" ;;
+  esac
+  chown root:"${GID}" "/srv/samba/$share"
+  chmod 2770 "/srv/samba/$share"
+done
+
+chown root:root /srv/samba/commun
 chmod 2777 /srv/samba/commun
-setfacl -m g:direction:rwx /srv/samba/commun
-setfacl -m g:comptabilite:rwx /srv/samba/commun
-setfacl -m g:technique:rwx /srv/samba/commun
 
-# 3. Ajout des partages dans smb.conf
-echo "→ Ajout des partages dans smb.conf"
-cat >> /etc/samba/smb.conf << EOF
+log "  → Permissions configurées"
+
+# ── 3. Vérification smb.conf avant ajout ────────────────────
+
+log "Vérification des partages dans smb.conf"
+
+NEED_SHARES=false
+for share in direction comptabilite technique commun; do
+  if grep -q "^\[$share\]" /etc/samba/smb.conf 2>/dev/null; then
+    log "  → Partage '[$share]' déjà présent"
+  else
+    NEED_SHARES=true
+  fi
+done
+
+if [ "$NEED_SHARES" = true ]; then
+  log "Ajout des partages manquants dans smb.conf"
+  cat >> /etc/samba/smb.conf << EOF
 
 # =====================
 #     PARTAGES PME
@@ -84,41 +108,57 @@ cat >> /etc/samba/smb.conf << EOF
    browseable = yes
    comment = Zone d'échange transversale
 EOF
+  log "  → Partages ajoutés"
+else
+  log "  → Tous les partages déjà présents"
+fi
 
-# 4. Validation et redémarrage
-echo "→ Validation de la configuration"
-testparm -s
+# ── 4. Validation et redémarrage ───────────────────────────
 
-echo "→ Redémarrage de Samba AD DC"
+log "Validation de la configuration (testparm)"
+if testparm -s >/dev/null 2>&1; then
+  log "  → testparm OK"
+else
+  log "  → ATTENTION : testparm a des avertissements"
+  testparm -s 2>&1 | tail -5
+fi
+
+log "Redémarrage de samba-ad-dc"
 systemctl restart samba-ad-dc
+sleep 3
 
-# 5. Vérifications
-echo ""
-echo "========================"
-echo "   VÉRIFICATIONS   "
-echo "========================"
+# ── 5. Vérifications ──────────────────────────────────────
 
-echo "→ Test partage direction (dir1) :"
-smbclient //localhost/direction -U dir1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+log ""
+log "========================"
+log "   VÉRIFICATIONS"
+log "========================"
 
-echo ""
-echo "→ Test partage comptabilite (compta1) :"
-smbclient //localhost/comptabilite -U compta1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+ERRORS=0
 
-echo ""
-echo "→ Test partage technique (tech1) :"
-smbclient //localhost/technique -U tech1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+for share_user in "direction:dir1" "comptabilite:compta1" "technique:tech1" "commun:dir1"; do
+  IFS=':' read -r share user <<< "$share_user"
+  if smbclient //localhost/"$share" -U "$DOMAIN"\\\\"$user" --password="$USER_PASS" -c "ls" >/dev/null 2>&1; then
+    log "  ✓ Partage $share ($user) accessible"
+  else
+    log "  ✗ Partage $share ($user) inaccessible"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
 
-echo ""
-echo "→ Test partage commun (soc_reader) :"
-smbclient //localhost/commun -U soc_reader --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
-
-echo ""
-echo "============================================================"
-echo "✅ PHASE 4 TERMINÉE"
-echo "============================================================"
-echo "Partages disponibles :"
-echo "  - //10.0.1.20/direction    (groupe direction)"
-echo "  - //10.0.1.20/comptabilite (groupe comptabilite)"
-echo "  - //10.0.1.20/technique    (groupe technique)"
-echo "  - //10.0.1.20/commun       (tous les groupes)"
+log ""
+if [ "$ERRORS" -eq 0 ]; then
+  log "============================================================"
+  log "✅ PHASE 4 TERMINÉE"
+  log "============================================================"
+  log "Partages disponibles :"
+  log "  - //10.0.1.20/direction    (groupe direction)"
+  log "  - //10.0.1.20/comptabilite (groupe comptabilite)"
+  log "  - //10.0.1.20/technique    (groupe technique)"
+  log "  - //10.0.1.20/commun       (tous les groupes)"
+else
+  log "============================================================"
+  log "❌ PHASE 4 TERMINÉE AVEC $ERRORS ERREUR(S)"
+  log "============================================================"
+  exit 1
+fi

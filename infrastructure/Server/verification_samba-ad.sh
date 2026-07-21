@@ -1,61 +1,101 @@
-#!/bin/bash
-# check_samba_ad.sh - Script de vérification autonome
+#!/usr/bin/env bash
+# ============================================================
+# Vérification autonome de Samba AD DC
+# Usage : sudo bash verification_samba-ad.sh
+# ============================================================
 
-echo "============================="
-echo "VÉRIFICATION DE SAMBA AD DC"
-echo "============================="
+set -euo pipefail
 
-echo ""
-echo "1. Service samba-ad-dc :"
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*"
+}
+
+ADMIN_PASS="AdminNyx2026!"
+USER_PASS="Nyx2026!"
+
+log "============================="
+log "VÉRIFICATION DE SAMBA AD DC"
+log "============================="
+
+ERRORS=0
+
+# ── 1. Service ─────────────────────────────────────────────
+
 if systemctl is-active --quiet samba-ad-dc; then
-    echo "   ✅ ACTIF"
+  log "  ✓ Service samba-ad-dc : ACTIF"
 else
-    echo "   ❌ INACTIF"
-    exit 1
+  log "  ✗ Service samba-ad-dc : INACTIF"
+  ERRORS=$((ERRORS + 1))
 fi
 
-echo ""
-echo "2. Kerberos (kinit administrator) :"
-echo "AdminNyx2026!" | kinit administrator@NYX.TG 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo "   ✅ Ticket obtenu"
-    klist
+# ── 2. Kerberos ────────────────────────────────────────────
+
+if echo "$ADMIN_PASS" | kinit administrator@NYX.TG 2>/dev/null; then
+  log "  ✓ Kerberos : ticket obtenu"
+  klist 2>/dev/null | head -5
 else
-    echo "   ❌ Échec"
-    exit 1
+  log "  ✗ Kerberos : échec"
+  ERRORS=$((ERRORS + 1))
 fi
 
-echo ""
-echo "3. DNS :"
+# ── 3. DNS ─────────────────────────────────────────────────
+
 if host srv-pme.nyx.tg >/dev/null 2>&1; then
-    echo "   ✅ Résolution OK"
-    host srv-pme.nyx.tg
+  log "  ✓ DNS : srv-pme.nyx.tg → $(host srv-pme.nyx.tg 2>/dev/null | head -1)"
 else
-    echo "   ❌ Échec"
-    exit 1
+  log "  ✗ DNS : srv-pme.nyx.tg ne résout pas"
+  ERRORS=$((ERRORS + 1))
 fi
 
-echo ""
-echo "4. SRV LDAP :"
+# ── 4. SRV LDAP ────────────────────────────────────────────
+
 if host -t SRV _ldap._tcp.nyx.tg >/dev/null 2>&1; then
-    echo "   ✅ SRV LDAP OK"
-    host -t SRV _ldap._tcp.nyx.tg
+  log "  ✓ SRV LDAP : trouvé"
 else
-    echo "   ❌ Échec"
-    exit 1
+  log "  ✗ SRV LDAP : introuvable"
+  ERRORS=$((ERRORS + 1))
 fi
 
-echo ""
-echo "5. Connexion Samba :"
-if smbclient //localhost/netlogon -U dir1 --password=Nyx2026! -c "ls" >/dev/null 2>&1; then
-    echo "   ✅ Connexion OK"
-    smbclient -L localhost -U dir1 --password=Nyx2026!
+# ── 5. SRV Kerberos ───────────────────────────────────────
+
+if host -t SRV _kerberos._tcp.nyx.tg >/dev/null 2>&1; then
+  log "  ✓ SRV Kerberos : trouvé"
 else
-    echo "   ❌ Échec"
-    exit 1
+  log "  ✗ SRV Kerberos : introuvable"
+  ERRORS=$((ERRORS + 1))
 fi
 
-echo ""
-echo "=========================================="
-echo "✅ TOUTES LES VÉRIFICATIONS SONT PASSÉES"
-echo "=========================================="
+# ── 6. Connexion Samba ────────────────────────────────────
+
+if smbclient //localhost/netlogon -U dir1 --password="$USER_PASS" -c "ls" >/dev/null 2>&1; then
+  log "  ✓ Connexion Samba : dir1 sur netlogon OK"
+else
+  log "  ✗ Connexion Samba : échec"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── 7. Groupes ─────────────────────────────────────────────
+
+for group in direction comptabilite technique; do
+  count=$(samba-tool group listmembers "$group" 2>/dev/null | wc -l)
+  if [ "$count" -gt 0 ]; then
+    log "  ✓ Groupe '$group' : $count membre(s)"
+  else
+    log "  ✗ Groupe '$group' : vide"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
+
+# ── Résumé ──────────────────────────────────────────────────
+
+log ""
+if [ "$ERRORS" -eq 0 ]; then
+  log "=========================================="
+  log "✅ TOUTES LES VÉRIFICATIONS SONT PASSÉES"
+  log "=========================================="
+else
+  log "=========================================="
+  log "❌ $ERRORS VÉRIFICATION(S) ÉCHOUÉE(S)"
+  log "=========================================="
+  exit 1
+fi
