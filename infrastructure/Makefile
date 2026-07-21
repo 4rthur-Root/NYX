@@ -1,12 +1,10 @@
-.PHONY: help install-tools network build-debian build-windows add-boxes \
-        opnsense opnsense-config opnsense-snapshot up provision down destroy clean \
+.PHONY: help install-tools network \
+        opnsense opnsense-config opnsense-snapshot \
         soc-create soc-provision soc-verify \
-        server-install server-provision server-samba-ad server-samba-verify
-
-BOX_DEBIAN_NAME := debian-12
-BOX_DEBIAN_PATH := packer/debian/debian-12-libvirt.box
-BOX_WINDOWS_NAME := windows-10
-BOX_WINDOWS_PATH := packer/windows/output-windows_10/windows-10-libvirt.box
+        server-install server-provision server-provision-all \
+        server-samba-ad server-samba-verify \
+        server-samba-shares server-samba-mount-soc \
+        server-dolibarr server-dolibarr-verify
 
 # SOC variables (surchargeables)
 SOC_USER ?= user
@@ -20,7 +18,7 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Infrastructure:"
-	@echo "  install-tools      Installer Vagrant, Ansible, Libvirt et les dépendances (Fedora)"
+	@echo "  install-tools      Installer libvirt, virt-install, virt-viewer (Fedora)"
 	@echo "  network            Créer le réseau isolé 'nyx' dans libvirt"
 	@echo ""
 	@echo "OPNsense:"
@@ -34,20 +32,15 @@ help:
 	@echo "  soc-verify         Vérifier l'état du SOC après provisionnement"
 	@echo ""
 	@echo "Server:"
-	@echo "  server-install         Créer la VM Debian Server (virt-install)"
-	@echo "  server-provision       Copier les scripts et provisionner la VM (base)"
-	@echo "  server-samba-ad        Installer et configurer Samba AD DC"
-	@echo "  server-samba-verify    Vérifier l'état de Samba AD"
-	@echo ""
-	@echo "Boxes Vagrant (Debian / Windows):"
-	@echo "  build-debian       Construire la box Debian 12 avec Packer"
-	@echo "  build-windows      Construire la box Windows 10"
-	@echo "  add-boxes          Enregistrer les box dans Vagrant"
-	@echo "  up                 Démarrer les VMs Vagrant"
-	@echo "  provision          Lancer le provisioning Ansible"
-	@echo "  down               Arrêter l'infrastructure Vagrant"
-	@echo "  destroy            Détruire l'infrastructure Vagrant"
-	@echo "  clean              Supprimer les box locales"
+	@echo "  server-install           Créer la VM Debian Server (virt-install)"
+	@echo "  server-provision         Copier les scripts et provisionner la VM (base)"
+	@echo "  server-provision-all     Provisionnement complet (base + Samba AD + partages + Dolibarr)"
+	@echo "  server-samba-ad          Installer et configurer Samba AD DC"
+	@echo "  server-samba-verify      Vérifier l'état de Samba AD"
+	@echo "  server-samba-shares      Configurer les partages Samba (direction/comptabilite/technique/commun)"
+	@echo "  server-samba-mount-soc   Monter les partages Samba en lecture seule sur le SOC"
+	@echo "  server-dolibarr          Déployer Dolibarr (Docker Compose)"
+	@echo "  server-dolibarr-verify   Vérifier le pipeline de logs Dolibarr"
 
 # --- Outils et réseau ---
 
@@ -104,13 +97,23 @@ soc-verify:
 
 server-install:
 	@echo "=> Installation de la VM Debian Server..."
-	@bash Server/server_installation.sh
+	@bash Server/server_installation.sh 
 
 server-provision:
-	@echo "=> Copie des scripts et provisionnement du Server..."
+	@echo "=> Copie des scripts et provisionnement du Server (base)..."
 	@if ping -c 1 -W 1 $(SERVER_IP) &>/dev/null; then \
 		scp -r Server/ $(SERVER_USER)@$(SERVER_IP):/tmp/server-provision; \
 		ssh $(SERVER_USER)@$(SERVER_IP) 'sudo bash /tmp/server-provision/base_installation.sh'; \
+	else \
+		echo "ERREUR : $(SERVER_IP) inaccessible. Vérifier SERVER_IP et SERVER_USER."; \
+		exit 1; \
+	fi
+
+server-provision-all:
+	@echo "=> Copie des scripts et provisionnement complet du Server..."
+	@if ping -c 1 -W 1 $(SERVER_IP) &>/dev/null; then \
+		scp -r Server/ $(SERVER_USER)@$(SERVER_IP):/tmp/server-provision; \
+		ssh $(SERVER_USER)@$(SERVER_IP) 'sudo bash /tmp/server-provision/server.sh'; \
 	else \
 		echo "ERREUR : $(SERVER_IP) inaccessible. Vérifier SERVER_IP et SERVER_USER."; \
 		exit 1; \
@@ -134,47 +137,39 @@ server-samba-verify:
 		exit 1; \
 	fi
 
-# --- Boxes Vagrant ---
-
-build-debian:
-	@echo "=> Construction de la box Debian 12 avec Packer..."
-	cd packer/debian && packer build debian.pkr.hcl
-
-build-windows:
-	@echo "=> Construction de la box Windows 10..."
-	@echo "[WARNING] Script windows_installation.sh non trouvé"
-	@bash Preparation/windows_installation.sh 2>/dev/null || echo "  -> Ignoré"
-
-add-boxes:
-	@echo "=> Enregistrement des box Vagrant..."
-	@if [ -f $(BOX_DEBIAN_PATH) ]; then \
-		vagrant box add $(BOX_DEBIAN_NAME) $(BOX_DEBIAN_PATH) --provider libvirt --force; \
+server-samba-shares:
+	@echo "=> Configuration des partages Samba..."
+	@if ping -c 1 -W 1 $(SERVER_IP) &>/dev/null; then \
+		ssh $(SERVER_USER)@$(SERVER_IP) 'sudo bash /tmp/server-provision/samba_installation.sh'; \
 	else \
-		echo "[WARNING] Box Debian introuvable, lancer 'make build-debian' d'abord."; \
-	fi
-	@if [ -f $(BOX_WINDOWS_PATH) ]; then \
-		vagrant box add $(BOX_WINDOWS_NAME) $(BOX_WINDOWS_PATH) --provider libvirt --force; \
-	else \
-		echo "[WARNING] Box Windows introuvable, lancer 'make build-windows' d'abord."; \
+		echo "ERREUR : $(SERVER_IP) inaccessible. Vérifier SERVER_IP et SERVER_USER."; \
+		exit 1; \
 	fi
 
-up:
-	@echo "=> Démarrage de l'infrastructure Vagrant..."
-	vagrant up --provider=libvirt
+server-samba-mount-soc:
+	@echo "=> Montage des partages Samba en lecture seule sur le SOC..."
+	@if ping -c 1 -W 1 $(SOC_IP) &>/dev/null; then \
+		scp Server/samba_montage-soc.sh $(SOC_USER)@$(SOC_IP):/tmp/; \
+		ssh $(SOC_USER)@$(SOC_IP) 'sudo bash /tmp/samba_montage-soc.sh'; \
+	else \
+		echo "ERREUR : $(SOC_IP) inaccessible. Vérifier SOC_IP et SOC_USER."; \
+		exit 1; \
+	fi
 
-provision:
-	@echo "=> Provisioning Ansible..."
-	vagrant provision
+server-dolibarr:
+	@echo "=> Déploiement de Dolibarr (Docker Compose)..."
+	@if ping -c 1 -W 1 $(SERVER_IP) &>/dev/null; then \
+		ssh $(SERVER_USER)@$(SERVER_IP) 'cd /tmp/server-provision/dolibarr && bash deploy_dolibarr.sh'; \
+	else \
+		echo "ERREUR : $(SERVER_IP) inaccessible. Vérifier SERVER_IP et SERVER_USER."; \
+		exit 1; \
+	fi
 
-down:
-	@echo "=> Arrêt de l'infrastructure Vagrant..."
-	vagrant halt
-
-destroy:
-	@echo "=> Destruction de l'infrastructure Vagrant..."
-	vagrant destroy -f
-
-clean:
-	@echo "=> Nettoyage..."
-	vagrant box remove $(BOX_DEBIAN_NAME) --provider libvirt || true
-	vagrant box remove $(BOX_WINDOWS_NAME) --provider libvirt || true
+server-dolibarr-verify:
+	@echo "=> Vérification du pipeline de logs Dolibarr..."
+	@if ping -c 1 -W 1 $(SERVER_IP) &>/dev/null; then \
+		ssh $(SERVER_USER)@$(SERVER_IP) 'sudo bash /tmp/server-provision/dolibarr/test_dolibarr.sh'; \
+	else \
+		echo "ERREUR : $(SERVER_IP) inaccessible. Vérifier SERVER_IP et SERVER_USER."; \
+		exit 1; \
+	fi
