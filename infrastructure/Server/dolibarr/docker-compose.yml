@@ -37,7 +37,6 @@ services:
     volumes:
       - ./data/dolibarr_documents:/var/www/documents
       - ./data/dolibarr_custom:/var/www/html/custom
-      - ./dolibarr.conf:/etc/apache2/conf-enabled/dolibarr.conf  # Pour config Apache si besoin
     logging:
       driver: "syslog"
       options:

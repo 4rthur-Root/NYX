@@ -25,6 +25,8 @@ Les paramètres configurables dans le script :
 - `MEMORY_MB` — quantité de RAM (défaut : `2048`)
 - `DISK_SIZE_GB` — taille du disque (défaut : `8`)
 
+⚠️ Avant de lancer le provisioning, vérifier le nom réel des interfaces réseau avec `ip a` — le script suppose `enp1s0` (NAT) et `enp2s0` (réseau `nyx`), mais l'ordre peut varier.
+
 ## Configuration de base
 
 Une fois la VM installée et le réseau configuré, appliquer la configuration :
@@ -33,76 +35,22 @@ Une fois la VM installée et le réseau configuré, appliquer la configuration :
 make server-provision
 ```
 
-### Hostname
-
-Le hostname `srv-pme.nyx.tg` est appliqué automatiquement via :
-
-```bash
-sudo hostnamectl set-hostname srv-pme.nyx.tg
-```
-
-### Fichier hosts
-
-Le fichier [`hosts.conf`](hosts.conf) doit être déployé dans `/etc/hosts`. Il contient :
-- L'entrée locale pour le serveur
-- L'entrée du réseau privé (10.0.1.20)
-
-```bash
-sudo cp hosts.conf /etc/hosts
-```
-
-## Base Installation
-
-Le script [base_installation.sh](base_installation.sh) installe :
+Le script [base_installation.sh](base_installation.sh) installe et configure en une seule passe :
 
 - **Hostname** : `srv-pme.nyx.tg`
-- **Outils de base** : vim, curl, net-tools, acl, git
+- **Fichier hosts** : déployé depuis [`hosts.conf`](hosts.conf)
 - **Interface privée** : configuration statique sur `enp2s0` (10.0.1.20/24)
+- **Outils de base** : vim, curl, net-tools, acl, git
+- **rsyslog** : installation, activation de l'écoute locale UDP (`imudp`, nécessaire pour le driver syslog Docker de Dolibarr), et déploiement du forward vers le SOC ([`50-forward.conf`](50-forward.conf))
+- **Chrony** : synchronisation NTP avec OPNsense (10.0.1.1), via [`chrony.conf`](chrony.conf)
+- **Docker** : installation de Docker CE + Compose ([docker_install.sh](docker_install.sh))
 
-## Chrony
-
-Le fichier [`chrony.conf`](chrony.conf) configure NTP avec le serveur OPNsense (10.0.1.1) :
-
-```bash
-# Installation
-sudo apt install -y chrony
-
-# Déploiement de la config
-sudo cp chrony.conf /etc/chrony/chrony.conf
-
-# Redémarrage
-sudo systemctl restart chrony
-```
-
-Vérification :
+### Vérification rapide
 
 ```bash
+ss -uln | grep 514                  # udp 0.0.0.0:514
 chronyc tracking
-```
-
-[![Résultat chronyc tracking](../Screenshots/chronyc-tracking.png)](../Screenshots/chronyc-tracking.png)
-
-## Docker
-
-Le script [docker_install.sh](docker_install.sh) installe Docker CE et Docker Compose :
-
-```bash
-sudo bash docker_install.sh
-```
-
-[![Docker installé avec succès](../Screenshots/docker_installed_successfully.png)](../Screenshots/docker_installed_successfully.png)
-
-Ce script :
-- Ajoute la clé GPG officielle Docker
-- Configure le dépôt APT Docker
-- Installe `docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`
-- Ajoute l'utilisateur au groupe `docker`
-
-Pour déployer depuis votre poste :
-
-```bash
-scp infrastructure/Server/docker_install.sh user@10.0.1.20:/tmp/
-ssh user@10.0.1.20 'sudo bash /tmp/docker_install.sh'
+docker --version
 ```
 
 ## Samba AD DC
@@ -119,16 +67,50 @@ Ce script :
 - Installe Samba 4, Kerberos, Winbind et les dépendances
 - Provisionne le domaine `NYX.TG` avec `samba-tool domain provision`
 - Crée les groupes `direction`, `comptabilite`, `technique`
-- Crée les utilisateurs `dir1`, `comptal`, `tech1`, `soc_reader`
+- Crée les utilisateurs `dir1`, `compta1`, `tech1`, `soc_reader`
 
 ### Vérification
 
 ```bash
 make server-samba-verify
+# ou directement :
+sudo bash verification_samba-ad.sh
 ```
 
-[![Samba AD en cours d'exécution](../Screenshots/samba-ad_running.png)](../Screenshots/samba-ad_running.png)
+### Partages Samba
 
-[![Kerberos fonctionnel](../Screenshots/kerberos_working.png)](../Screenshots/kerberos_working.png)
+Une fois Samba AD DC opérationnel, configurer les partages avec [samba_installation.sh](samba_installation.sh) :
 
-[![Connexion utilisateur](../Screenshots/connexion_dir1.png)](../Screenshots/connexion_dir1.png)
+```bash
+make server-samba-shares
+```
+
+Ce script crée les 4 partages (`direction`, `comptabilite`, `technique`, `commun`) avec ACL par groupe, et teste l'accès de chaque utilisateur.
+
+### Montage pour le SOC
+
+Le script [samba_montage-soc.sh](samba_montage-soc.sh) monte les 4 partages en lecture seule sur le SOC (`/mnt/samba/`), pour que le moteur de corrélation puisse y exécuter des scans YARA :
+
+```bash
+sudo bash samba_montage-soc.sh
+```
+
+## Dolibarr (ERP)
+
+Une fois Docker installé, déployer Dolibarr avec [deploy_dolibarr.sh](deploy_dolibarr.sh) :
+
+```bash
+bash deploy_dolibarr.sh
+```
+
+Ce script lance `docker compose up -d` à partir de [docker-compose.yml](docker-compose.yml) (MariaDB + Dolibarr), attend le démarrage, et affiche l'état des conteneurs.
+
+Accès : `http://10.0.1.20` — login `admin` / mot de passe `admin`.
+
+### Vérifier le pipeline de logs Dolibarr
+
+```bash
+sudo bash test_dolibarr.sh
+```
+
+Ce script vérifie que le driver syslog Docker écrit bien vers rsyslog local, puis que les logs sont relayés vers le SOC (`10.0.1.10`). L'activation d'`imudp` est déjà faite par `base_installation.sh` — pas besoin de correctif séparé.

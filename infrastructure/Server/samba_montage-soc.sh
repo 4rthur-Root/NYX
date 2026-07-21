@@ -2,11 +2,12 @@
 # ============================================================
 # Phase 4.5 - Montage des partages pour le SOC
 # ============================================================
-# Usage : sudo ./mount_samba_soc.sh
+# Usage : sudo ./samba_montage-soc.sh
 # ============================================================
-
-# Ceci n'est pas un script d'installation, mais un script de montage des partages Samba pour le SOC.
-# le moteur pourra se reférer à ce script pour monter les partages Samba en lecture seule.
+# Ceci n'est pas un script d'installation, mais un script de montage
+# des partages Samba pour le SOC. Le moteur pourra se référer à ce
+# script pour monter les partages Samba en lecture seule.
+# ============================================================
 
 set -e
 
@@ -39,22 +40,18 @@ mkdir -p /mnt/samba/{direction,comptabilite,technique,commun}
 echo ""
 echo "→ Montage des partages en lecture seule"
 
-# Direction
 echo "  → Montage de /direction"
 mount -t cifs //10.0.1.20/direction /mnt/samba/direction \
     -o username=soc_reader,password=Nyx2026!,domain=NYX,ro
 
-# Comptabilite
 echo "  → Montage de /comptabilite"
 mount -t cifs //10.0.1.20/comptabilite /mnt/samba/comptabilite \
     -o username=soc_reader,password=Nyx2026!,domain=NYX,ro
 
-# Technique
 echo "  → Montage de /technique"
 mount -t cifs //10.0.1.20/technique /mnt/samba/technique \
     -o username=soc_reader,password=Nyx2026!,domain=NYX,ro
 
-# Commun
 echo "  → Montage de /commun"
 mount -t cifs //10.0.1.20/commun /mnt/samba/commun \
     -o username=soc_reader,password=Nyx2026!,domain=NYX,ro

@@ -52,6 +52,7 @@ cat >> /etc/samba/smb.conf << EOF
    directory mask = 2770
    force group = direction
    browseable = yes
+   comment = Documents confidentiels - Direction
 
 [comptabilite]
    path = /srv/samba/comptabilite
@@ -61,6 +62,7 @@ cat >> /etc/samba/smb.conf << EOF
    directory mask = 2770
    force group = comptabilite
    browseable = yes
+   comment = Relevés financiers - Comptabilité
 
 [technique]
    path = /srv/samba/technique
@@ -70,6 +72,7 @@ cat >> /etc/samba/smb.conf << EOF
    directory mask = 2770
    force group = technique
    browseable = yes
+   comment = Configurations et scripts - Technique
 
 [commun]
    path = /srv/samba/commun
@@ -77,8 +80,9 @@ cat >> /etc/samba/smb.conf << EOF
    read only = no
    create mask = 0664
    directory mask = 2777
-   force group = domain\ users
+   force group = $DOMAIN\\domain users
    browseable = yes
+   comment = Zone d'échange transversale
 EOF
 
 # 4. Validation et redémarrage
@@ -98,8 +102,8 @@ echo "→ Test partage direction (dir1) :"
 smbclient //localhost/direction -U dir1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
 
 echo ""
-echo "→ Test partage comptabilite (comptal) :"
-smbclient //localhost/comptabilite -U comptal --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
+echo "→ Test partage comptabilite (compta1) :"
+smbclient //localhost/comptabilite -U compta1 --password=$USER_PASS -c "ls" && echo "✅ OK" || echo "❌ ÉCHEC"
 
 echo ""
 echo "→ Test partage technique (tech1) :"

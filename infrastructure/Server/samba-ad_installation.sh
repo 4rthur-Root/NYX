@@ -49,7 +49,7 @@ echo ""
 
 if [ -f /etc/samba/smb.conf ]; then
     echo "→ Sauvegarde de /etc/samba/smb.conf vers smb.conf.bak"
-    sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
+    mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
 else
     echo "→ Aucun fichier smb.conf existant, pas besoin de sauvegarde."
 fi
@@ -171,7 +171,7 @@ echo "============================================================"
 echo ""
 echo "Pourquoi ? Ces utilisateurs simulent les employés de la PME :"
 echo "  - dir1      : Directeur (groupe direction)"
-echo "  - comptal   : Comptable (groupe comptabilite)"
+echo "  - compta1   : Comptable (groupe comptabilite)"
 echo "  - tech1     : Technicien (groupe technique)"
 echo "  - soc_reader: Compte du SOC pour analyse YARA"
 echo ""
@@ -181,10 +181,10 @@ samba-tool user create dir1 $USER_PASS \
     --surname="Un" \
     --mail-address=dir1@nyx.tg
 
-samba-tool user create comptal $USER_PASS \
+samba-tool user create compta1 $USER_PASS \
     --given-name="Comptable" \
     --surname="Un" \
-    --mail-address=comptal@nyx.tg
+    --mail-address=compta1@nyx.tg
 
 samba-tool user create tech1 $USER_PASS \
     --given-name="Technicien" \
@@ -196,7 +196,7 @@ samba-tool user create soc_reader $USER_PASS \
     --surname="Reader" \
     --mail-address=soc@nyx.tg
 
-echo "→ Utilisateurs créés : dir1, comptal, tech1, soc_reader"
+echo "→ Utilisateurs créés : dir1, compta1, tech1, soc_reader"
 
 # ============================================================
 # ÉTAPE 9 : Ajout des utilisateurs à leurs groupes
@@ -208,11 +208,11 @@ echo "ÉTAPE 9 : Ajout des utilisateurs à leurs groupes"
 echo "============================================================"
 
 samba-tool group addmembers direction dir1
-samba-tool group addmembers comptabilite comptal
+samba-tool group addmembers comptabilite compta1
 samba-tool group addmembers technique tech1
 
 echo "→ dir1 → direction"
-echo "→ comptal → comptabilite"
+echo "→ compta1 → comptabilite"
 echo "→ tech1 → technique"
 echo "→ soc_reader : aucun groupe (lecture seule)"
 
@@ -326,7 +326,7 @@ echo ""
 echo "RÉSUMÉ :"
 echo "  - Domaine : $REALM"
 echo "  - Admin   : administrator@$REALM"
-echo "  - Utilisateurs : dir1, comptal, tech1, soc_reader"
+echo "  - Utilisateurs : dir1, compta1, tech1, soc_reader"
 echo "  - Groupes : direction, comptabilite, technique"
 echo ""
 echo "✅ Toutes les vérifications sont PASSÉES."
