@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "soar"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml",
+    "requests",
+    "watchdog",
+    "jsonschema",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

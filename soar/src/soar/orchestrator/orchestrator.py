@@ -5,12 +5,15 @@ from pathlib import Path
 from typing import Optional
 
 from soar.config.settings import settings
+from soar.db import get_connection
 from soar.engine import DecisionEngine
 from soar.handlers.handler import HANDLERS
+from soar.logging import AuditLogger, ResponseWriter
 from soar.models.alert import Alert
 from soar.models.decision import Decision
 from soar.models.response import Response
 from soar.parser import AlertParser
+from soar.repositories.alert_repository import AlertRepository
 from soar.watcher import AlertWatcher
 
 logger = logging.getLogger("soar.orchestrator")
@@ -27,6 +30,9 @@ class AlertOrchestrator:
         self._engine = decision_engine or DecisionEngine()
         self._watch_dir = watch_dir or Path(settings.alerts_incoming)
         self._watcher: Optional[AlertWatcher] = None
+        self._audit_logger = AuditLogger()
+        self._response_writer = ResponseWriter()
+        self._alert_repo = AlertRepository()
 
     def start(self):
         self._watcher = AlertWatcher(
@@ -44,6 +50,11 @@ class AlertOrchestrator:
 
     def _on_alert(self, alert: Alert):
         try:
+            self._alert_repo.save(alert)
+        except Exception:
+            logger.exception("Erreur sauvegarde alerte %s", alert.alert_id)
+
+        try:
             decision = self._engine.decide(alert)
         except Exception:
             logger.exception("Erreur décision pour %s", alert.alert_id)
@@ -59,11 +70,13 @@ class AlertOrchestrator:
 
         try:
             response = handler(alert, decision)
-            self._on_response(response)
+            self._on_response(alert, decision, response)
         except Exception:
             logger.exception("Erreur exécution handler pour %s", alert.alert_id)
 
-    def _on_response(self, response: Response):
+    def _on_response(self, alert: Alert, decision: Decision, response: Response):
+        self._audit_logger.log(alert, decision, response)
+        self._response_writer.write(response)
         logger.info(
             "Réponse: alert=%s action=%s status=%s latency=%dms",
             response.alert_id,

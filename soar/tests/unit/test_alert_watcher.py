@@ -132,6 +132,7 @@ class TestAlertWatcher:
 
         assert len(watcher._seen_ids) == 1
         assert "550e8400-e29b-41d4-a716-446655440000" in watcher._seen_ids
+        assert len(received) == 1
 
     def test_start_stop_does_not_crash(self, parser, tmp_alerts):
         watcher = AlertWatcher(

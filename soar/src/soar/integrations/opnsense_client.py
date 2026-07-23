@@ -22,112 +22,123 @@ class OPNsenseClient:
             settings.opnsense_api_key,
             settings.opnsense_api_secret,
         )
-        # Certificat auto-signé en lab — ne pas reproduire en production
         self._verify = settings.opnsense_verify_ssl
 
     def block_ip(self, ip: str) -> OpnsenseResult:
-        last_code = 0
-        attempts = 0
-
         for attempt in range(1, MAX_RETRIES + 1):
-            attempts = attempt
             try:
-                resp = requests.post(
-                    f"{self._base_url}/api/firewall/alias/addItem",
-                    json={"alias": ALIAS_NAME, "address": ip},
-                    auth=self._auth,
-                    verify=self._verify,
-                    timeout=5,
-                )
-                last_code = resp.status_code
-
-                if resp.status_code == 200:
-                    self._apply()
+                current = self.list_blocked()
+                if ip in current:
                     return OpnsenseResult(
                         rule_id=ALIAS_NAME,
                         blocked_ip=ip,
                         api_status_code=200,
                         retry_count=attempt,
                     )
-
-                logger.warning(
-                    "Blocage %s tentative %d/%d: HTTP %d",
-                    ip, attempt, MAX_RETRIES, resp.status_code,
+                current.append(ip)
+                if not self._import_content("\n".join(current)):
+                    logger.warning(
+                        "Blocage %s tentative %d/%d: échec import",
+                        ip, attempt, MAX_RETRIES,
+                    )
+                    continue
+                self._apply()
+                return OpnsenseResult(
+                    rule_id=ALIAS_NAME,
+                    blocked_ip=ip,
+                    api_status_code=200,
+                    retry_count=attempt,
                 )
-
             except requests.RequestException as e:
-                last_code = 0
                 logger.warning(
                     "Blocage %s tentative %d/%d: %s",
                     ip, attempt, MAX_RETRIES, e,
                 )
-
         return OpnsenseResult(
             blocked_ip=ip,
-            api_status_code=last_code,
-            retry_count=attempts,
+            api_status_code=0,
+            retry_count=MAX_RETRIES,
         )
 
     def unblock_ip(self, ip: str) -> OpnsenseResult:
-        last_code = 0
-        attempts = 0
-
         for attempt in range(1, MAX_RETRIES + 1):
-            attempts = attempt
             try:
-                resp = requests.post(
-                    f"{self._base_url}/api/firewall/alias/delItem",
-                    json={"alias": ALIAS_NAME, "address": ip},
-                    auth=self._auth,
-                    verify=self._verify,
-                    timeout=5,
-                )
-                last_code = resp.status_code
-
-                if resp.status_code == 200:
-                    self._apply()
+                current = self.list_blocked()
+                if ip not in current:
                     return OpnsenseResult(
                         rule_id=ALIAS_NAME,
                         blocked_ip=ip,
                         api_status_code=200,
                         retry_count=attempt,
                     )
-
+                current = [addr for addr in current if addr != ip]
+                if not self._import_content("\n".join(current)):
+                    continue
+                self._apply()
+                return OpnsenseResult(
+                    rule_id=ALIAS_NAME,
+                    blocked_ip=ip,
+                    api_status_code=200,
+                    retry_count=attempt,
+                )
             except requests.RequestException as e:
-                last_code = 0
                 logger.warning(
                     "Déblocage %s tentative %d/%d: %s",
                     ip, attempt, MAX_RETRIES, e,
                 )
-
         return OpnsenseResult(
             blocked_ip=ip,
-            api_status_code=last_code,
-            retry_count=attempts,
+            api_status_code=0,
+            retry_count=MAX_RETRIES,
         )
 
     def list_blocked(self) -> list[str]:
         try:
             resp = requests.get(
-                f"{self._base_url}/api/firewall/alias/getAlias",
-                params={"name": ALIAS_NAME},
+                f"{self._base_url}/api/firewall/alias/searchItem",
                 auth=self._auth,
                 verify=self._verify,
                 timeout=5,
             )
             if resp.status_code == 200:
                 data = resp.json()
-                content = data.get("alias", {}).get("content", "")
-                if not content:
-                    return []
-                return [addr.strip() for addr in content.split("\n") if addr.strip()]
+                for row in data.get("rows", []):
+                    if row.get("name") == ALIAS_NAME:
+                        content = row.get("content", "")
+                        if not content:
+                            return []
+                        return [
+                            addr.strip()
+                            for addr in content.split("\n")
+                            if addr.strip()
+                        ]
         except requests.RequestException as e:
             logger.warning("Impossible de lister les IPs bloquées: %s", e)
         return []
 
     def is_already_blocked(self, ip: str) -> bool:
-        blocked = self.list_blocked()
-        return ip in blocked
+        return ip in self.list_blocked()
+
+    def _import_content(self, content: str) -> bool:
+        try:
+            resp = requests.post(
+                f"{self._base_url}/api/firewall/alias/import",
+                data={
+                    "data[aliases][alias][1][name]": ALIAS_NAME,
+                    "data[aliases][alias][1][type]": "host",
+                    "data[aliases][alias][1][content]": content,
+                },
+                auth=self._auth,
+                verify=self._verify,
+                timeout=5,
+            )
+            if resp.status_code == 200:
+                result = resp.json()
+                return result.get("status") == "ok"
+            return False
+        except requests.RequestException as e:
+            logger.warning("Échec de l'import du contenu: %s", e)
+            return False
 
     def _apply(self) -> bool:
         try:

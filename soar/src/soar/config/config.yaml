@@ -12,7 +12,7 @@ handlers:
   S3: s3_handler
 
 paths:
-  alerts_incoming: "/var/log/nyx/"
+  alerts_incoming: "/tmp/nyx_alerts/"
   alert_schema: "../docs/alert-schema.json"   # ou chemin absolu si le service tourne ailleurs
   fallback_list: "src/soar/cache/fallback_list.yaml"
   database: "data/soar.db"

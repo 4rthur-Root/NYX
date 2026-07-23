@@ -106,5 +106,6 @@ class AlertWatcher:
                     alert = self._parser.parse_file(f)
                     self._seen_ids.add(alert.alert_id)
                     logger.debug("Préchargée: %s (%s)", f.name, alert.alert_id)
+                    self._on_alert(alert)
                 except (AlertValidationError, OSError) as e:
                     logger.debug("Ignoré au préchargement %s: %s", f.name, e)
