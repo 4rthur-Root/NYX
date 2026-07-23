@@ -1,0 +1,7 @@
+watchdog>=4.0
+jsonschema>=4.0
+pyyaml>=6.0
+requests>=2.31
+python-dotenv>=1.0
+pytest>=8.0
+pytest-mock>=3.0
