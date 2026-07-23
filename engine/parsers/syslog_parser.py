@@ -1,4 +1,5 @@
 # parsers/syslog_parser.py
+import json
 import re
 import logging
 from parsers.base_parser import BaseParser
@@ -141,8 +142,11 @@ class SyslogParser(BaseParser):
         # Dispatcher par programme
         if program == "sshd":
             result = self._parse_sshd(message)
-        elif program == "smbd":
-            result = self._parse_smbd(message)
+        elif program in ("smbd", "samba", "samba-audit"):
+            if message.strip().startswith("{"):
+                result = self._parse_samba_json(message)
+            else:
+                result = self._parse_smbd(message)
         elif program in ("apache2", "httpd"):
             result = self._parse_apache(message)
         elif program == "nmbd":
@@ -290,6 +294,45 @@ class SyslogParser(BaseParser):
         if self.debug:
             logger.debug("smbd message non reconnu : %s", msg[:80])
         return None
+
+    def _parse_samba_json(self, msg: str) -> tuple | None:
+        """Parse un log d'audit Samba au format JSON (Samba >= 4.12).
+        
+        Gère les EventIDs 4768 (TGT) et 4769 (TGS) pour la détection
+        d'AS-REP Roasting et Kerberoasting.
+        """
+        try:
+            data = json.loads(msg.strip())
+        except json.JSONDecodeError:
+            if self.debug:
+                logger.debug("Samba JSON invalide : %s", msg[:80])
+            return None
+
+        auth = data.get("Authentication", {})
+        event_id = auth.get("eventId")
+        
+        if event_id == 4768:
+            event_type = "tgt_request"
+        elif event_id == 4769:
+            event_type = "tgs_request"
+        else:
+            return None
+            
+        ip = auth.get("remoteAddress", "")
+        if ip.startswith("ipv4:"):
+            ip = ip[5:]
+        elif ip.startswith("ipv6:"):
+            ip = ip[5:]
+            
+        if ":" in ip and not ip.startswith("["): 
+            ip = ip.rsplit(":", 1)[0]
+            
+        user = auth.get("accountName")
+        spn = auth.get("servicePrincipalName")
+        
+        extra = {"spn": spn} if spn else None
+        
+        return (event_type, ip or None, user or None, 88, extra)
 
     def _parse_apache(self, msg: str) -> tuple | None:
         """Parse un message apache2 (Combined Log Format).
