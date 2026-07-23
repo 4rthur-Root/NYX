@@ -1,17 +1,20 @@
 rule_id: SMB_EXFIL_001
 type: 3
-description: "Exfiltration de données via SMB détectée"
-event_type: smb_exfil
-mitre_tactic: TA001
-mitre_technique: T1041
-source_host_pattern: "debian*"
+description: >
+  Exfiltration SMB — cooccurrence d'un scan réseau et d'un accès Samba
+  depuis la même IP .
+severity: CRITICAL
+mitre_tactic: "TA0010"
+mitre_technique: "T1021.002"
+source_host_pattern: "*"
+
+condition:
+  event_types:
+    - net_scan
+    - samba_read
+  window_seconds: 300
+  group_by: actor_ip
+  min_count_per_type: 1
+
 response:
   alert: true
-
-trigger:
-  severity: CRITICAL
-  treshold: 10
-  windows_seconds: 60
-  group_by:  
-    actor_ip
-    actor_user

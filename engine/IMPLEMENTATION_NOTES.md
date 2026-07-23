@@ -43,7 +43,7 @@ class BaseParser(ABC):
 - Le Dispatcher reçoit un `BaseParser` → il peut recevoir n'importe quel
   parser concret sans modification (Liskov Substitution Principle).
 
-**Ressource** : https://docs.python.org/3/library/abc.html
+**Ressource** : https://docs.python.org/3/library/abc.html 
 
 ---
 

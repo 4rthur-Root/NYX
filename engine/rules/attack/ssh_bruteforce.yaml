@@ -1,6 +1,9 @@
 rule_id: SSH_BRUTEFORCE_001
+type: 1
 description: "Brute-force SSH détectée"
 severity: CRITICAL
+mitre_tactic: "TA0006"
+mitre_technique: "T1110"
 source_host_pattern: "debian*"
 
 trigger:

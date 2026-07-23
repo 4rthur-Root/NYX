@@ -1,5 +1,4 @@
 # Mapping nom de fichier source → type de parser
-# Ajouter une source = ajouter une ligne ici, zéro modification du code
 sources:
   "debian.log":              "syslog"
   "OPNsense.internal.log":   "filterlog"
@@ -20,11 +19,25 @@ db_path:    "engine/engine.db"
 alerts_dir: "/var/log/nyxsoc/alerts"
 alerts_log: "/var/log/nyxsoc/engine.log"
 
+samba_mounts:
+  commun:        "/mnt/samba/commun"
+  direction:     "/mnt/samba/direction"
+  comptabilite:  "/mnt/samba/comptabilite"
+  technique:     "/mnt/samba/technique"
+
 # Canal de communication vers le module SOAR
 soar:
-  channel: "file"               # écriture atomique fichier JSON
+  channel: "file"
   alerts_dir: "/var/log/nyxsoc/alerts"
 
 # Chemins vers les règles de détection
 rules:
   attack: "engine/rules/attack"
+
+# Types d'événements retenus pour les règles 
+event_types: [
+        "ssh_failure", "logon_success", "logon_failure",
+        "samba_read", "samba_write", "smb_failure",
+        "http_request", "net_scan", "firewall_block",
+        "file_create", "process_exec", "net_connect"
+      ]

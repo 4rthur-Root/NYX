@@ -1,1 +1,5 @@
-pyYAML==6.0.2
+pyyaml==6.0.2
+jsonschema==4.23.0
+watchdog==5.0.0
+
+pytest==8.3.2
