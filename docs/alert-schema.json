@@ -85,7 +85,7 @@
               },
               "event_type": {
                 "type": "string",
-                "description": "Type normalisé de l'événement. Ex: ssh_failure, samba_read, file_create, process_exec, net_scan, http_request"
+                "description": "Type normalisé de l'événement. Ex: ssh_failure, samba_read, file_create, process_exec, net_scan, http_request, tgs_request, tgt_request"
               },
               "source_host": {
                 "type": "string",

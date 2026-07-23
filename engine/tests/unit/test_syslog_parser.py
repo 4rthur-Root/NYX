@@ -81,6 +81,31 @@ class TestSamba:
         assert event["event_type"] == "smb_failure"
 
 
+class TestSambaAudit:
+    """Tests pour l'audit JSON d'authentification Samba (Kerberos)."""
+
+    def test_tgt_request_4768(self, parser):
+        line = ('2026-06-19T10:25:00+00:00 srv-pme samba-audit[222]: {"Authentication": '
+                '{"eventId": 4768, "remoteAddress": "ipv4:10.0.1.50:56100", '
+                '"servicePrincipalName": "krbtgt/NYX.TG", "accountName": "employe"}}')
+        event = parser.parse(line)
+        assert event is not None
+        assert event["event_type"] == "tgt_request"
+        assert event["actor_ip"] == "10.0.1.50"
+        assert event["actor_user"] == "employe"
+        assert event["extra"]["spn"] == "krbtgt/NYX.TG"
+
+    def test_tgs_request_4769(self, parser):
+        line = ('2026-06-19T10:25:05+00:00 srv-pme samba-audit[222]: {"Authentication": '
+                '{"eventId": 4769, "remoteAddress": "ipv6:[::1]:56101", '
+                '"servicePrincipalName": "cifs/srv-pme.nyx.tg", "accountName": "employe"}}')
+        event = parser.parse(line)
+        assert event is not None
+        assert event["event_type"] == "tgs_request"
+        assert event["actor_ip"] == "[::1]:56101" # IPv6 parsing simple form
+        assert event["extra"]["spn"] == "cifs/srv-pme.nyx.tg"
+
+
 class TestApache:
     """Tests pour les événements http_request."""
 

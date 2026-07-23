@@ -106,3 +106,28 @@ def test_full_smb_exfil(engine_env):
     assert alert["rule_id"] == "SMB_EXFIL_001"
     assert alert["severity"] == "CRITICAL"
     assert alert["attacker_ip"] == "10.0.1.60"
+
+def test_full_kerberoasting(engine_env):
+    dispatcher, alerts_dir, state = engine_env
+    
+    # Règle KERBEROASTING_001 : 5 tgs_request (4769) en 30s
+    ts = int(time.time()) - 10
+    dt = datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc)
+    ts_str_iso = dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    
+    # 5 TGS requests (4769) pour différents SPN
+    for i in range(5):
+        line = f"{ts_str_iso} debian-server samba-audit[2]: {{\"Authentication\": {{\"eventId\": 4769, \"remoteAddress\": \"ipv4:10.0.1.50:5610{i}\", \"servicePrincipalName\": \"cifs/srv-{i}.nyx.tg\", \"accountName\": \"employe\"}}}}"
+        dispatcher.dispatch(line, "debian.log")
+        
+    # Vérifier l'alerte
+    alert_files = list(alerts_dir.glob("alert_*.json"))
+    assert len(alert_files) == 1
+    
+    with open(alert_files[0]) as f:
+        alert = json.load(f)
+        
+    assert alert["rule_id"] == "KERBEROASTING_001"
+    assert alert["events"]["count"] == 5
+    assert alert["attacker_ip"] == "10.0.1.50"
+

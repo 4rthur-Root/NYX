@@ -25,7 +25,9 @@
         "firewall_block",
         "file_create",
         "process_exec",
-        "net_connect"
+        "net_connect",
+        "tgt_request",
+        "tgs_request"
       ],
       "description": "Taxonomie fermée des types d'événements normalisés par les parsers."
     },

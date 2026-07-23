@@ -1,0 +1,16 @@
+rule_id: ASREP_ROASTING_001
+type: 1
+description: "AS-REP Roasting - Requêtes TGT multiples (sans pré-authentification)"
+severity: CRITICAL
+mitre_tactic: "TA0006"
+mitre_technique: "T1558.004"
+source_host_pattern: "*"
+
+trigger:
+  event_type: tgt_request
+  threshold: 5
+  window_seconds: 30
+  group_by: actor_ip
+
+response:
+  alert: true
