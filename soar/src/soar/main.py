@@ -64,3 +64,7 @@ def _daily_loop(notifier: Notifier):
             notifier.send_daily_summary()
         except Exception:
             logger.exception("Erreur lors de l'envoi du résumé quotidien")
+
+
+if __name__ == "__main__":
+    main()
