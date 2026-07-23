@@ -7,6 +7,7 @@ from typing import Optional
 from soar.config.settings import settings
 from soar.engine import DecisionEngine
 from soar.handlers.handler import HANDLERS
+from soar.logging import AuditLogger, ResponseWriter
 from soar.models.alert import Alert
 from soar.models.decision import Decision
 from soar.models.response import Response
@@ -27,6 +28,8 @@ class AlertOrchestrator:
         self._engine = decision_engine or DecisionEngine()
         self._watch_dir = watch_dir or Path(settings.alerts_incoming)
         self._watcher: Optional[AlertWatcher] = None
+        self._audit_logger = AuditLogger()
+        self._response_writer = ResponseWriter()
 
     def start(self):
         self._watcher = AlertWatcher(
@@ -59,11 +62,13 @@ class AlertOrchestrator:
 
         try:
             response = handler(alert, decision)
-            self._on_response(response)
+            self._on_response(alert, decision, response)
         except Exception:
             logger.exception("Erreur exécution handler pour %s", alert.alert_id)
 
-    def _on_response(self, response: Response):
+    def _on_response(self, alert: Alert, decision: Decision, response: Response):
+        self._audit_logger.log(alert, decision, response)
+        self._response_writer.write(response)
         logger.info(
             "Réponse: alert=%s action=%s status=%s latency=%dms",
             response.alert_id,
