@@ -32,6 +32,7 @@ _VALID_EVENT_TYPES = {
     "samba_read", "samba_write", "smb_failure",
     "http_request", "net_scan", "firewall_block",
     "file_create", "process_exec", "net_connect",
+    "tgt_request", "tgs_request",
 }
 
 
