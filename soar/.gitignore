@@ -29,3 +29,12 @@ htmlcov/
 .DS_Store
 Thumbs.db
 *.swp
+
+
+
+# Docs de développement (step-*)
+docs/step-*.md
+
+# Anciens fichiers de planification
+DCD_module_SOAR*
+planning-developpement-soar.md
