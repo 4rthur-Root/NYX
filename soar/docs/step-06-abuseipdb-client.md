@@ -89,7 +89,7 @@ Pour que le client fonctionne avec la vraie API AbuseIPDB, tu dois :
 2. Générer une clé API
 3. Éditer `soar/.env` :
 ```env
-ABUSEIPDB_API_KEY=ta_cle_ici
+ABUSEIPDB_API_KEY=0c07923665f97d9ee92d4ce5aaf6c44ec34107398d6544945bcc254e35204a9ec7e6e0bc915d3b3a
 ```
 
 ---
