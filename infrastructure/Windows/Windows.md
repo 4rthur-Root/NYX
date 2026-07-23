@@ -2,9 +2,11 @@
 
 ## Description
 
-Machine cliente Windows 10 du lab NYX. Elle fait partie du réseau isolé `10.0.1.0/24` et envoie ses logs au SOC.
+Machine cliente Windows 10 du lab NYX (`NYX-PME`). Elle est membre du domaine `NYX.TG`, fait partie du réseau isolé `10.0.1.0/24` (`10.0.1.30`), et envoie ses logs Sysmon + Security au SOC via NXLog.
 
-Référence vidéo : [How to install Windows 10 in Linux QEMU VM with virtio](https://www.youtube.com/watch?v=WYQFptZfdwE)
+Référence vidéo pour l'installation initiale : [How to install Windows 10 in Linux QEMU VM with virtio](https://www.youtube.com/watch?v=WYQFptZfdwE)
+
+**Principe :** comme pour le SOC et le Server, la VM est créée manuellement (pas de Vagrant), puis pilotée à distance via SSH une fois OpenSSH Server activé. Les scripts PowerShell automatisent le reste.
 
 ---
 
@@ -12,7 +14,7 @@ Référence vidéo : [How to install Windows 10 in Linux QEMU VM with virtio](ht
 
 ### Pré-requis (à télécharger)
 
-- [Windows 10 ISO](https://www.microsoft.com/software-download/windows10) 
+- [Windows 10 ISO](https://www.microsoft.com/software-download/windows10)
 - [VirtIO drivers ISO](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso)
 
 ### 1. Créer la VM
@@ -42,102 +44,164 @@ Une fois Windows installé et la session ouverte :
 3. Cocher tous les composants : **NetKVM**, **Balloon**, **vioserial**, **pvpanic**
 4. Redémarrer
 
-### 4. QEMU Guest Agent
+### 4. Activer OpenSSH Server
 
+Pour piloter la VM à distance comme le reste de la topologie (Server, SOC), activer OpenSSH depuis l'interface graphique (une seule fois, avant d'avoir accès à distance) :
+
+- Paramètres → Applications → Fonctionnalités facultatives → Ajouter une fonctionnalité → **OpenSSH Server**
+
+Ou en PowerShell local :
 ```powershell
-# Dans le gestionnaire de périphériques, mettre à jour le pilote du
-# "PCI simple communications controller" → choisir le dossier
-# virtio-win\vioserial\w10\amd64
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+Start-Service sshd
+Set-Service -Name sshd -StartupType Automatic
 ```
 
-Ou via le MSI (inclus dans l'étape 3 si coché).
+À partir de cette étape, toutes les commandes suivantes s'exécutent depuis l'hôte, via SSH :
+```bash
+ssh dir1@<IP_NAT>
+```
+(l'IP NAT est visible avec `ipconfig` sur l'interface `Ethernet`, réseau `default`/libvirt NAT — sert uniquement à l'administration, jamais utilisée par les VMs pour sortir vers Internet)
 
-### 5. Vérifier le réseau
+⚠️ Le shell par défaut d'une session SSH Windows est `cmd.exe`. Taper `powershell` pour repasser en PowerShell et utiliser les cmdlets ci-dessous.
 
-Vérifier dans les paramètres réseau que les deux interfaces sont reconnues :
-- **Interface 1** — NAT (DHCP, accès internet)
-- **Interface 2** — NYX (`10.0.1.x`, à configurer en statique)
+### 5. Configuration réseau
 
----
+Vérifier les deux interfaces :
+```powershell
+Get-NetAdapter
+ipconfig
+```
 
-## Configuration réseau
+- **Interface NAT** (`Ethernet` généralement) : DHCP, sert uniquement à l'accès SSH admin, jamais de sortie Internet pour les VMs.
+- **Interface NYX** (`Ethernet 2` généralement) : à configurer en statique.
 
-### IP statique sur le réseau NYX
+#### IP statique sur le réseau NYX
 
-1. Panneau de configuration → Centre Réseau et partage → Modifier les paramètres de la carte
-2. Identifier l'interface du réseau `nyx` (celle qui n'a pas internet)
-3. Propriétés → IPv4 → Utiliser l'adresse suivante :
+```powershell
+New-NetIPAddress -InterfaceAlias "Ethernet 2" -IPAddress 10.0.1.30 -PrefixLength 24 -DefaultGateway 10.0.1.1
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ServerAddresses 10.0.1.20
+```
 
-| Champ | Valeur |
-|-------|--------|
-| Adresse IP | `10.0.1.20` |
-| Masque | `255.255.255.0` |
-| Passerelle | `10.0.1.1` |
-| DNS | `8.8.8.8` |
+⚠️ **Point de vigilance** : si les deux interfaces ont la même métrique (`InterfaceMetric`), Windows peut choisir arbitrairement quel DNS interroger en premier, ce qui casse la résolution du domaine même si la config est correcte. Vérifier et forcer si besoin :
+```powershell
+Get-NetIPInterface -InterfaceAlias "Ethernet", "Ethernet 2" | Select InterfaceAlias, InterfaceMetric
+Set-NetIPInterface -InterfaceAlias "Ethernet 2" -InterfaceMetric 10
+Set-NetIPInterface -InterfaceAlias "Ethernet" -InterfaceMetric 100
+```
 
-### Vérification
+#### Vérification
 
 ```powershell
 ipconfig
-# Doit montrer 10.0.1.20/24
+# Ethernet 2 doit montrer 10.0.1.30/24
 
 ping 10.0.1.1
 # Doit répondre (OPNsense)
 
-ping 10.0.1.10
-# Doit répondre (SOC)
+nslookup srv-pme.nyx.tg
+# Doit résoudre via 10.0.1.20 (Samba AD DNS), pas via un DNS public
+```
+
+### 6. Renommer la machine (optionnel mais recommandé)
+
+Le nom par défaut (`DESKTOP-XXXXXXX`) doit être changé avant le join du domaine :
+```powershell
+Rename-Computer -NewName "NYX-PME" -Restart
+```
+Reconnecte-toi ensuite via SSH sur l'IP NAT (inchangée).
+
+### 7. Rejoindre le domaine NYX.TG
+
+Le DNS doit déjà pointer vers `10.0.1.20` (étape 5) pour que la résolution du domaine fonctionne.
+
+En session SSH (pas de fenêtre graphique disponible), construire le credential en ligne de commande plutôt que `Get-Credential` (qui ouvre une popup graphique incompatible avec SSH) :
+```powershell
+$securePass = ConvertTo-SecureString "AdminNyx2026!" -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ("NYX\administrator", $securePass)
+Add-Computer -DomainName "NYX.TG" -Credential $cred -Restart
+```
+
+Après redémarrage, reconnecte-toi en SSH et vérifie :
+```powershell
+Get-ComputerInfo | Select CsDomain, CsDomainRole
+# CsDomain doit être NYX.TG, CsDomainRole doit être MemberWorkstation
+```
+
+Teste également la connexion avec un compte de domaine (ex. `compta1`, `tech1`) via l'écran de login Windows (**Other user** → `NYX\compta1`) pour confirmer que l'authentification AD fonctionne réellement sur ce poste.
+
+---
+
+## Sysmon
+
+Le fichier [`sysmonconfig-nyxsoc.xml`](sysmonconfig-nyxsoc.xml) est une version filtrée de la configuration [SwiftOnSecurity/sysmon-config](https://github.com/SwiftOnSecurity/sysmon-config), réduite à 4 Event IDs pertinents pour le moteur de corrélation NyxSOC :
+
+| Event ID | Nom | Usage détection |
+|----------|-----|------------------|
+| 1 | ProcessCreate | Création de processus (exécution suspecte, chaînes d'attaque) |
+| 2 | FileCreateTime | Modification d'horodatage (timestomping, anti-forensique) |
+| 3 | NetworkConnect | Connexions réseau sortantes (C2, exfiltration) |
+| 11 | FileCreate | Création de fichier (dépôt de payload) |
+
+### Installation
+D' abord créer le répertoire *NyxSOC/Sysmon* sur windows et lancer . ***(user = dir1)***
+```bash
+scp Windows/sysmonconfig-nyxsoc.xml user@192.168.122.160:'C:\NyxSOC\Sysmon\'
+scp Windows/sysmon_install.ps1 user@192.168.122.160:'C:\NyxSOC\Sysmon\'
+ssh user@192.168.122.160 'powershell -ExecutionPolicy Bypass -File C:\NyxSOC\Sysmon\sysmon_install.ps1'
+```
+
+Le script :
+- Télécharge Sysmon64 depuis Sysinternals si absent
+- Installe le service avec la config filtrée
+- Vérifie que le service tourne et que des événements sont journalisés
+
+### Vérification manuelle
+
+```powershell
+Get-Service Sysmon64
+Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10
 ```
 
 ---
 
-## Envoi des logs vers le SOC
+## NXLog CE — envoi des logs vers le SOC
 
-### Avec nxlog (recommandé)
+Le fichier [`nxlog.conf`](nxlog.conf) collecte :
+- Le journal **Sysmon/Operational** (Event IDs 1, 2, 3, 11, déjà filtrés en amont)
+- Le journal **Security** (Event IDs 4624, 4625, 4768, 4769 — authentification, cohérent avec Samba AD DC)
 
-1. Télécharger et installer [nxlog Community Edition](https://nxlog.co/products/nxlog-community-edition/download)
-2. Configurer `/Program Files/nxlog/conf/nxlog.conf` :
+Et les forward en **Syslog RFC 5424** vers `10.0.1.10:514` (UDP).
 
-```
-define ROOT C:\Program Files\nxlog
-define HOSTNAME Windows10
+### Installation
 
-Modulename im_msvistalog
-    <Query>
-        <XmlQuery>
-            SELECT * FROM System
-        </XmlQuery>
-    </Query>
+Télécharger le .msi depuis [](https://nxlog.co/downloads/nxlog-ce#nxlog-community-edition)
 
-<Output out>
-    Module om_udp
-    Host 10.0.1.10
-    Port 514
-    OutputType Syslog_RFC3164
-</Output>
-
-<Route r>
-    Path => out
-</Route>
+```bash
+scp ~/Downloads/nxlog-ce-3.2.2329.msi dir1@192.168.122.160:'C:\NyxSOC\NXLog\nxlog-ce.msi'
+scp Windows/nxlog.conf dir1@192.168.122.160:'C:\NyxSOC\NXLog\'
+scp Windows/nxlog_install.ps1 dir1@192.168.122.160:'C:\NyxSOC\NXLog\'
+ssh dir1@192.168.122.160 'powershell -ExecutionPolicy Bypass -File C:\NyxSOC\NXLog\nxlog_install.ps1'
 ```
 
-3. Redémarrer le service nxlog :
-
-```powershell
-Restart-Service nxlog
-```
+⚠️ Vérifier la version la plus récente de NXLog CE sur [nxlog.co](https://nxlog.co/products/nxlog-community-edition/download) avant exécution — l'URL de téléchargement dans `nxlog_install.ps1` doit être mise à jour périodiquement.
 
 ### Vérifier sur le SOC
 
 ```bash
-sudo tail -f /var/log/remote/Windows10.log
+sudo tail -f /var/log/remote/NYX-PME.log
 ```
 
 ---
 
 ## Scripts
 
-| Script | Rôle |
-|--------|------|
+| Fichier | Rôle |
+|---------|------|
 | `windows_installation.sh` | Crée la VM Windows 10 via virt-install |
+| `sysmonconfig-nyxsoc.xml` | Config Sysmon filtrée (Event IDs 1, 2, 3, 11) |
+| `sysmon_install.ps1` | Installe et configure Sysmon |
+| `nxlog.conf` | Config NXLog (RFC 5424, forward vers le SOC) |
+| `nxlog_install.ps1` | Installe et configure NXLog CE |
 
-Note : l'installation de Windows elle-même reste manuelle (clic dans le VNC). Les scripts automatisent la création de la VM et l'attachement des ISOs.
+Note : l'installation de Windows elle-même reste manuelle (clic dans le VNC/virt-viewer). Tout le reste (réseau, join domaine, Sysmon, NXLog) est piloté à distance via SSH.
