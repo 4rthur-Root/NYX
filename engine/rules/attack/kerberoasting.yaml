@@ -1,0 +1,16 @@
+rule_id: KERBEROASTING_001
+type: 1
+description: "Kerberoasting - Requêtes TGS multiples et anormales"
+severity: CRITICAL
+mitre_tactic: "TA0006"
+mitre_technique: "T1558.003"
+source_host_pattern: "*"
+
+trigger:
+  event_type: tgs_request
+  threshold: 5
+  window_seconds: 30
+  group_by: actor_ip
+
+response:
+  alert: true
