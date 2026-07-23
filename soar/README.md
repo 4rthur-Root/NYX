@@ -73,13 +73,28 @@ PYTHONPATH=src .venv/bin/python -m soar.main
 Déposer une alerte dans `/tmp/nyx_alerts/` :
 
 ```bash
-# Écriture atomique : .tmp → .json
 mv alert.json.tmp /tmp/nyx_alerts/alert.json
 ```
 
 Arrêt propre : `Ctrl+C` ou `kill <pid>`.
 
 ---
+
+## Structure
+
+| Couche | Dossier |
+|--------|---------|
+| Entry point | `src/soar/main.py` |
+| Orchestrateur | `src/soar/orchestrator/` |
+| Moteur de décision | `src/soar/engine/` |
+| Parsing alerte | `src/soar/parser/` |
+| Surveillant fichier | `src/soar/watcher/` |
+| Intégrations | `src/soar/integrations/` (OPNsense, AbuseIPDB) |
+| Handlers | `src/soar/handlers/` (block_ip, notify, ignore) |
+| Persistance | `src/soar/db/` + `src/soar/repositories/` |
+| Logging | `src/soar/logging/` |
+| Notifications | `src/soar/notifications/` (Telegram, SMTP) |
+| Config | `src/soar/config/` |
 
 ## Configuration
 
@@ -100,17 +115,6 @@ Arrêt propre : `Ctrl+C` ou `kill <pid>`.
 | `SMTP_PASSWORD` | ❌ | — | Mot de passe SMTP |
 | `NOTIFY_EMAIL` | ❌ | — | Destinataire des notifications |
 
-### `config/config.yaml`
-
-| Clé | Défaut | Description |
-|-----|--------|-------------|
-| `soar.severity_threshold` | `CRITICAL` | Seuil minimal de sévérité |
-| `soar.response_timeout_s` | `5` | Timeout des handlers (secondes) |
-| `soar.abuseipdb_score_threshold` | `50` | Score AbuseIPDB min pour `block_ip` |
-| `paths.alerts_incoming` | `/tmp/nyx_alerts/` | Dossier surveillé par le watcher |
-
----
-
 ## Structure du projet
 
 ```
@@ -121,24 +125,24 @@ soar/
 │   │   ├── settings.py          # Chargement .env + config.yaml
 │   │   └── config.yaml          # Configuration SOAR
 │   ├── models/
-│   │   ├── alert.py             # Dataclass Alert
-│   │   ├── decision.py          # Dataclass Decision
-│   │   └── response.py          # Dataclass Response
+│   │   ├── alert.py
+│   │   ├── decision.py
+│   │   └── response.py
 │   ├── parser/
-│   │   └── alert_parser.py      # Validation JSON Schema → Alert
+│   │   └── alert_parser.py
 │   ├── watcher/
-│   │   └── alert_watcher.py     # Watchdog inotify, dedup, preload
+│   │   └── alert_watcher.py
 │   ├── engine/
-│   │   ├── decision_engine.py   # Logique de décision
-│   │   └── rules.py             # Playbook + whitelist
+│   │   ├── decision_engine.py
+│   │   └── rules.py
 │   ├── handlers/
-│   │   └── handler.py           # block_ip, notify, ignore
+│   │   └── handler.py
 │   ├── integrations/
-│   │   ├── opnsense_client.py   # API OPNsense (import/searchItem)
-│   │   ├── abuseipdb_client.py  # API AbuseIPDB + circuit breaker
-│   │   └── base.py              # Base API client (retry)
+│   │   ├── opnsense_client.py
+│   │   ├── abuseipdb_client.py
+│   │   └── base.py
 │   ├── db/
-│   │   ├── connection.py        # SQLite connection manager
+│   │   ├── connection.py
 │   │   ├── schema.sql
 │   │   └── migrations/
 │   ├── repositories/
@@ -146,16 +150,13 @@ soar/
 │   │   ├── response_repository.py
 │   │   └── audit_repository.py
 │   ├── logging/
-│   │   ├── soar_log.py          # Logging standard avec rotation
-│   │   ├── audit_logger.py      # Audit JSONL + SQLite
-│   │   └── response_writer.py   # Persistance des réponses
+│   │   ├── soar_log.py
+│   │   ├── audit_logger.py
+│   │   └── response_writer.py
 │   └── notifications/
-│       └── notifier.py          # Telegram + SMTP + daily summary
+│       └── notifier.py
 ├── tests/
-│   ├── unit/          (16 fichiers, ~110 tests)
-│   └── integration/   (1 fichier, test OPNsense mocké)
-├── docs/              # Documentation par étape (step-01 à step-14)
-├── scripts/           # rotate_logs, generate_report, cleanup_rules
+├── scripts/
 ├── .env.example
 ├── pyproject.toml
 └── requirements.txt
@@ -199,30 +200,3 @@ cd ~/NYX/soar
 .venv/bin/python -m pytest -v
 # 111 tests, ~27s
 ```
-
-Tests unitaires : engine, parser, watcher, handlers, repositories, logging, notifier, cache.
-Tests intégration : client OPNsense (mocké).
-
----
-
-## Documentation
-
-Chaque étape du développement est documentée dans `soar/docs/` :
-
-| Doc | Sujet |
-|-----|-------|
-| `step-00` | Environnement |
-| `step-01` | Modèles de données |
-| `step-02` | Configuration |
-| `step-03` | Parser |
-| `step-04` | Watcher |
-| `step-05` | Cache IP |
-| `step-06` | Client AbuseIPDB |
-| `step-07` | Client OPNsense |
-| `step-08` | Decision Engine |
-| `step-09` | Handlers |
-| `step-10` | Orchestrateur |
-| `step-11` | Base de données |
-| `step-12` | Logging |
-| `step-13` | Notifications |
-| `step-14` | Point d'entrée |
