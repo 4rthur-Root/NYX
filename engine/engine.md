@@ -188,6 +188,11 @@ documentée H-E3.
 
 **Bibliothèques** : `watchdog`, `queue`, `threading`
 
+### Scénario 6 : Kerberoasting / AS-REP Roasting sur Samba AD
+Un attaquant cible le contrôleur de domaine (Samba AD) pour extraire des tickets de service (TGS) ou des tickets TGT exploitables hors ligne.
+* **Critère :** Génération rapide de multiples événements `tgs_request` ou `tgt_request` pour des SPNs distincts depuis la même IP source.
+* **Corrélation :** Seuil simple dans une fenêtre courte.
+
 ---
 
 ### 4.3 dispatcher.py + validator.py
@@ -309,6 +314,8 @@ savoir quel parser concret est derrière.
 | `file_create` | Windows | Sysmon EventID 11 |
 | `process_exec` | Windows | Sysmon EventID 1 |
 | `net_connect` | Windows | Sysmon EventID 3 |
+| `tgt_request` | Debian | Auth Samba TGT EventID 4768 |
+| `tgs_request` | Debian | Auth Samba TGS EventID 4769 |
 
 #### Principes communs
 
