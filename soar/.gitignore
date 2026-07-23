@@ -10,3 +10,21 @@ logs/*.log
 reports/*.csv
 reports/*.pdf
 reports/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Environnement
+.env
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
