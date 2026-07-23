@@ -1,0 +1,90 @@
+<!--
+  sysmonconfig-nyxsoc.xml
+  Configuration Sysmon filtrée pour le laboratoire NyxSOC.
+
+  Dérivée de : SwiftOnSecurity/sysmon-config (version 74, 2021-07-08)
+  https://github.com/SwiftOnSecurity/sysmon-config
+  Licence : Creative Commons Attribution 4.0
+
+  Portée volontairement réduite à 4 Event IDs pour le périmètre du
+  moteur de corrélation NyxSOC :
+    - Event ID 1  : ProcessCreate      (création de processus)
+    - Event ID 2  : FileCreateTime     (modification d'horodatage de fichier)
+    - Event ID 3  : NetworkConnect     (connexion réseau sortante)
+    - Event ID 11 : FileCreate         (création de fichier)
+
+  Tous les autres types d'événements Sysmon (DNS, registre, WMI, pipes,
+  clipboard, chargement d'image, etc.) sont désactivés : en l'absence
+  de RuleGroup pour un événement, Sysmon ne le journalise pas.
+
+  REQUIS : Sysmon version 13 ou supérieure.
+-->
+
+<Sysmon schemaversion="4.50">
+	<HashAlgorithms>md5,sha256,IMPHASH</HashAlgorithms>
+	<CheckRevocation/>
+
+	<EventFiltering>
+
+	<!-- ============================================================ -->
+	<!-- EVENT ID 1 : PROCESS CREATION [ProcessCreate]                 -->
+	<!-- ============================================================ -->
+	<!-- DATA: UtcTime, ProcessGuid, ProcessID, Image, FileVersion,
+	     Description, Product, Company, CommandLine, CurrentDirectory,
+	     User, LogonGuid, LogonId, TerminalSessionId, IntegrityLevel,
+	     Hashes, ParentProcessGuid, ParentProcessId, ParentImage,
+	     ParentCommandLine, RuleName -->
+	<RuleGroup name="" groupRelation="or">
+		<ProcessCreate onmatch="exclude">
+			<!-- Exclusions minimales : bruit Windows non pertinent pour la détection -->
+			<Image condition="is">C:\Windows\system32\conhost.exe</Image> <!-- Windows: hôte console, très bruyant -->
+			<Image condition="is">C:\Windows\system32\audiodg.exe</Image> <!-- Windows: lancé en continu -->
+			<CommandLine condition="begin with">C:\Windows\system32\wbem\wmiprvse.exe -Embedding</CommandLine> <!-- WMI provider host -->
+		</ProcessCreate>
+	</RuleGroup>
+
+	<!-- ============================================================ -->
+	<!-- EVENT ID 2 : FILE CREATION TIME CHANGED [FileCreateTime]      -->
+	<!-- ============================================================ -->
+	<!-- DATA: RuleName, UtcTime, ProcessGuid, ProcessId, Image,
+	     TargetFilename, CreationUtcTime, PreviousCreationUtcTime -->
+	<!-- COMMENT: Souvent utilisé par des malwares pour antidater un
+	     fichier (timestomping) et échapper à une analyse forensique
+	     chronologique. Signal à forte valeur, peu bruyant. -->
+	<RuleGroup name="" groupRelation="or">
+		<FileCreateTime onmatch="exclude">
+		</FileCreateTime>
+	</RuleGroup>
+
+	<!-- ============================================================ -->
+	<!-- EVENT ID 3 : NETWORK CONNECTION [NetworkConnect]              -->
+	<!-- ============================================================ -->
+	<!-- DATA: UtcTime, ProcessGuid, ProcessId, Image, User, Protocol,
+	     Initiated, SourceIsIpv6, SourceIp, SourceHostname, SourcePort,
+	     SourcePortName, DestinationIsIpv6, DestinationIp,
+	     DestinationHostname, DestinationPort, DestinationPortName -->
+	<RuleGroup name="" groupRelation="or">
+		<NetworkConnect onmatch="exclude">
+			<!-- Exclusion du loopback local, sans intérêt pour la détection réseau -->
+			<DestinationIp condition="is">127.0.0.1</DestinationIp>
+		</NetworkConnect>
+	</RuleGroup>
+
+	<!-- ============================================================ -->
+	<!-- EVENT ID 11 : FILE CREATE [FileCreate]                        -->
+	<!-- ============================================================ -->
+	<!-- DATA: RuleName, UtcTime, ProcessGuid, ProcessId, Image,
+	     TargetFilename, CreationUtcTime -->
+	<!-- COMMENT: Capture la création/écrasement de fichiers. Utile
+	     pour détecter des dépôts de payloads, scripts, ou exfiltration
+	     préparée dans des dossiers sensibles. -->
+	<RuleGroup name="" groupRelation="or">
+		<FileCreate onmatch="exclude">
+			<!-- Exclusions minimales : caches et fichiers temporaires très bruyants -->
+			<TargetFilename condition="contains">\AppData\Local\Temp\</TargetFilename>
+			<TargetFilename condition="contains">\AppData\Local\Microsoft\Windows\INetCache\</TargetFilename>
+		</FileCreate>
+	</RuleGroup>
+
+	</EventFiltering>
+</Sysmon>
