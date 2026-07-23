@@ -1,0 +1,12 @@
+# Base SQLite et fichiers annexes du mode WAL
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Logs applicatifs et d'audit
+logs/*.log
+
+# Rapports générés
+reports/*.csv
+reports/*.pdf
+reports/*.json

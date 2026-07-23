@@ -1,0 +1,24 @@
+soar:
+  severity_threshold: "CRITICAL"
+  response_timeout_s: 5
+  abuseipdb_score_threshold: 50
+  abuseipdb_circuit_breaker_cooldown_s: 300
+  rule_ttl_hours: 48
+
+handlers:
+  # Mapping rule_id -> handler, piloté par config plutôt qu'en dur dans le code
+  S1: ssh_handler
+  S2: smb_handler
+  S3: s3_handler
+
+paths:
+  alerts_incoming: "/var/log/nyx/"
+  alert_schema: "../docs/alert-schema.json"   # ou chemin absolu si le service tourne ailleurs
+  fallback_list: "src/soar/cache/fallback_list.yaml"
+  database: "data/soar.db"
+
+logging:
+  soar_log_path: "logs/soar.log"
+  audit_log_path: "logs/audit.log"
+  rotation_max_bytes: 5000000
+  rotation_backup_count: 5
