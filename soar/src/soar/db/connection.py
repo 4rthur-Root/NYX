@@ -18,7 +18,7 @@ def get_connection() -> sqlite3.Connection:
     if _connection is None:
         db_path = settings.database_path
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        _connection = sqlite3.connect(str(db_path))
+        _connection = sqlite3.connect(str(db_path), check_same_thread=False)
         _connection.row_factory = sqlite3.Row
         _connection.execute("PRAGMA journal_mode=WAL")
         _connection.execute("PRAGMA foreign_keys=ON")
