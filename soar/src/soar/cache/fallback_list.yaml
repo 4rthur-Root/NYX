@@ -1,0 +1,7 @@
+# AbuseIPDB Fallback List
+# IPs connues comme malveillantes, utilisées en dernier recours
+# quand l'API AbuseIPDB est injoignable.
+known_ips:
+  - ip: "10.0.1.50"
+    score: 100
+    reason: "Kali Linux — machine d'attaque du lab"
