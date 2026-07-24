@@ -6,6 +6,9 @@
 <div class="page-header">
     <h1>Métriques</h1>
     <p class="subtitle">Indicateurs de performance du Mini-SOC</p>
+    {% if not stats.total_alerts %}
+    <p class="subtitle" style="color: var(--accent-yellow);">Mode démo — Données mockées</p>
+    {% endif %}
 </div>
 
 <div class="stats-grid">

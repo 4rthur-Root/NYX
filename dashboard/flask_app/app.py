@@ -37,7 +37,15 @@ def create_app() -> Flask:
 
     @app.route("/health")
     def health():
-        return {"status": "ok"}
+        from pathlib import Path
+        soar_db = Path(app.config["SOAR_DB_PATH"])
+        engine_db = Path(app.config["ENGINE_DB_PATH"])
+        return {
+            "status": "ok",
+            "soar_db": str(soar_db) if soar_db.exists() else "missing",
+            "engine_db": str(engine_db) if engine_db.exists() else "missing",
+            "mock_mode": app.config.get("MOCK_MODE", False),
+        }
 
     return app
 
