@@ -10,8 +10,8 @@
   "panels": [
     {
       "datasource": {
-        "type": "sqlite",
-        "uid": "NyxSOC-SQLite"
+        "type": "frser-sqlite-datasource",
+        "uid": "P2C96C82D4FD9A41B"
       },
       "fieldConfig": {
         "defaults": {
@@ -45,7 +45,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": ""
         },
         "text": {},
@@ -55,11 +57,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "sqlite",
-            "uid": "NyxSOC-SQLite"
+            "type": "frser-sqlite-datasource",
+            "uid": "P2C96C82D4FD9A41B"
           },
           "format": "table",
-          "rawSql": "SELECT COUNT(*) as value FROM alerts"
+          "rawSql": "SELECT COUNT(*) FROM alerts"
         }
       ],
       "title": "Total alertes",
@@ -67,8 +69,8 @@
     },
     {
       "datasource": {
-        "type": "sqlite",
-        "uid": "NyxSOC-SQLite"
+        "type": "frser-sqlite-datasource",
+        "uid": "P2C96C82D4FD9A41B"
       },
       "fieldConfig": {
         "defaults": {
@@ -102,7 +104,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": ""
         },
         "text": {},
@@ -112,20 +116,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "sqlite",
-            "uid": "NyxSOC-SQLite"
+            "type": "frser-sqlite-datasource",
+            "uid": "P2C96C82D4FD9A41B"
           },
           "format": "table",
-          "rawSql": "SELECT ROUND(100.0 * SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) / COUNT(*), 1) as value FROM responses"
+          "rawSql": "SELECT CAST(SUM(CASE WHEN status = \"success\" THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS INTEGER) FROM responses"
         }
       ],
-      "title": "Taux de succès OPNsense",
+      "title": "Taux de succ\u00e8s OPNsense",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "sqlite",
-        "uid": "NyxSOC-SQLite"
+        "type": "frser-sqlite-datasource",
+        "uid": "P2C96C82D4FD9A41B"
       },
       "fieldConfig": {
         "defaults": {
@@ -154,20 +158,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "sqlite",
-            "uid": "NyxSOC-SQLite"
+            "type": "frser-sqlite-datasource",
+            "uid": "P2C96C82D4FD9A41B"
           },
           "format": "table",
-          "rawSql": "SELECT severity as 'Severity', COUNT(*) as 'Count' FROM alerts GROUP BY severity"
+          "rawSql": "SELECT severity, COUNT(*) FROM alerts GROUP BY severity"
         }
       ],
-      "title": "Alertes par sévérité",
+      "title": "Alertes par s\u00e9v\u00e9rit\u00e9",
       "type": "piechart"
     },
     {
       "datasource": {
-        "type": "sqlite",
-        "uid": "NyxSOC-SQLite"
+        "type": "frser-sqlite-datasource",
+        "uid": "P2C96C82D4FD9A41B"
       },
       "fieldConfig": {
         "defaults": {
@@ -195,20 +199,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "sqlite",
-            "uid": "NyxSOC-SQLite"
+            "type": "frser-sqlite-datasource",
+            "uid": "P2C96C82D4FD9A41B"
           },
           "format": "table",
-          "rawSql": "SELECT a.rule_id as 'Scenario', AVG(r.latency_ms) as 'Avg Latency (ms)' FROM responses r JOIN alerts a ON a.alert_id = r.alert_id GROUP BY a.rule_id"
+          "rawSql": "SELECT a.rule_id, AVG(r.latency_ms) FROM responses r JOIN alerts a ON a.alert_id = r.alert_id GROUP BY a.rule_id"
         }
       ],
-      "title": "Latence par scénario",
+      "title": "Latence par sc\u00e9nario",
       "type": "barchart"
     },
     {
       "datasource": {
-        "type": "sqlite",
-        "uid": "NyxSOC-SQLite"
+        "type": "frser-sqlite-datasource",
+        "uid": "P2C96C82D4FD9A41B"
       },
       "fieldConfig": {
         "defaults": {
@@ -242,21 +246,24 @@
       "targets": [
         {
           "datasource": {
-            "type": "sqlite",
-            "uid": "NyxSOC-SQLite"
+            "type": "frser-sqlite-datasource",
+            "uid": "P2C96C82D4FD9A41B"
           },
           "format": "table",
-          "rawSql": "SELECT a.rule_id as 'Règle', a.severity as 'Sévérité', a.attacker_ip as 'IP attaquant', a.target_host as 'Cible', datetime(a.timestamp / 1000, 'unixepoch') as 'Timestamp' FROM alerts a ORDER BY a.timestamp DESC LIMIT 50"
+          "rawSql": "SELECT rule_id, severity, attacker_ip, target_host, datetime(timestamp / 1000, \"unixepoch\") as ts FROM alerts ORDER BY timestamp DESC LIMIT 50"
         }
       ],
-      "title": "Dernières alertes",
+      "title": "Derni\u00e8res alertes",
       "type": "table"
     }
   ],
   "refresh": "30s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["nyxsoc", "soc"],
+  "tags": [
+    "nyxsoc",
+    "soc"
+  ],
   "templating": {
     "list": []
   },
