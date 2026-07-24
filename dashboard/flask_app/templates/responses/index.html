@@ -7,7 +7,86 @@
     <h1>Réponses SOAR</h1>
     <p class="subtitle">Actions automatisées du module de réponse</p>
 </div>
-<div class="card">
-    <p>Aucune réponse pour le moment. Le module SOAR n'est pas encore connecté.</p>
+
+<script src="{{ url_for('static', filename='js/responses.js') }}"></script>
+
+<div class="filters">
+    <form method="get" action="{{ url_for('responses.responses_index') }}">
+        <div class="filter-group">
+            <label>Action</label>
+            <select name="action">
+                <option value="">Toutes</option>
+                <option value="block_ip" {{ 'selected' if filters.action == 'block_ip' }}>block_ip</option>
+                <option value="notify" {{ 'selected' if filters.action == 'notify' }}>notify</option>
+                <option value="none" {{ 'selected' if filters.action == 'none' }}>none</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Statut</label>
+            <select name="status">
+                <option value="">Tous</option>
+                <option value="success" {{ 'selected' if filters.status == 'success' }}>success</option>
+                <option value="error" {{ 'selected' if filters.status == 'error' }}>error</option>
+                <option value="skipped" {{ 'selected' if filters.status == 'skipped' }}>skipped</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+    </form>
 </div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Response ID</th>
+                <th>Alert ID</th>
+                <th>Action</th>
+                <th>Statut</th>
+                <th>Score AbuseIPDB</th>
+                <th>OPNsense</th>
+                <th>Latence</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if responses %}
+                {% for resp in responses %}
+                <tr>
+                    <td><code>{{ resp.response_id }}</code></td>
+                    <td><code>{{ resp.alert_id }}</code></td>
+                    <td>{{ resp.action }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'green' if resp.status == 'success' else 'red' if resp.status == 'error' else 'yellow' }}">
+                            {{ resp.status }}
+                        </span>
+                    </td>
+                    <td>{{ resp.abuseipdb_score if resp.abuseipdb_score is not none else '—' }}</td>
+                    <td>
+                        {% if resp.api_status_code %}
+                            <span class="badge badge-{{ 'green' if resp.api_status_code == 200 else 'red' }}">
+                                {{ resp.api_status_code }}
+                            </span>
+                        {% else %}
+                            <span class="badge">—</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ resp.latency_ms }} ms</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">Aucune réponse trouvée.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% for p in range(1, total_pages + 1) %}
+        <a href="?page={{ p }}&action={{ filters.action }}&status={{ filters.status }}"
+           class="page-link {{ 'active' if p == page }}">{{ p }}</a>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

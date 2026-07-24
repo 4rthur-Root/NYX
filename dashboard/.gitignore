@@ -31,5 +31,4 @@ Thumbs.db
 *.sublime-workspace
 
 # Données générées
-mock_data/mock_engine.db
 data/
