@@ -1,8 +1,8 @@
-# Mapping nom de fichier source → type de parser
 sources:
-  "debian.log":              "syslog"
+  "srv-pme.log":             "syslog"
+  "localhost.log":           "syslog"
   "OPNsense.internal.log":   "filterlog"
-  "DESKTOP-PME.log":         "windows"
+  "NYX-PME.nyx.tg.log":      "windows"
 
 # Rétention des données SQLite
 retention:
