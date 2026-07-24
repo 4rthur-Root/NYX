@@ -1,8 +1,11 @@
 services:
   flask:
     build:
-      context: ./flask_app
-      dockerfile: ../docker/flask.Dockerfile
+      context: .
+      dockerfile: ./docker/flask.Dockerfile
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "5000:5000"
     volumes:
@@ -20,6 +23,9 @@ services:
 
   grafana:
     image: grafana/grafana:11.3.0
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "3000:3000"
     volumes:
