@@ -2,7 +2,7 @@
 
 ## Contexte
 
-- **Moteur de corrélation** (Gaël) : produit des alertes → les écrit dans `/var/log/nyx/`
+- **Moteur de corrélation** (Gaël) : produit des alertes → les écrit dans `/var/log/nyxsoc/alerts/`
 - **Module SOAR** (Fiodor) : lit les alertes, décide d'une action, exécute (blocage OPNsense, notification)
 
 Les deux modules sont **indépendants** : pas de code partagé, pas de base commune, pas d'appel direct. La communication se fait uniquement par fichiers JSON.
@@ -15,7 +15,7 @@ Les deux modules sont **indépendants** : pas de code partagé, pas de base comm
 
 | Règle | Détail |
 |-------|--------|
-| Dossier | `/var/log/nyx/` |
+| Dossier | `/var/log/nyxsoc/alerts/` |
 | Format | JSON strict conforme à `docs/alert-schema.json` |
 | Extension | `.json` |
 | Écriture atomique | Écrire dans `alert-xxx.json.tmp` → **`rename()`** → `alert-xxx.json` |
@@ -34,7 +34,6 @@ Les deux modules sont **indépendants** : pas de code partagé, pas de base comm
   "target_ip": "10.0.1.20",
   "mitre_tactic": "TA0006",
   "mitre_technique": "T1110",
-  "events_count": 5,
   "events": {
     "count": 5,
     "details": [
@@ -52,7 +51,7 @@ Les deux modules sont **indépendants** : pas de code partagé, pas de base comm
 ### 2. Lecture et réponse (par le SOAR)
 
 Le SOAR :
-1. Surveille `/var/log/nyx/` avec `watchdog`
+1. Surveille `/var/log/nyxsoc/alerts/` avec `watchdog`
 2. Valide chaque nouveau `.json` contre `alert-schema.json`
 3. Passe l'alerte dans le moteur de décision (sévérité, whitelist, playbook, enrichissement AbuseIPDB)
 4. Exécute l'action (blocage OPNsense via API, notification)
@@ -89,8 +88,8 @@ cp .env.example .env
 # → Remplir avec les vraies clés fournies
 
 # 4. Dossier d'alertes
-sudo mkdir -p /var/log/nyx/
-sudo chown $(whoami): /var/log/nyx/
+sudo mkdir -p /var/log/nyxsoc/alerts/
+sudo chown $(whoami): /var/log/nyxsoc/alerts/
 
 # 5. Lancer les tests
 pytest
@@ -104,7 +103,7 @@ python -m soar.main
 ## Règles d'or
 
 1. **Écriture atomique obligatoire** : `.tmp` → `rename()` → `.json`. Si le SOAR voit un `.tmp`, il l'ignore.
-2. **Jamais de suppression** : le moteur ne doit pas nettoyer les fichiers dans `/var/log/nyx/`. Le SOAR non plus.
+2. **Jamais de suppression** : le moteur ne doit pas nettoyer les fichiers dans `/var/log/nyxsoc/alerts/`. Le SOAR non plus.
 3. **Schéma strict** : une alerte non conforme au schéma est rejetée silencieusement (log warning).
 4. **`alert_id` unique** : un UUID string. Le SOAR déduplique par `alert_id`.
 5. **Le moteur n'a pas besoin de connaître le SOAR** : pas d'appel API, pas de callback. C'est une architecture orientée fichiers.
@@ -114,7 +113,7 @@ python -m soar.main
 ## Architecture
 
 ```
-/var/log/nyx/
+/var/log/nyxsoc/alerts/
 ├── alert-001.json  ← écrit par le moteur (rename atomique)
 ├── alert-002.json
 └── ...
@@ -127,7 +126,7 @@ Moteur (Gaël)                    SOAR (Fiodor)
     │                                 ├── exécute (block / notify)
     │                                 └── persist (SQLite + JSONL audit)
     │
-    └── /var/log/nyx/  ←─── lecture seule ───┘
+    └── /var/log/nyxsoc/alerts/  ←─── lecture seule ───┘
 ```
 
 ---

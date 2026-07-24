@@ -9,7 +9,7 @@
 
 ## 1. Configuration
 
-Copier `.env.template` vers `.env` et renseigner :
+Copier `.env.example` vers `.env` et renseigner :
 
 ```bash
 OPNSENSE_API_URL=https://<ip-opnsense>
@@ -25,14 +25,14 @@ cd /home/fiodor/NYX/soar
 PYTHONPATH=src .venv/bin/python -m soar.main
 ```
 
-Le SOAR écoute les fichiers JSON déposés dans `/tmp/nyx_alerts/`.
+Le SOAR écoute les fichiers JSON déposés dans `/var/log/nyxsoc/alerts/`.
 
 ## 3. Envoyer une alerte factice
 
-Créer un fichier JSON valide dans `/tmp/nyx_alerts/` :
+Créer un fichier JSON valide dans `/var/log/nyxsoc/alerts/` :
 
 ```bash
-cat > /tmp/nyx_alerts/test.json.tmp << 'EOF'
+cat > /var/log/nyxsoc/alerts/test.json.tmp << 'EOF'
 {
   "alert_id": "550e8400-e29b-41d4-a716-446655440001",
   "timestamp": 1721746800000,
@@ -58,7 +58,7 @@ cat > /tmp/nyx_alerts/test.json.tmp << 'EOF'
 EOF
 
 # Atomique : renommer .tmp → .json pour que le watcher le voie
-mv /tmp/nyx_alerts/test.json.tmp /tmp/nyx_alerts/test.json
+mv /var/log/nyxsoc/alerts/test.json.tmp /var/log/nyxsoc/alerts/test.json
 ```
 
 ## 4. Vérifier le blocage
@@ -75,7 +75,7 @@ print('Blocked IPs:', c.list_blocked())
 ## 5. Nettoyer
 
 ```bash
-rm -f /tmp/nyx_alerts/*.json
+rm -f /var/log/nyxsoc/alerts/*.json
 cd /home/fiodor/NYX/soar
 PYTHONPATH=src .venv/bin/python -c "
 from soar.integrations import OPNsenseClient

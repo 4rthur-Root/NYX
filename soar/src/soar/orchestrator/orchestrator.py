@@ -7,7 +7,7 @@ from typing import Optional
 from soar.config.settings import settings
 from soar.db import get_connection
 from soar.engine import DecisionEngine
-from soar.handlers.handler import HANDLERS
+from soar.handlers.handler import get_handler
 from soar.logging import AuditLogger, ResponseWriter
 from soar.models.alert import Alert
 from soar.models.decision import Decision
@@ -60,16 +60,18 @@ class AlertOrchestrator:
             logger.exception("Erreur décision pour %s", alert.alert_id)
             return
 
-        handler = HANDLERS.get(decision.action)
-        if handler is None:
+        handler_fn = get_handler(decision)
+        if handler_fn is None:
             logger.warning(
-                "Aucun handler pour action=%s (alert=%s)",
-                decision.action, alert.alert_id,
+                "Aucun handler pour action=%s scenario=%s (alert=%s)",
+                decision.action,
+                decision.scenario_type,
+                alert.alert_id,
             )
             return
 
         try:
-            response = handler(alert, decision)
+            response = handler_fn(alert, decision)
             self._on_response(alert, decision, response)
         except Exception:
             logger.exception("Erreur exécution handler pour %s", alert.alert_id)
