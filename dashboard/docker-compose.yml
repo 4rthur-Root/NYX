@@ -1,0 +1,43 @@
+services:
+  flask:
+    build:
+      context: ./flask_app
+      dockerfile: ../docker/flask.Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../../soar/data:/app/data/soar:ro
+      - ../../engine/engine.db:/app/data/engine.db:ro
+      - ./mock_data:/app/mock_data:ro
+    environment:
+      - FLASK_DEBUG=0
+      - SOAR_DB_PATH=/app/data/soar/soar.db
+      - ENGINE_DB_PATH=/app/data/engine.db
+      - MOCK_DATA_DIR=/app/mock_data
+    restart: unless-stopped
+    networks:
+      - nyxsoc
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../soar/data:/app/data/soar:ro
+      - ../../engine/engine.db:/app/data/engine.db:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    restart: unless-stopped
+    networks:
+      - nyxsoc
+
+volumes:
+  grafana-storage:
+
+networks:
+  nyxsoc:
+    driver: bridge
