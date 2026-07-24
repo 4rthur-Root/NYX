@@ -1,12 +1,75 @@
 {% extends "base.html" %}
 
-{% block title %}Détail alerte — NyxSOC{% endblock %}
+{% block title %}Détail alerte {{ alert.alert_id if alert else '' }} — NyxSOC{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1>Détail alerte</h1>
+    {% if alert %}
+    <a href="{{ url_for('alerts.alerts_index') }}" class="btn">← Retour à la liste</a>
+    {% endif %}
 </div>
+
+{% if alert %}
+<div class="alert-detail">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">ID</span>
+            <span class="detail-value"><code>{{ alert.alert_id }}</code></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Timestamp</span>
+            <span class="detail-value">{{ alert.timestamp | int | datetimeformat }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Règle</span>
+            <span class="detail-value"><code>{{ alert.rule_id }}</code></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Sévérité</span>
+            <span class="detail-value">
+                <span class="badge badge-{{ 'red' if alert.severity == 'CRITICAL' else 'yellow' }}">
+                    {{ alert.severity }}
+                </span>
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">IP attaquant</span>
+            <span class="detail-value">{{ alert.attacker_ip or '—' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Cible</span>
+            <span class="detail-value">{{ alert.target_host }} ({{ alert.target_ip }})</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">MITRE</span>
+            <span class="detail-value">{{ alert.mitre_tactic }} / {{ alert.mitre_technique }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Événements</span>
+            <span class="detail-value">{{ alert.events_count }}</span>
+        </div>
+    </div>
+
+    {% if events %}
+    <h2>Chaîne d'événements</h2>
+    <div class="timeline">
+        {% for event in events %}
+        <div class="timeline-item">
+            <div class="timeline-time">{{ event.timestamp | int | datetimeformat }}</div>
+            <div class="timeline-content">
+                <div class="timeline-type">{{ event.event_type }}</div>
+                <div class="timeline-source">{{ event.source_host }}</div>
+                <div class="timeline-raw">{{ event.raw_log }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% else %}
 <div class="card">
-    <p>Aucune alerte sélectionnée.</p>
+    <p>Aucune alerte trouvée avec cet identifiant.</p>
 </div>
+{% endif %}
 {% endblock %}

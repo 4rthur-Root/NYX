@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, render_template
+
+
+def _datetimeformat(ts: int) -> str:
+    if not ts:
+        return "—"
+    return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def create_app() -> Flask:
@@ -26,6 +33,8 @@ def create_app() -> Flask:
     app.register_blueprint(alerts_bp)
     app.register_blueprint(responses_bp)
     app.register_blueprint(metrics_bp)
+
+    app.jinja_env.filters["datetimeformat"] = _datetimeformat
 
     @app.errorhandler(404)
     def not_found(error):

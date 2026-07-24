@@ -1,0 +1,26 @@
+{
+  "alert_id": "550e8400-e29b-41d4-a716-446655440002",
+  "timestamp": 1750003600000,
+  "rule_id": "SMB_EXFIL_001",
+  "severity": "CRITICAL",
+  "attacker_ip": "185.220.101.99",
+  "target_host": "debian-server",
+  "target_ip": "10.0.1.20",
+  "mitre_tactic": "TA0010",
+  "mitre_technique": "T1021.002",
+  "events_count": 8,
+  "events_details": [
+    {
+      "timestamp": 1750003580000,
+      "event_type": "net_scan",
+      "source_host": "OPNsense",
+      "raw_log": "nmap scan detected from 185.220.101.99"
+    },
+    {
+      "timestamp": 1750003590000,
+      "event_type": "samba_read",
+      "source_host": "debian-server",
+      "raw_log": "Samba read access to comptabilite/ from 185.220.101.99"
+    }
+  ]
+}
