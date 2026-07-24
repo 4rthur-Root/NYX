@@ -58,8 +58,8 @@
     },
     "mitre_technique": {
       "type": "string",
-      "pattern": "^T[0-9]{4}$",
-      "description": "Technique MITRE ATT&CK. Ex: T1110"
+      "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$",
+      "description": "Technique MITRE ATT&CK, avec sous-technique optionnelle. Ex: T1110 ou T1204.002"
     },
     "events": {
       "type": "object",

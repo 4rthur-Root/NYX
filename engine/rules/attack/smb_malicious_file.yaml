@@ -1,9 +1,13 @@
 rule_id: SMB_MALICIOUS_FILE_001
 type: 4
-description: " Fichier malveillant détecté sur le partage Samba par YARA."
+description: >
+  Fichier malveillant détecté sur partage Samba par YARA. Alerte immédiate
+  sans condition préalable. Couvre le vecteur phishing/BEC où un employé
+  uploade directement un fichier malveillant reçu par mail.
+  Complémentaire à MALICIOUS_FILE_EXEC_001 qui suit l'exécution.
 severity: CRITICAL
-mitre_tactic: "T1080"
-mitre_technique: "T1204.002"
+mitre_tactic: "TA0001"
+mitre_technique: "T1566.002"
 source_host_pattern: "*"
 
 yara_trigger: 

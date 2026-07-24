@@ -19,6 +19,7 @@
         "logon_success",
         "logon_failure",
         "samba_read",
+        "samba_write",
         "smb_failure",
         "http_request",
         "net_scan",
@@ -119,16 +120,36 @@
           "enum": ["actor_ip", "actor_user", "source_host"],
           "description": "Champ qui doit correspondre entre cette étape et la précédente pour maintenir la corrélation."
         },
-        "check_yara": {
-          "type": "boolean",
-          "default": false,
-          "description": "Si true, appelle yara_scanner sur le fichier référencé par l'événement."
-        },
-        "yara_match_required": {
-          "type": "boolean",
-          "default": false,
-          "description": "Si false, l'alerte est générée même si YARA ne trouve pas de match (fichier supprimé, accès refusé)."
+        "condition": {
+          "type": "object",
+          "properties": {
+            "yara_match": {
+              "type": "string",
+              "enum": ["required"],
+              "description": "Si présent, cette étape n'est validée que si l'événement porte un yara_match (résultat du scan systématique du Dispatcher sur samba_write)."
+            }
+          },
+          "additionalProperties": false,
+          "description": "Condition optionnelle sur cette étape. Cf. rules-catalog.md section 1.5."
         }
+      },
+      "additionalProperties": false
+    },
+
+    "yara_trigger_type4": {
+      "type": "object",
+      "required": ["event_type", "yara_match"],
+      "properties": {
+        "event_type": {
+          "$ref": "#/definitions/event_type",
+          "description": "Doit être 'samba_write' — Type 4 se déclenche uniquement sur cet event_type d'après rules-catalog.md section 1.5."
+        },
+        "yara_match": {
+          "type": "string",
+          "enum": ["required"],
+          "description": "Type 4 exige toujours un match YARA — sans condition préalable (cf. rules-catalog.md)."
+        },
+        "source_host_pattern": { "$ref": "#/definitions/source_host_pattern" }
       },
       "additionalProperties": false
     },
@@ -187,8 +208,8 @@
 
     "type": {
       "type": "integer",
-      "enum": [1, 2, 3],
-      "description": "Type de règle. 1: seuil simple sur un event_type. 2: étapes séquentielles ordonnées. 3: cooccurrence multi-event_types sans ordre."
+      "enum": [1, 2, 3, 4],
+      "description": "Type de règle. 1: seuil simple sur un event_type. 2: étapes séquentielles ordonnées. 3: cooccurrence multi-event_types sans ordre. 4: détection YARA directe sur samba_write."
     },
 
     "description": {
@@ -220,6 +241,11 @@
       "description": "Requis si type == 3. Définit les event_types qui doivent coexister."
     },
 
+    "yara_trigger": {
+      "$ref": "#/definitions/yara_trigger_type4",
+      "description": "Requis si type == 4. Détection YARA directe sans condition préalable."
+    },
+
     "response": { "$ref": "#/definitions/response" }
   },
 
@@ -235,6 +261,10 @@
     {
       "if": { "properties": { "type": { "const": 3 } } },
       "then": { "required": ["condition"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": 4 } } },
+      "then": { "required": ["yara_trigger"] }
     }
   ],
 
