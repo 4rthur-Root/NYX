@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: NyxSOC-SQLite
+    type: sqlite
+    access: proxy
+    url: /var/lib/grafana/data/soar/soar.db
+    isDefault: true
+    editable: true
+    jsonData:
+      path: /var/lib/grafana/data/soar

@@ -1,0 +1,271 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "sqlite",
+        "uid": "NyxSOC-SQLite"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "sqlite",
+            "uid": "NyxSOC-SQLite"
+          },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) as value FROM alerts"
+        }
+      ],
+      "title": "Total alertes",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "sqlite",
+        "uid": "NyxSOC-SQLite"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "sqlite",
+            "uid": "NyxSOC-SQLite"
+          },
+          "format": "table",
+          "rawSql": "SELECT ROUND(100.0 * SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) / COUNT(*), 1) as value FROM responses"
+        }
+      ],
+      "title": "Taux de succès OPNsense",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "sqlite",
+        "uid": "NyxSOC-SQLite"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "donut"
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "sqlite",
+            "uid": "NyxSOC-SQLite"
+          },
+          "format": "table",
+          "rawSql": "SELECT severity as 'Severity', COUNT(*) as 'Count' FROM alerts GROUP BY severity"
+        }
+      ],
+      "title": "Alertes par sévérité",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "sqlite",
+        "uid": "NyxSOC-SQLite"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "sqlite",
+            "uid": "NyxSOC-SQLite"
+          },
+          "format": "table",
+          "rawSql": "SELECT a.rule_id as 'Scenario', AVG(r.latency_ms) as 'Avg Latency (ms)' FROM responses r JOIN alerts a ON a.alert_id = r.alert_id GROUP BY a.rule_id"
+        }
+      ],
+      "title": "Latence par scénario",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "sqlite",
+        "uid": "NyxSOC-SQLite"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "sqlite",
+            "uid": "NyxSOC-SQLite"
+          },
+          "format": "table",
+          "rawSql": "SELECT a.rule_id as 'Règle', a.severity as 'Sévérité', a.attacker_ip as 'IP attaquant', a.target_host as 'Cible', datetime(a.timestamp / 1000, 'unixepoch') as 'Timestamp' FROM alerts a ORDER BY a.timestamp DESC LIMIT 50"
+        }
+      ],
+      "title": "Dernières alertes",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["nyxsoc", "soc"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "title": "NyxSOC Dashboard",
+  "version": 1,
+  "weekStart": ""
+}
