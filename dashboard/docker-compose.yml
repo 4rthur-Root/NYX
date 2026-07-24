@@ -3,12 +3,10 @@ services:
     build:
       context: .
       dockerfile: ./docker/flask.Dockerfile
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     ports:
       - "5000:5000"
     volumes:
+      - /home/fiodor/NYX/soar/.venv:/venv:ro
       - ../../soar/data:/app/data/soar:ro
       - ../../engine/engine.db:/app/data/engine.db:ro
       - ./mock_data:/app/mock_data:ro

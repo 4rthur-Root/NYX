@@ -2,10 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY flask_app/ /app/flask_app/
 
-COPY flask_app/ ./flask_app/
+ENV PATH="/venv/bin:$PATH"
 
 EXPOSE 5000
 
