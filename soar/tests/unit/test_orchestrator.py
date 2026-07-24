@@ -1,8 +1,8 @@
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from soar.engine import DecisionEngine
-from soar.handlers.handler import HANDLERS
+from soar.handlers.handler import get_handler
 from soar.models.alert import Alert, EventDetail
 from soar.models.decision import Decision
 from soar.models.response import Response
@@ -51,24 +51,19 @@ class TestPipeline:
             watch_dir=Path("/tmp/nyx_test"),
         )
 
-        with MagicMock() as mock_handler:
-            original = HANDLERS["block_ip"]
-            HANDLERS["block_ip"] = mock_handler
-            mock_handler.return_value = Response(
-                response_id="resp-a1",
-                alert_id="a1",
-                alert_timestamp=1,
-                response_timestamp=2,
-                latency_ms=1,
-                action="block_ip",
-                status="success",
-            )
+        mock_handler = MagicMock(return_value=Response(
+            response_id="resp-a1",
+            alert_id="a1",
+            alert_timestamp=1,
+            response_timestamp=2,
+            latency_ms=1,
+            action="block_ip",
+            status="success",
+        ))
 
-            try:
-                orch._on_alert(S1_ALERT)
-                assert mock_handler.called
-            finally:
-                HANDLERS["block_ip"] = original
+        with patch("soar.orchestrator.orchestrator.get_handler", return_value=mock_handler):
+            orch._on_alert(S1_ALERT)
+            assert mock_handler.called
 
     def test_error_in_decision_does_not_crash(self, caplog):
         engine = MagicMock(spec=DecisionEngine)
@@ -94,13 +89,10 @@ class TestPipeline:
             watch_dir=Path("/tmp"),
         )
 
-        original = HANDLERS["block_ip"]
-        HANDLERS["block_ip"] = MagicMock(side_effect=RuntimeError("handler fail"))
-        try:
+        mock_handler = MagicMock(side_effect=RuntimeError("handler fail"))
+        with patch("soar.orchestrator.orchestrator.get_handler", return_value=mock_handler):
             orch._on_alert(S1_ALERT)
             assert any("Erreur exécution handler" in r.message for r in caplog.records)
-        finally:
-            HANDLERS["block_ip"] = original
 
     def test_unknown_action_logs_warning(self, caplog):
         engine = MagicMock(spec=DecisionEngine)

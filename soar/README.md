@@ -1,7 +1,7 @@
 # NyxSOC — Module SOAR
 
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
-![tests](https://img.shields.io/badge/tests-111%20passing-green)
+![tests](https://img.shields.io/badge/tests-127%20passing-green)
 ![branch](https://img.shields.io/badge/branch-soar-orange)
 
 Security Orchestration, Automation and Response pour l'infrastructure NyxSOC.
@@ -13,7 +13,7 @@ Security Orchestration, Automation and Response pour l'infrastructure NyxSOC.
 ```mermaid
 graph TB
     subgraph Entrée
-        A[Alert JSON<br/>/tmp/nyx_alerts/] --> B[Watcher<br/>watchdog]
+        A[Alert JSON<br/>/var/log/nyxsoc/alerts/] --> B[Watcher<br/>watchdog]
     end
     subgraph Pipeline
         B --> C[AlertParser<br/>jsonschema]
@@ -36,7 +36,7 @@ graph TB
 
 ## Fonctionnement
 
-1. **Watcher** surveille `/tmp/nyx_alerts/` avec `watchdog` (inotify)
+1. **Watcher** surveille `/var/log/nyxsoc/alerts/` avec `watchdog` (inotify)
 2. Fichier JSON atomique (`.tmp` → `.json`) → déclenche le pipeline
 3. **AlertParser** valide le JSON contre `docs/alert-schema.json`
 4. **DecisionEngine** applique : sévérité, whitelist, AbuseIPDB score, playbook
@@ -70,10 +70,10 @@ cp .env.example .env   # renseigner les clés
 PYTHONPATH=src .venv/bin/python -m soar.main
 ```
 
-Déposer une alerte dans `/tmp/nyx_alerts/` :
+Déposer une alerte dans `/var/log/nyxsoc/alerts/` :
 
 ```bash
-mv alert.json.tmp /tmp/nyx_alerts/alert.json
+mv alert.json.tmp /var/log/nyxsoc/alerts/alert.json
 ```
 
 Arrêt propre : `Ctrl+C` ou `kill <pid>`.
@@ -90,7 +90,7 @@ Arrêt propre : `Ctrl+C` ou `kill <pid>`.
 | Parsing alerte | `src/soar/parser/` |
 | Surveillant fichier | `src/soar/watcher/` |
 | Intégrations | `src/soar/integrations/` (OPNsense, AbuseIPDB) |
-| Handlers | `src/soar/handlers/` (block_ip, notify, ignore) |
+| Handlers | `src/soar/handlers/` (block_ip, notify, ignore + handlers spécifiques S1/S2/S3) |
 | Persistance | `src/soar/db/` + `src/soar/repositories/` |
 | Logging | `src/soar/logging/` |
 | Notifications | `src/soar/notifications/` (Telegram, SMTP) |
@@ -136,7 +136,12 @@ soar/
 │   │   ├── decision_engine.py
 │   │   └── rules.py
 │   ├── handlers/
-│   │   └── handler.py
+│   │   ├── base_handler.py
+│   │   ├── core.py
+│   │   ├── handler.py
+│   │   ├── ssh_handler.py
+│   │   ├── smb_handler.py
+│   │   └── s3_handler.py
 │   ├── integrations/
 │   │   ├── opnsense_client.py
 │   │   ├── abuseipdb_client.py
@@ -168,7 +173,7 @@ soar/
 
 | Règle | Détail |
 |-------|--------|
-| Dossier | `/tmp/nyx_alerts/` |
+| Dossier | `/var/log/nyxsoc/alerts/` |
 | Format | JSON conforme à `docs/alert-schema.json` |
 | Écriture | Atomique : `.tmp` → `rename()` → `.json` |
 | Cycle de vie | Le moteur écrit, le SOAR lit (ne supprime jamais) |
@@ -198,5 +203,5 @@ Le contrat complet est documenté dans `docs/INTEGRATION.md`.
 ```bash
 cd ~/NYX/soar
 .venv/bin/python -m pytest -v
-# 111 tests, ~27s
+# 127 tests, ~2s
 ```
