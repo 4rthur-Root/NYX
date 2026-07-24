@@ -12,6 +12,8 @@ alerts_bp = Blueprint("alerts", __name__)
 
 
 def _get_db_path() -> Path | None:
+    if current_app.config.get("MOCK_MODE"):
+        return None
     db_path = Path(current_app.config["SOAR_DB_PATH"])
     return db_path if db_path.exists() else None
 
