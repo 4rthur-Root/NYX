@@ -1,5 +1,5 @@
 # tests/unit/test_alerter.py
-"""Tests unitaires — Alerter et build_alert."""
+"""Tests unitaires - Alerter et build_alert."""
 import json
 import logging
 import os
@@ -104,10 +104,10 @@ class TestBuildAlert:
         assert details[0]["actor_user"] == "user0"
         assert details[-1]["actor_user"] == "user9"
 
-    def test_mitre_technique_strips_subtechnique(self, sample_rule, sample_events):
+    def test_mitre_technique_preserves_subtechnique(self, sample_rule, sample_events):
         sample_rule["mitre_technique"] = "T1110.001"
         alert = build_alert(rule=sample_rule, events=sample_events)
-        assert alert["mitre_technique"] == "T1110"
+        assert alert["mitre_technique"] == "T1110.001"
 
     def test_yara_match_included(self, sample_rule, sample_events):
         yara_match = {"rule_name": "MALWARE", "file_hash": "md5:abc123"}
@@ -123,7 +123,7 @@ class TestBuildAlert:
         assert alert["target_resource"] is None
 
 
-# Alerter — WARNING
+# Alerter - WARNING
 
 class TestAlerterWarning:
     def test_warning_logs_to_file(self, alerter, alerts_log, sample_rule, sample_events):
@@ -145,7 +145,7 @@ class TestAlerterWarning:
         assert len(json_files) == 0
 
 
-# Alerter — CRITICAL
+# Alerter - CRITICAL
 
 class TestAlerterCritical:
     def test_critical_logs_to_file(self, alerter, alerts_log, sample_rule, sample_events):
@@ -194,7 +194,7 @@ class TestAlerterCritical:
         assert len(json_files) == 3
 
 
-# Alerter — Atomic write
+# Alerter - Atomic write
 
 class TestAtomicWrite:
     def test_no_tmp_file_left_after_success(self, alerter, alerts_dir, sample_rule, sample_events):
@@ -215,7 +215,7 @@ class TestAtomicWrite:
         assert expected.exists()
 
 
-# Alerter — Unknown severity
+# Alerter - Unknown severity
 
 class TestUnknownSeverity:
     def test_unknown_severity_logs_error(self, alerter, caplog, sample_rule, sample_events):
@@ -226,7 +226,7 @@ class TestUnknownSeverity:
         assert "Sévérité inconnue" in caplog.text
 
 
-# Alerter — Directory creation
+# Alerter - Directory creation
 
 class TestDirectoryCreation:
     def test_creates_missing_directories(self, tmp_path):
