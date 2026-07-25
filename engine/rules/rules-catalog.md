@@ -1,7 +1,9 @@
-# Catalogue des règles de détection — Nyx
+# Catalogue des règles de détection Nyx
+# Ce dossier contient les règles de corrélation et celles yara récupérées depuis le dépôt 
 
+### Règles de corrélation
 **Référence schéma** : `docs/rule-schema.json`  
-**Règles stockées dans** : `engine/rules/attack/attack/*.yaml`  
+**Règles stockées dans** : `engine/rules/attack/*.yaml`  
 **Version** : 1.1.0  
 
 ---
