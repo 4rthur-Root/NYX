@@ -3,3 +3,5 @@ jsonschema
 watchdog
 yara-python
 pytest
+flake8
+mypy
