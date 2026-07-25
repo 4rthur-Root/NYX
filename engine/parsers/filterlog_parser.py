@@ -21,9 +21,9 @@ _IDX4_DST       = 19
 
 # IPv6 : ...ipver,class,flowlabel,hlim,proto_txt,proto_id,length,src,dst,...
 _IDX6_PROTO_TXT = 13
-_IDX6_LENGTH    = 15
-_IDX6_SRC       = 16
-_IDX6_DST       = 17
+_IDX6_LENGTH    = 14
+_IDX6_SRC       = 15
+_IDX6_DST       = 16
 
 
 class FilterlogParser(BaseParser):
@@ -44,53 +44,6 @@ class FilterlogParser(BaseParser):
             debug: Si True, loggue les lignes non reconnues au niveau DEBUG.
         """
         self.debug = debug
-
-    def parse(self, line: str) -> dict | None:
-        """Parse une ligne de log filterlog OPNsense en événement normalisé.
-
-        La ligne contient une enveloppe syslog RFC 5424 suivie de la payload
-        filterlog CSV. On extrait d'abord l'enveloppe, puis on parse le CSV.
-
-        Args:
-            line: Ligne brute issue de OPNsense.internal.log.
-
-        Returns:
-            Dict conforme au schéma EventNormalized, ou None si la ligne
-            ne correspond pas à un log filterlog valide.
-        """
-        stripped = line.strip()
-        if not stripped:
-            return None
-
-        # Extraire l'enveloppe syslog : "2026-06-19T10:23:38+00:00 OPNsense.internal filterlog[56373]: <payload>"
-        # On cherche "filterlog[" pour identifier la source
-        try:
-            parts = stripped.split(" ", 3)
-            if len(parts) < 4:
-                return None
-            ts_str, source_host, program_raw, payload = parts
-        except ValueError:
-            return None
-
-        if "filterlog" not in program_raw.lower():
-            if self.debug:
-                logger.debug("Ligne ignorée — pas filterlog : %s", stripped[:80])
-            return None
-
-        # Parse timestamp
-        try:
-            timestamp = self.parse_timestamp(ts_str)
-        except ValueError:
-            if self.debug:
-                logger.debug("Timestamp invalide '%s'", ts_str)
-            return None
-
-        return self._parse_filterlog_payload(
-            payload=payload.strip(),
-            timestamp=timestamp,
-            source_host=source_host,
-            raw_log=stripped,
-        )
 
     def _parse_filterlog_payload(
         self,
@@ -218,3 +171,50 @@ class FilterlogParser(BaseParser):
             return "net_scan" if direction == "in" else "firewall_block"
         # pass in/out → connexion réseau observable
         return "net_connect"
+    
+    def parse(self, line: str) -> dict | None:
+        """Parse une ligne de log filterlog OPNsense en événement normalisé.
+
+        La ligne contient une enveloppe syslog RFC 5424 suivie de la payload
+        filterlog CSV. On extrait d'abord l'enveloppe, puis on parse le CSV.
+
+        Args:
+            line: Ligne brute issue de OPNsense.internal.log.
+
+        Returns:
+            Dict conforme au schéma EventNormalized, ou None si la ligne
+            ne correspond pas à un log filterlog valide.
+        """
+        stripped = line.strip()
+        if not stripped:
+            return None
+
+        # Extraire l'enveloppe syslog : "2026-06-19T10:23:38+00:00 OPNsense.internal filterlog[56373]: <payload>"
+        # On cherche "filterlog[" pour identifier la source
+        try:
+            parts = stripped.split(" ", 3)
+            if len(parts) < 4:
+                return None
+            ts_str, source_host, program_raw, payload = parts
+        except ValueError:
+            return None
+
+        if "filterlog" not in program_raw.lower():
+            if self.debug:
+                logger.debug("Ligne ignorée — pas filterlog : %s", stripped[:80])
+            return None
+
+        # Parse timestamp
+        try:
+            timestamp = self.parse_timestamp(ts_str)
+        except ValueError:
+            if self.debug:
+                logger.debug("Timestamp invalide '%s'", ts_str)
+            return None
+
+        return self._parse_filterlog_payload(
+            payload=payload.strip(),
+            timestamp=timestamp,
+            source_host=source_host,
+            raw_log=stripped,
+        )
