@@ -1,18 +1,21 @@
-FROM python:3.13-slim 
+FROM python:3.13-slim
 
-# Définit le répertoire de travail dans le conteneur
-WORKDIR /nyx
+WORKDIR /engine
 
-# Copier les fichiers de dépendances d'abord (meilleure mise en cache)
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        bash \
+        gcc \
+        libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie le reste du code
-COPY app.py .
+# Copy engine source
+COPY . .
 
-# Le port exposé par l'application
-EXPOSE 5000
-
-# Commande pour lancer l'appli
-CMD ["python", "app.py"]
+# Default to bash; Makefile overrides with pytest commands
+CMD ["/bin/bash"]
