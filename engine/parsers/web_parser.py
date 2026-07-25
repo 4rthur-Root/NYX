@@ -124,7 +124,7 @@ class WebParser(BaseParser):
             "http_path":    combined["path"],
             "http_status":  int(combined["status"]),
             "user_agent":   combined["user_agent"] or None,
-            "referer":      combined["referer"] or None,
+            "referer": combined["referer"] if combined["referer"] not in ("", "-") else None,
         }
 
         # response_size peut être "-" (pas de contenu)

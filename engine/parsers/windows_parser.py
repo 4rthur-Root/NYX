@@ -145,9 +145,7 @@ class WindowsParser(BaseParser):
 
         return None  # pragma: no cover
 
-    # ------------------------------------------------------------------
     # Builders par EventID
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _build_logon_success(get_data, timestamp: int, host: str, raw_log: str) -> dict:
