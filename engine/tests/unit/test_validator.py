@@ -21,7 +21,8 @@ def valid_event():
         "target_port": 22,
         "extra":       None,
         "yara_match":  None,
-        "raw_log":     "Failed password for root from 10.0.1.50 port 52341 ssh2",
+        "raw_log":     ("Failed password for root from 10.0.1.50 "
+                             "port 52341 ssh2"),
     }
 
 
@@ -59,12 +60,19 @@ class TestTaxonomy:
         valid_types = [
             "ssh_failure", "logon_success", "logon_failure",
             "samba_read", "samba_write", "smb_failure",
-            "http_request", "net_scan", "firewall_block",
+            "net_scan", "firewall_block",
             "file_create", "process_exec", "net_connect",
+            "tgt_request", "tgs_request",
         ]
         for et in valid_types:
             valid_event["event_type"] = et
-            assert v.validate(valid_event) is True, f"'{et}' devrait être valide"
+            msg = f"'{et}' should be valid"
+            assert v.validate(valid_event) is True, msg
+
+    def test_http_request_is_valid_event_type(self, v, valid_event):
+        """http_request est produit par WebParser (logs Dolibarr)."""
+        valid_event["event_type"] = "http_request"
+        assert v.validate(valid_event) is True
 
     def test_invalid_event_type_fails(self, v, valid_event):
         valid_event["event_type"] = "unknown_event"
@@ -77,12 +85,12 @@ class TestTaxonomy:
 
 class TestNullableFields:
     def test_null_optional_fields_pass(self, v, valid_event):
-        valid_event["actor_ip"]    = None
-        valid_event["actor_user"]  = None
+        valid_event["actor_ip"] = None
+        valid_event["actor_user"] = None
         valid_event["target_host"] = None
         valid_event["target_port"] = None
-        valid_event["extra"]       = None
-        valid_event["yara_match"]  = None
+        valid_event["extra"] = None
+        valid_event["yara_match"] = None
         assert v.validate(valid_event) is True
 
     def test_extra_as_dict_passes(self, v, valid_event):
