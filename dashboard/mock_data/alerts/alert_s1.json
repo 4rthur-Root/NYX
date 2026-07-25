@@ -1,0 +1,26 @@
+{
+  "alert_id": "550e8400-e29b-41d4-a716-446655440001",
+  "timestamp": 1750000000000,
+  "rule_id": "SSH_BRUTEFORCE_001",
+  "severity": "CRITICAL",
+  "attacker_ip": "185.220.101.99",
+  "target_host": "debian-server",
+  "target_ip": "10.0.1.20",
+  "mitre_tactic": "TA0006",
+  "mitre_technique": "T1110",
+  "events_count": 15,
+  "events_details": [
+    {
+      "timestamp": 1749999940000,
+      "event_type": "ssh_failure",
+      "source_host": "debian-server",
+      "raw_log": "Failed password for root from 185.220.101.99 port 22 ssh2"
+    },
+    {
+      "timestamp": 1749999950000,
+      "event_type": "ssh_failure",
+      "source_host": "debian-server",
+      "raw_log": "Failed password for root from 185.220.101.99 port 22 ssh2"
+    }
+  ]
+}
