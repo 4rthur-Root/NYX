@@ -352,12 +352,104 @@ description: >
   uploade directement un fichier malveillant reçu par mail.
   Complémentaire à MALICIOUS_FILE_EXEC_001 qui suit l'exécution.
 severity: CRITICAL
-mitre_tactic: "T1080"
+mitre_tactic: "TA0001"
 mitre_technique: "T1566.002"
 yara_trigger:
   event_type: samba_write
   yara_match: required
   source_host_pattern: "debian*"
+response:
+  alert: true
+```
+
+---
+
+### KERBEROASTING_001
+
+| | |
+|---|---|
+| **Fichier** | `engine/rules/attack/kerberoasting.yaml` |
+| **Type** | 1 — seuil simple |
+| **Sévérité** | CRITICAL |
+| **MITRE** | TA0006 / T1558.003 |
+| **Scénario** | S6 — Kerberoasting (Samba 4 AD DC) |
+
+**Ce que détecte la règle** : volume anormal de requêtes TGS (EventID 4769,
+capturé via l'audit JSON Samba ≥ 4.12) depuis la même IP en 30 secondes.
+Un outil de Kerberoasting (Rubeus, Impacket `GetUserSPNs.py`) demande des
+tickets de service pour tous les SPN enregistrés dans l'AD en rafale, afin
+de les craquer hors-ligne — signature très différente d'un poste de travail
+qui demande un TGS ponctuellement pour accéder à une ressource précise.
+
+**Pourquoi CRITICAL** : dans ce lab, aucun poste légitime ne demande plus
+de 5 TGS en 30 secondes dans son usage normal. Le seuil est calibré serré
+car le comportement d'énumération n'a pas d'équivalent légitime plausible
+à ce volume.
+
+**Pourquoi Type 1 et non Type 3** : contrairement à `SMB_EXFIL_001`, il n'y
+a qu'un seul event_type impliqué (`tgs_request`) — un simple comptage par
+IP suffit, pas de cooccurrence à exprimer.
+
+```yaml
+rule_id: KERBEROASTING_001
+type: 1
+description: "Kerberoasting - Requêtes TGS multiples et anormales"
+severity: CRITICAL
+mitre_tactic: "TA0006"
+mitre_technique: "T1558.003"
+source_host_pattern: "*"
+trigger:
+  event_type: tgs_request
+  threshold: 5
+  window_seconds: 30
+  group_by: actor_ip
+response:
+  alert: true
+```
+
+---
+
+### ASREP_ROASTING_001
+
+| | |
+|---|---|
+| **Fichier** | `engine/rules/attack/asrep_roasting.yaml` |
+| **Type** | 1 — seuil simple |
+| **Sévérité** | CRITICAL |
+| **MITRE** | TA0006 / T1558.004 |
+| **Scénario** | S6 — AS-REP Roasting (Samba 4 AD DC) |
+
+**Ce que détecte la règle** : volume anormal de requêtes TGT (EventID 4768)
+depuis la même IP en 30 secondes. Une attaque AS-REP Roasting (Rubeus,
+Impacket `GetNPUsers.py`) énumère les comptes AD dont la pré-authentification
+Kerberos est désactivée, en demandant un TGT pour chacun sans fournir de
+mot de passe préalable — même signature de rafale que le Kerberoasting,
+mais sur l'EventID 4768 plutôt que 4769.
+
+**Pourquoi une règle séparée de `KERBEROASTING_001`** : les event_types
+produits sont différents (`tgt_request` vs `tgs_request`), correspondant à
+deux EventID Windows/Samba distincts (4768 vs 4769) et deux sous-techniques
+MITRE distinctes (T1558.004 vs T1558.003). Le SOAR doit pouvoir distinguer
+les deux pour orienter la remédiation (comptes sans pré-auth à corriger
+vs SPN à auditer).
+
+**Pourquoi CRITICAL et mêmes seuils que Kerberoasting** : même raisonnement
+que pour `KERBEROASTING_001` — aucun usage légitime dans ce lab ne génère
+ce volume de requêtes TGT en 30 secondes.
+
+```yaml
+rule_id: ASREP_ROASTING_001
+type: 1
+description: "AS-REP Roasting - Requêtes TGT multiples (sans pré-authentification)"
+severity: CRITICAL
+mitre_tactic: "TA0006"
+mitre_technique: "T1558.004"
+source_host_pattern: "*"
+trigger:
+  event_type: tgt_request
+  threshold: 5
+  window_seconds: 30
+  group_by: actor_ip
 response:
   alert: true
 ```
@@ -373,6 +465,8 @@ response:
 | Kill-chain BEC (dépôt + exécution) | MALICIOUS_FILE_EXEC_001 | S3 | ✓ |
 | Upload direct fichier malveillant | YARA_MALICIOUS_FILE_001 | S3 variante | ✓ |
 | Brute-force ERP web | WEB_BRUTEFORCE_001 | S4 | ✓ |
+| Kerberoasting (SPN TGS en rafale) | KERBEROASTING_001 | S6 | ✓ |
+| AS-REP Roasting (TGT sans pré-auth) | ASREP_ROASTING_001 | S6 | ✓ |
 | Slow brute-force SSH (< 10/min) | — | — | ✗ Limite documentée |
 | Pivoting inter-IP | — | — | ✗ Limite documentée |
 | Exfiltration DNS/HTTPS | — | — | ✗ Hors scope |
