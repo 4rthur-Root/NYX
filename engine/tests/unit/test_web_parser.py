@@ -9,9 +9,7 @@ def parser():
     return WebParser(debug=True)
 
 
-# =====================================================================
 # Événements http_request
-# =====================================================================
 
 class TestHTTPRequest:
     """Parsing du Combined Log Format Dolibarr."""
@@ -58,9 +56,7 @@ class TestHTTPRequest:
         assert event["extra"]["http_method"] == "OPTIONS"
 
 
-# =====================================================================
 # Extraction des champs extra
-# =====================================================================
 
 class TestFieldExtraction:
     """Champs extra du Combined Log."""
@@ -137,9 +133,7 @@ class TestFieldExtraction:
         assert event["extra"]["pid"] == "794"
 
 
-# =====================================================================
 # Lignes ignorées
-# =====================================================================
 
 class TestIgnored:
     """Lignes non reconnues ou hors périmètre."""
@@ -166,9 +160,7 @@ class TestIgnored:
         assert parser.parse(line) is None
 
 
-# =====================================================================
 # Output contract
-# =====================================================================
 
 class TestOutput:
     """Contrat de sortie du parser."""

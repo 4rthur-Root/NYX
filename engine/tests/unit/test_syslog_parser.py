@@ -9,9 +9,7 @@ def parser():
     return SyslogParser(debug=True)
 
 
-# =====================================================================
 # SSH
-# =====================================================================
 
 class TestSSHFailure:
     """Événements ssh_failure."""
@@ -91,9 +89,7 @@ class TestSSHNoise:
             assert parser.parse(line) is None
 
 
-# =====================================================================
 # Samba (smbd)
-# =====================================================================
 
 class TestSambaWrite:
     """Événements samba_write."""
@@ -151,9 +147,7 @@ class TestSambaFailure:
         assert event["actor_ip"] == "10.0.1.50"
 
 
-# =====================================================================
 # Samba Audit JSON (Kerberos)
-# =====================================================================
 
 class TestSambaAudit:
     """Audit JSON Samba — EventIDs 4768 et 4769."""
@@ -188,9 +182,7 @@ class TestSambaAudit:
         assert event["extra"]["spn"] == "cifs/srv-pme.nyx.tg"
 
 
-# =====================================================================
 # Ignored / noise
-# =====================================================================
 
 class TestIgnored:
     """Lignes sans parser applicable."""
@@ -214,9 +206,7 @@ class TestIgnored:
         assert parser.parse("   ") is None
 
 
-# =====================================================================
 # Output contract
-# =====================================================================
 
 class TestOutput:
     """Contrat de sortie du parser."""

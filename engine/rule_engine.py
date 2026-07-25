@@ -28,7 +28,7 @@ class RuleEngine:
     - Type 3 : cooccurrence multi-sources (sans ordre)
     - Type 4 : détection YARA directe (samba_write + yara_match)
 
-    Les règles invalides sont loggées et ignorées — pas de crash.
+    Les règles invalides sont loggées et ignorées - pas de crash.
 
     Attributes:
         state: StateManager injecté depuis main.py.
@@ -55,9 +55,7 @@ class RuleEngine:
         self._schema = self._load_rule_schema()
         self._load_rules(rules_dir)
 
-    # ------------------------------------------------------------------
     # Interface publique
-    # ------------------------------------------------------------------
 
     def process_event(self, event: dict) -> list[dict] | None:
         """Évalue l'événement contre toutes les règles chargées.
@@ -98,9 +96,7 @@ class RuleEngine:
 
         return alerts if alerts else None
 
-    # ------------------------------------------------------------------
     # Évaluateurs par type
-    # ------------------------------------------------------------------
 
     def _eval_type1(self, rule: dict, event: dict) -> dict | None:
         """Évalue une règle Type 1 : seuil simple.
@@ -343,9 +339,7 @@ class RuleEngine:
             yara_match=yara_match,
         )
 
-    # ------------------------------------------------------------------
     # Chargement des règles
-    # ------------------------------------------------------------------
 
     def _load_rules(self, rules_dir: str) -> None:
         """Charge et valide tous les fichiers YAML du répertoire de règles.

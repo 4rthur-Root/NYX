@@ -23,9 +23,7 @@ def _wrap(event_id: str, extra_data: str = "") -> str:
     )
 
 
-# =====================================================================
 # EventID 4625 — logon_failure
-# =====================================================================
 
 class TestLogonFailure:
     def test_event_type(self, parser):
@@ -49,9 +47,7 @@ class TestLogonFailure:
         assert event["actor_ip"] == "10.0.1.50"
 
 
-# =====================================================================
 # EventID 4624 — logon_success
-# =====================================================================
 
 class TestLogonSuccess:
     def test_event_type(self, parser):
@@ -76,9 +72,7 @@ class TestLogonSuccess:
         assert event["extra"]["logon_type"] == "2"
 
 
-# =====================================================================
 # EventID 1 — process_exec (Sysmon)
-# =====================================================================
 
 class TestProcessExec:
     def test_event_type(self, parser):
@@ -127,9 +121,7 @@ class TestProcessExec:
         assert event["actor_ip"] is None
 
 
-# =====================================================================
 # EventID 11 — file_create (Sysmon)
-# =====================================================================
 
 class TestFileCreate:
     def test_event_type(self, parser):
@@ -153,9 +145,7 @@ class TestFileCreate:
         assert event["extra"]["target_filename"] == "C:\\Users\\employe\\payload.exe"  # noqa: E501
 
 
-# =====================================================================
 # EventID 3 — net_connect (Sysmon)
-# =====================================================================
 
 class TestNetConnect:
     def test_event_type(self, parser):
@@ -183,9 +173,7 @@ class TestNetConnect:
         assert event["extra"]["dst_ip"] == "10.0.1.50"
 
 
-# =====================================================================
 # Lignes ignorées
-# =====================================================================
 
 class TestIgnored:
     def test_unknown_event_id_returns_none(self, parser):
@@ -205,9 +193,7 @@ class TestIgnored:
         assert parser.parse(line) is None
 
 
-# =====================================================================
 # Output contract
-# =====================================================================
 
 class TestOutput:
     def test_yara_match_always_none(self, parser):

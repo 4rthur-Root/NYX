@@ -51,9 +51,7 @@ def sample_events():
     ]
 
 
-# =====================================================================
 # build_alert
-# =====================================================================
 
 class TestBuildAlert:
     def test_returns_dict_with_required_fields(self, sample_rule, sample_events):
@@ -125,9 +123,7 @@ class TestBuildAlert:
         assert alert["target_resource"] is None
 
 
-# =====================================================================
 # Alerter — WARNING
-# =====================================================================
 
 class TestAlerterWarning:
     def test_warning_logs_to_file(self, alerter, alerts_log, sample_rule, sample_events):
@@ -149,9 +145,7 @@ class TestAlerterWarning:
         assert len(json_files) == 0
 
 
-# =====================================================================
 # Alerter — CRITICAL
-# =====================================================================
 
 class TestAlerterCritical:
     def test_critical_logs_to_file(self, alerter, alerts_log, sample_rule, sample_events):
@@ -200,9 +194,7 @@ class TestAlerterCritical:
         assert len(json_files) == 3
 
 
-# =====================================================================
 # Alerter — Atomic write
-# =====================================================================
 
 class TestAtomicWrite:
     def test_no_tmp_file_left_after_success(self, alerter, alerts_dir, sample_rule, sample_events):
@@ -223,9 +215,7 @@ class TestAtomicWrite:
         assert expected.exists()
 
 
-# =====================================================================
 # Alerter — Unknown severity
-# =====================================================================
 
 class TestUnknownSeverity:
     def test_unknown_severity_logs_error(self, alerter, caplog, sample_rule, sample_events):
@@ -236,9 +226,7 @@ class TestUnknownSeverity:
         assert "Sévérité inconnue" in caplog.text
 
 
-# =====================================================================
 # Alerter — Directory creation
-# =====================================================================
 
 class TestDirectoryCreation:
     def test_creates_missing_directories(self, tmp_path):

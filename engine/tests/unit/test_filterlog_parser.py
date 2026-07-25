@@ -9,9 +9,7 @@ def parser():
     return FilterlogParser(debug=True)
 
 
-# =====================================================================
 # Classification d'événements
-# =====================================================================
 
 class TestNetScan:
     """block in → net_scan (sondage de port entrant)."""
@@ -75,9 +73,7 @@ class TestNetConnect:
         assert event["event_type"] == "net_connect"
 
 
-# =====================================================================
 # Extraction des champs
-# =====================================================================
 
 class TestFieldExtraction:
     """Champs extraits du CSV filterlog."""
@@ -129,9 +125,7 @@ class TestFieldExtraction:
         assert event["yara_match"] is None
 
 
-# =====================================================================
 # IPv6
-# =====================================================================
 
 class TestIPv6:
     """Support IPv6 dans le CSV filterlog."""
@@ -148,9 +142,7 @@ class TestIPv6:
         assert event["actor_ip"] == "2001:db8::1"
 
 
-# =====================================================================
 # Lignes ignorées
-# =====================================================================
 
 class TestIgnored:
     """Lignes non filterlog ou malformées."""
