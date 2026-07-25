@@ -73,9 +73,7 @@ class Alerter:
         else:
             logger.error("Sévérité inconnue '%s' pour la règle %s", severity, rule_id)
 
-    # ------------------------------------------------------------------
     # Helpers privés
-    # ------------------------------------------------------------------
 
     def _log_warning(self, alert: dict) -> None:
         """Loggue l'alerte dans le fichier alerts.log.
