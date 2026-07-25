@@ -29,6 +29,7 @@ from reader import Reader
 from parsers.syslog_parser import SyslogParser
 from parsers.filterlog_parser import FilterlogParser
 from parsers.windows_parser import WindowsParser
+from parsers.web_parser import WebParser
 
 # ---------------------------------------------------------------------------
 # Logging principal (console + fichier)
@@ -195,6 +196,7 @@ def main() -> None:
         "syslog":    SyslogParser(),
         "filterlog": FilterlogParser(),
         "windows":   WindowsParser(),
+        "web":       WebParser(),
     }
     parsers: dict = {}
     for filename, parser_type in sources_map.items():

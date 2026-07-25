@@ -30,7 +30,8 @@ _EVENT_SCHEMA: dict = {
 _VALID_EVENT_TYPES = {
     "ssh_failure", "logon_success", "logon_failure",
     "samba_read", "samba_write", "smb_failure",
-    "http_request", "net_scan", "firewall_block",
+    "http_request",
+    "net_scan", "firewall_block",
     "file_create", "process_exec", "net_connect",
     "tgt_request", "tgs_request",
 }
