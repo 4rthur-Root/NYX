@@ -1,7 +1,7 @@
 # main.py
 """Point d'entrée NyxSOC Engine.
 
-Orchestration uniquement — aucune logique métier ici.
+Orchestration uniquement - aucune logique métier ici.
 Ordre d'instanciation obligatoire (spec engine.md §4.1) :
     StateManager → YaraScanner → RuleEngine(state, yara)
     → Alerter → Validator → Dispatcher(parsers, validator, state, yara, alerter)
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-# --- Imports engine ---
+# Imports engine
 from state_manager import StateManager
 from yara_scanner import YaraScanner
 from rule_engine import RuleEngine
@@ -25,15 +25,13 @@ from alerter import Alerter
 from validator import EventValidator
 from dispatcher import Dispatcher
 from reader import Reader
-
 from parsers.syslog_parser import SyslogParser
 from parsers.filterlog_parser import FilterlogParser
 from parsers.windows_parser import WindowsParser
 from parsers.web_parser import WebParser
 
-# ---------------------------------------------------------------------------
 # Logging principal (console + fichier)
-# ---------------------------------------------------------------------------
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
@@ -41,9 +39,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("nyxsoc.main")
 
-# ---------------------------------------------------------------------------
 # Config
-# ---------------------------------------------------------------------------
 _CONFIG_PATH = Path(__file__).parent / "config.yaml"
 
 
@@ -78,16 +74,14 @@ def load_config(path: Path) -> dict:
     return cfg
 
 
-# ---------------------------------------------------------------------------
 # Thread consommateur de la queue
-# ---------------------------------------------------------------------------
 
 def _consumer_loop(
     shared_queue: queue.Queue,
     dispatcher: Dispatcher,
     stop_event: threading.Event,
 ) -> None:
-    """Thread consommateur — dépile la queue et appelle dispatcher.dispatch().
+    """Thread consommateur - dépile la queue et appelle dispatcher.dispatch().
 
     Args:
         shared_queue: Queue thread-safe partagée avec le Reader.
@@ -115,9 +109,7 @@ def _consumer_loop(
     logger.info("Consommateur queue arrêté")
 
 
-# ---------------------------------------------------------------------------
 # Thread de purge horaire
-# ---------------------------------------------------------------------------
 
 def _purge_loop(
     state: StateManager,
@@ -143,9 +135,7 @@ def _purge_loop(
         state.expire_contexts(max_age_s=retention_s)
 
 
-# ---------------------------------------------------------------------------
 # Point d'entrée
-# ---------------------------------------------------------------------------
 
 def main() -> None:
     """Orchestre le démarrage complet du moteur NyxSOC.
