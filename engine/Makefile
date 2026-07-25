@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-parsers lint typecheck shell clean
+.PHONY: help build test test-unit test-parsers test-validator test-state-manager test-rule-engine test-yara-scanner test-alerter test-dispatcher test-integration lint typecheck shell clean
 
 IMAGE_NAME := nyxsoc-engine
 
@@ -15,14 +15,21 @@ help:
 	@echo "Container engine: $(CONTAINER_ENGINE)"
 	@echo ""
 	@echo "Targets:"
-	@echo "  make build           Build the test image"
-	@echo "  make test            Run all tests"
-	@echo "  make test-unit       Run unit tests"
-	@echo "  make test-parsers    Run parser tests"
-	@echo "  make lint            Run flake8"
-	@echo "  make typecheck       Run mypy --strict"
-	@echo "  make shell           Open a shell in the test container"
-	@echo "  make clean           Remove caches"
+	@echo "  make build            Build the test image"
+	@echo "  make test             Run all tests"
+	@echo "  make test-unit        Run unit tests"
+	@echo "  make test-integration Run integration tests"
+	@echo "  make test-parsers     Run parser tests (syslog, filterlog, windows, web)"
+	@echo "  make test-validator   Run validator tests"
+	@echo "  make test-state-manager Run state_manager tests"
+	@echo "  make test-rule-engine Run rule_engine tests"
+	@echo "  make test-yara-scanner Run yara_scanner tests"
+	@echo "  make test-alerter     Run alerter tests"
+	@echo "  make test-dispatcher  Run dispatcher tests"
+	@echo "  make lint             Run flake8"
+	@echo "  make typecheck        Run mypy --strict"
+	@echo "  make shell            Open a shell in the test container"
+	@echo "  make clean            Remove caches"
 
 build:
 	@echo "=> Building image $(IMAGE_NAME) with $(CONTAINER_ENGINE)..."
@@ -36,9 +43,37 @@ test-unit: build
 	@echo "=> Running unit tests..."
 	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/ -v
 
+test-integration: build
+	@echo "=> Running integration tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/integration/ -v
+
 test-parsers: build
 	@echo "=> Running parser tests..."
 	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_syslog_parser.py tests/unit/test_filterlog_parser.py tests/unit/test_windows_parser.py tests/unit/test_web_parser.py -v
+
+test-validator: build
+	@echo "=> Running validator tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_validator.py -v
+
+test-state-manager: build
+	@echo "=> Running state_manager tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_state_manager.py -v
+
+test-rule-engine: build
+	@echo "=> Running rule_engine tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_rule_engine.py -v
+
+test-yara-scanner: build
+	@echo "=> Running yara_scanner tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_yara_scanner.py -v
+
+test-alerter: build
+	@echo "=> Running alerter tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_alerter.py -v
+
+test-dispatcher: build
+	@echo "=> Running dispatcher tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_dispatcher.py -v
 
 lint: build
 	@echo "=> Running flake8..."
