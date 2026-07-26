@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-parsers test-validator test-state-manager test-rule-engine test-yara-scanner test-alerter test-dispatcher test-integration lint typecheck shell clean
+.PHONY: help build test test-unit test-integration test-parsers test-validator test-state-manager test-rule-engine test-yara-scanner test-alerter test-dispatcher test-reader lint typecheck shell clean
 
 IMAGE_NAME := nyxsoc-engine
 
@@ -26,6 +26,7 @@ help:
 	@echo "  make test-yara-scanner Run yara_scanner tests"
 	@echo "  make test-alerter     Run alerter tests"
 	@echo "  make test-dispatcher  Run dispatcher tests"
+	@echo "  make test-reader      Run reader tests"
 	@echo "  make lint             Run flake8"
 	@echo "  make typecheck        Run mypy --strict"
 	@echo "  make shell            Open a shell in the test container"
@@ -74,6 +75,10 @@ test-alerter: build
 test-dispatcher: build
 	@echo "=> Running dispatcher tests..."
 	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_dispatcher.py -v
+
+test-reader: build
+	@echo "=> Running reader tests..."
+	$(CONTAINER_ENGINE) run --rm $(IMAGE_NAME) pytest tests/unit/test_reader.py -v
 
 lint: build
 	@echo "=> Running flake8..."
