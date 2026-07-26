@@ -173,7 +173,7 @@ def main() -> None:
     yara = YaraScanner(yara_dir)
 
     logger.info("Init RuleEngine (%s)", rules_dir)
-    rule_engine = RuleEngine(state, yara, rules_dir)
+    rule_engine = RuleEngine(state, yara, rules_dir, cfg.get("hosts", {}))
 
     logger.info("Init Alerter")
     alerter = Alerter(alerts_dir, alerts_log)

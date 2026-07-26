@@ -43,7 +43,7 @@
       "description": "Hostname de la machine ciblée. Ex: debian-server, DESKTOP-PME"
     },
     "target_ip": {
-      "type": "string",
+      "type": ["string", "null"],
       "format": "ipv4",
       "description": "IP de la machine ciblée"
     },
