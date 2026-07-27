@@ -2,6 +2,8 @@
 # Wordlists générées (contiennent le vrai mot de passe)
 wordlist_s1*.txt
 wordlist_*.txt
+# Ou plus globalement, ignorer tous les wordlists générés
+*.txt
 
 # Logs et métadonnées de runs (peuvent contenir des infos sensibles/volumineuses)
 logs/
@@ -11,3 +13,4 @@ logs/
 *.exe
 *.docm
 payload*
+*.csv
