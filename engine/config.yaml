@@ -47,12 +47,3 @@ soar:
 rules:
   attack: "engine/rules/attack"
 
-# Types d'événements retenus pour les règles 
-event_types: [
-        "ssh_failure", "logon_success", "logon_failure",
-        "samba_read", "samba_write", "smb_failure",
-        "http_request",
-        "net_scan", "firewall_block",
-        "file_create", "process_exec", "net_connect",
-        "tgt_request", "tgs_request"
-      ]

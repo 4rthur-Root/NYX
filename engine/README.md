@@ -702,6 +702,21 @@ sudo chown -R nyxsoc:nyxsoc /var/log/nyxsoc/
 | H-E4 | YARA sur fichiers locaux Windows inaccessible | Fichiers C:\ non scannable | YARA sur partages Samba montés |
 | H-E5 | Seuils calibrés lab | Faux positifs en production | Ajuster threshold/window en prod |
 | H-E6 | Pas de hot-reload des règles | Redémarrage requis après modif | Acceptable pour 10 semaines |
+| H-E7 | Taxonomie `event_type` dupliquée | Incohérence lors d'ajout d'un type | Maintenir 3 copies manuelles (voir ci-dessous) |
+
+### Point de vigilance — Taxonomie `event_type` dupliquée
+
+La taxonomie des 14 `event_type` est actuellement dupliquée à 3 endroits :
+
+1. **`validator.py`** — `_VALID_EVENT_TYPES` (set Python) : utilisée par `EventValidator.validate()` au runtime pour rejeter les événements hors taxonomie.
+2. **`docs/rule-schema.json`** — définition `event_type` (enum JSON) : utilisée par `jsonschema.validate()` dans `RuleEngine._load_rules()` pour valider les règles YAML à l'initialisation.
+3. **`config.yaml`** — clé `event_types` (liste YAML) : **jamais lue par le code**. Configuration morte.
+
+**Risque** : l'ajout d'un nouveau `event_type` (ex: `dns_query`) nécessite de modifier les 3 fichiers. L'oubli de l'un d'eux provoque soit un rejet silencieux des événements (validator), soit une erreur de chargement des règles (schema), soit une incohérence de documentation (config).
+
+**Recommandation** :
+- Court terme : supprimer la clé `event_types` de `config.yaml` (configuration morte).
+- Moyen terme : centraliser la taxonomie dans un fichier unique (ex: `engine/taxonomy.yaml` ou un module Python `engine/event_types.py`) et générer les 2 autres fichiers (validator set + schema enum) à partir de cette source unique.
 
 ---
 
