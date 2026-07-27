@@ -90,9 +90,16 @@ if [ -z "$VALID_LINE" ]; then
 fi
 echo "[+] Paire valide trouvée : ${VALID_LINE}"
 
-# Format typique nxc : "SMB  10.0.1.20  445  SRV-PME  [+] NYX\dir1:MotDePasse"
-VALID_USER=$(echo "$VALID_LINE" | grep -oP '(?<=\\\\)[^:]+(?=:)' || echo "unknown")
-VALID_PASS=$(echo "$VALID_LINE" | grep -oP '(?<=:)[^\s]+$' || echo "unknown")
+# Format typique nxc : "SMB  10.0.1.20  445  SRV-PME  [+] nyx.tg\dir1:MotDePasse"
+# Extraire la chaîne credential après [+] et trimmer les espaces.
+# Ne PAS utiliser xargs (il interprète les backslashes et les mange).
+CRED=$(printf '%s\n' "$VALID_LINE" | sed 's/.*\[+] *//; s/[[:space:]]*$//')
+if [ -z "$CRED" ]; then
+    echo "[!] Impossible d'extraire les credentials de la ligne nxc."
+    exit 1
+fi
+VALID_USER=$(printf '%s\n' "$CRED" | cut -d\\ -f2 | cut -d: -f1)
+VALID_PASS=$(printf '%s\n' "$CRED" | cut -d: -f2-)
 
 echo "    Compte compromis : ${VALID_USER}"
 
