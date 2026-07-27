@@ -9,7 +9,7 @@ plausibles. Permet de contrôler précisément le nombre de tentatives avant
 succès, donc de calculer une latence de détection reproductible.
 
 Usage :
-    python3 gen_wordlist.py --real-password 'MonMotDePasse' --position 12 --out wordlist_s1.txt
+    python3 gen_wordlist.py --real-password 'VraiMotDePasse' --position 'nombre(entier)' --out wordlist_s1.txt
 
 ⚠️ Ne jamais committer wordlist_s1.txt dans le repo (contient un vrai mdp).
    Ajouter au .gitignore : nyx-s1/wordlist_s1.txt
