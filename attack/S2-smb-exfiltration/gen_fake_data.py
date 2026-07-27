@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-gen_fake_data.py — Génère un fichier releves_mm.csv factice mais réaliste
-pour le scénario S2 (Exfiltration de données financières via SMB — NyxSOC).
+gen_fake_data.py - Génère un fichier releves_mm.csv factice mais réaliste
+pour le scénario S2 (Exfiltration de données financières via SMB - Nyx).
 
 Ce fichier simule un export de relevés Mobile Money (Flooz/TMoney, cohérent
 avec le contexte PME togolais documenté dans Topologie.pdf) tel qu'il
 pourrait être stocké dans le partage Samba `direction/`.
 
 ⚠️ Toutes les données sont synthétiques (noms, numéros, montants générés
-   aléatoirement) — aucune donnée réelle n'est utilisée ou nécessaire.
+   aléatoirement) - aucune donnée réelle n'est utilisée ou nécessaire.
 
 Usage :
     python3 gen_fake_data.py --rows 150 --out releves_mm.csv
@@ -28,7 +28,7 @@ FIRST_NAMES = [
 ]
 LAST_NAMES = [
     "Agbodan", "Kponton", "Ametepe", "Lawson", "Adjovi", "Tetteh",
-    "Amouzou", "Gnassingbe", "Kokouvi", "Amegah",
+    "Amouzou", "Gangondoin", "Kokouvi", "Amegah",
 ]
 
 

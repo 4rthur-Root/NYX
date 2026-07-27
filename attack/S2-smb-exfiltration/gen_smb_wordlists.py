@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-gen_smb_wordlists.py — Génère users.txt et passwords.txt pour le brute-force
-SMB du scénario S2 (Exfiltration de données financières via SMB — NyxSOC).
+gen_smb_wordlists.py - Génère users.txt et passwords.txt pour le brute-force
+SMB du scénario S2 (Exfiltration de données financières via SMB - Nyx).
 
 Même logique que gen_wordlist.py (S1) : le vrai mot de passe d'un compte
 cible est injecté à une position connue dans passwords.txt, pour contrôler
