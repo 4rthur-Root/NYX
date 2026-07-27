@@ -1,0 +1,13 @@
+## Note this gitignore is only here for safety , not used yet unless logic switch
+# Wordlists générées (contiennent le vrai mot de passe)
+wordlist_s1*.txt
+wordlist_*.txt
+
+# Logs et métadonnées de runs (peuvent contenir des infos sensibles/volumineuses)
+logs/
+*.meta.json
+
+# Payloads générés (S3/S5 — binaires malveillants, ne doivent jamais être commit)
+*.exe
+*.docm
+payload*
