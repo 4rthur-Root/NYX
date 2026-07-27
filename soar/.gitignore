@@ -1,0 +1,43 @@
+# Base SQLite et fichiers annexes du mode WAL
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Logs applicatifs et d'audit
+logs/*.log
+
+# Rapports générés
+reports/*.csv
+reports/*.pdf
+reports/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Environnement
+.env
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+
+
+# Docs de développement (step-*)
+docs/step-*.md
+
+# Anciens fichiers de planification
+DCD_module_SOAR*
+planning-developpement-soar.md
+
+# Documentation de référence (non versionnée)
+REFERENCE_RAPPORT.md

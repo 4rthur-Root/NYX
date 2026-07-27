@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Optional
+
+from soar.config.settings import settings
+from soar.db import get_connection
+from soar.engine import DecisionEngine
+from soar.handlers.handler import get_handler
+from soar.logging import AuditLogger, ResponseWriter
+from soar.models.alert import Alert
+from soar.models.decision import Decision
+from soar.models.response import Response
+from soar.parser import AlertParser
+from soar.repositories.alert_repository import AlertRepository
+from soar.watcher import AlertWatcher
+
+logger = logging.getLogger("soar.orchestrator")
+
+
+class AlertOrchestrator:
+    def __init__(
+        self,
+        parser: Optional[AlertParser] = None,
+        decision_engine: Optional[DecisionEngine] = None,
+        watch_dir: Optional[Path] = None,
+    ):
+        self._parser = parser or AlertParser()
+        self._engine = decision_engine or DecisionEngine()
+        self._watch_dir = watch_dir or Path(settings.alerts_incoming)
+        self._watcher: Optional[AlertWatcher] = None
+        self._audit_logger = AuditLogger()
+        self._response_writer = ResponseWriter()
+        self._alert_repo = AlertRepository()
+
+    def start(self):
+        self._watcher = AlertWatcher(
+            watch_dir=self._watch_dir,
+            parser=self._parser,
+            on_alert=self._on_alert,
+        )
+        self._watcher.start()
+        logger.info("Orchestrateur démarré sur %s", self._watch_dir)
+
+    def stop(self):
+        if self._watcher is not None:
+            self._watcher.stop()
+            logger.info("Orchestrateur arrêté")
+
+    def _on_alert(self, alert: Alert):
+        try:
+            self._alert_repo.save(alert)
+        except Exception:
+            logger.exception("Erreur sauvegarde alerte %s", alert.alert_id)
+
+        try:
+            decision = self._engine.decide(alert)
+        except Exception:
+            logger.exception("Erreur décision pour %s", alert.alert_id)
+            return
+
+        handler_fn = get_handler(decision)
+        if handler_fn is None:
+            logger.warning(
+                "Aucun handler pour action=%s scenario=%s (alert=%s)",
+                decision.action,
+                decision.scenario_type,
+                alert.alert_id,
+            )
+            return
+
+        try:
+            response = handler_fn(alert, decision)
+            self._on_response(alert, decision, response)
+        except Exception:
+            logger.exception("Erreur exécution handler pour %s", alert.alert_id)
+
+    def _on_response(self, alert: Alert, decision: Decision, response: Response):
+        self._audit_logger.log(alert, decision, response)
+        self._response_writer.write(response)
+        logger.info(
+            "Réponse: alert=%s action=%s status=%s latency=%dms",
+            response.alert_id,
+            response.action,
+            response.status,
+            response.latency_ms,
+        )

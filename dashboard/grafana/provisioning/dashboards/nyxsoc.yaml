@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: nyxsoc
+    orgId: 1
+    folder: NyxSOC
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/nyxsoc
+      foldersFromFilesStructure: false

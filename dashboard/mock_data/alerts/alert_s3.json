@@ -1,0 +1,32 @@
+{
+  "alert_id": "550e8400-e29b-41d4-a716-446655440003",
+  "timestamp": 1750007200000,
+  "rule_id": "MALICIOUS_FILE_EXEC_001",
+  "severity": "CRITICAL",
+  "attacker_ip": null,
+  "target_host": "DESKTOP-PME",
+  "target_ip": "10.0.1.30",
+  "mitre_tactic": "TA0002",
+  "mitre_technique": "T1204.002",
+  "events_count": 3,
+  "events_details": [
+    {
+      "timestamp": 1750007100000,
+      "event_type": "samba_write",
+      "source_host": "debian-server",
+      "raw_log": "Samba write access to commun/ payload.exe from dir1"
+    },
+    {
+      "timestamp": 1750007150000,
+      "event_type": "file_create",
+      "source_host": "DESKTOP-PME",
+      "raw_log": "File created: C:\\Users\\compta1\\Downloads\\payload.exe"
+    },
+    {
+      "timestamp": 1750007200000,
+      "event_type": "process_exec",
+      "source_host": "DESKTOP-PME",
+      "raw_log": "Process executed: payload.exe (PID 1234)"
+    }
+  ]
+}

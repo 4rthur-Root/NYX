@@ -1,20 +1,23 @@
 rule_id: MALICIOUS_FILE_EXEC_001
+type: 2
 description: "Fichier malveillant déposé et exécuté"
 severity: CRITICAL
+mitre_tactic: "TA0002"
+mitre_technique: "T1204.002"
+source_host_pattern: "*"
 
 steps:
   - step: 1
-    event_type: file_create
-    source_host_pattern: "DESKTOP*"
-    check_yara: true
-    yara_match_required: false
+    event_type: samba_write
+    source_host_pattern: "debian*"
+    condition:
+      yara_match: required
 
   - step: 2
     event_type: process_exec
     source_host_pattern: "DESKTOP*"
-    window_seconds: 14400    # 4h après step 1
+    window_seconds: 14400    # jusqu'à 4h après step 1
     match_on: actor_user     # même utilisateur que step 1
 
 response:
   alert: true
-  soar_action: block_ip_and_isolate

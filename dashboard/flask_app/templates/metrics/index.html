@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Métriques — NyxSOC{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Métriques</h1>
+    <p class="subtitle">Indicateurs de performance du Mini-SOC</p>
+    {% if not stats.total_alerts %}
+    <p class="subtitle" style="color: var(--accent-yellow);">Mode démo — Données mockées</p>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Alertes totales</div>
+        <div class="stat-value">{{ stats.total_alerts }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Taux de succès</div>
+        <div class="stat-value">
+            {% if stats.success_rate is not none %}
+                {{ stats.success_rate }}%
+            {% else %}
+                —
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Latence moyenne</div>
+        <div class="stat-value">
+            {% if stats.avg_latency_ms is not none %}
+                {{ stats.avg_latency_ms }} ms
+            {% else %}
+                —
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h2>Alertes par sévérité</h2>
+        <canvas id="severityChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h2>Latence par scénario</h2>
+        <canvas id="latencyChart"></canvas>
+    </div>
+    <div class="chart-card full-width">
+        <h2>Alertes par heure</h2>
+        <canvas id="timelineChart"></canvas>
+    </div>
+</div>
+
+{% if stats.blocked_ips %}
+<div class="card">
+    <h2>IPs bloquées (OPNsense)</h2>
+    <ul class="ip-list">
+        {% for ip in stats.blocked_ips %}
+        <li><code>{{ ip }}</code></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
+<script>
+    const metricsData = {{ stats | tojson | safe }};
+</script>
+{% endblock %}

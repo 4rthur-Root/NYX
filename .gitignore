@@ -1,11 +1,16 @@
+# Environnement Python
+.venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.db
-*.sqlite3
-*.log
-*.bkp
-plan.txt
-garde/
+*.egg-info/
+
+# Secrets
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
 nyx_engine_report.md

@@ -1,1 +1,7 @@
-pyYAML==6.0.2
+pyyaml
+jsonschema
+watchdog
+yara-python
+pytest
+flake8
+mypy
