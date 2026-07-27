@@ -77,6 +77,10 @@ class _LogFileHandler(FileSystemEventHandler):
     def _read_new_lines(self, path: str, filename: str) -> None:
         """Lit les nouvelles lignes depuis le pointeur courant.
 
+        Gère la rotation copytruncate : si le fichier a rétréci depuis la
+        dernière lecture, le pointeur est réinitialisé à 0 pour éviter
+        de lire des données corrompues ou de sauter du contenu.
+
         Avance le pointeur après chaque lecture pour ne pas retraiter
         les anciennes lignes lors du prochain événement inotify.
 
@@ -85,6 +89,24 @@ class _LogFileHandler(FileSystemEventHandler):
             filename: Nom du fichier (clé de routing pour le Dispatcher).
         """
         pos = self._positions.get(path, 0)
+
+        try:
+            current_size = os.path.getsize(path)
+        except OSError as exc:
+            logger.warning("Impossible de stat %s : %s", path, exc)
+            return
+
+        if current_size < pos:
+            # Le fichier a rétréci depuis la dernière lecture — rotation
+            # copytruncate (pas de rename, contenu écrasé sur place).
+            # Reprendre depuis le début pour ne pas perdre ni corrompre
+            # les nouvelles lignes.
+            logger.info(
+                "Troncature détectée sur %s (%d -> %d octets) — pointeur réinitialisé",
+                path, pos, current_size,
+            )
+            pos = 0
+
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 f.seek(pos)

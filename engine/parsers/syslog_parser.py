@@ -1,4 +1,3 @@
-# parsers/syslog_parser.py
 import json
 import re
 import logging
@@ -13,7 +12,7 @@ class SyslogParser(BaseParser):
     Gère les processus : sshd, smbd, nmbd, apache2 (et variantes).
     Dispatch interne par le champ 'program' extrait de l'enveloppe syslog.
     Produit les event_types : ssh_failure, logon_success, samba_read,
-    samba_write, smb_failure, http_request.
+    samba_write, smb_failure.
 
     Attributes:
         debug: Active le logging des lignes ignorées pour le débogage.
@@ -27,7 +26,7 @@ class SyslogParser(BaseParser):
         """
         self.debug = debug
 
-        # --- Enveloppe syslog ---
+        # Enveloppe syslog
         # RFC 5424 : 2026-06-19T10:23:41+00:00 host program[pid]: message
         self.RE_ENVELOPE_RFC5424 = re.compile(
             r"^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[.]\d+)?(?:[+-]\d{2}:\d{2}|Z))"
@@ -47,7 +46,7 @@ class SyslogParser(BaseParser):
             re.DOTALL,
         )
 
-        # --- SSH ---
+        # SSH
         self.RE_SSH_FAIL = re.compile(
             r"Failed\s+\S+\s+for\s+(?:invalid\s+user\s+)?(?P<user>\S+)\s+"
             r"from\s+(?P<ip>[\d.]+)\s+port\s+(?P<port>\d+)"
@@ -60,7 +59,7 @@ class SyslogParser(BaseParser):
         )
         self.RE_SSH_DISCONNECT = re.compile(r"Disconnected|Connection closed|Connection reset")
 
-        # --- Samba (smbd) ---
+        # Samba (smbd)
         # "dir1 wrote payload.exe on //commun from 10.0.1.50" (format audit smbd)
         self.RE_SMBD_WRITE = re.compile(
             r"(?P<user>\S+)\s+(?:wrote|stored|created|put)\s+(?P<filename>\S+)\s+on\s+(?P<share>//\S+)"
@@ -90,18 +89,156 @@ class SyslogParser(BaseParser):
             r"(?:for\s+(?P<user>\S+)\s+from|user\s+(?P<user2>\S+))\s+(?P<ip>[\d.]+)"
         )
 
-        # --- Apache2 / web ---
-        # Format Combined Log : IP - - [date] "METHOD /path HTTP/1.1" status size
-        self.RE_APACHE = re.compile(
-            r'(?P<ip>[\d.]+)\s+-\s+-\s+\[[^\]]+\]\s+'
-            r'"(?P<method>[A-Z]+)\s+(?P<path>\S+)\s+HTTP/[\d.]+"\s+'
-            r"(?P<status>\d{3})\s+(?P<size>\d+|-)"
-        )
+    # Sous-parsers par programme
+    def _parse_sshd(self, msg: str) -> tuple | None:
+        """Parse un message sshd.
 
-    # ------------------------------------------------------------------
-    # Méthode principale
-    # ------------------------------------------------------------------
+        Args:
+            msg: Corps du message syslog du processus sshd.
 
+        Returns:
+            Tuple (event_type, actor_ip, actor_user, target_port, extra)
+            ou None si la ligne est du bruit SSH.
+        """
+        # Échec SSH - "Failed password for root from 10.0.1.50 port 52341"
+        m = self.RE_SSH_FAIL.search(msg)
+        if m:
+            user = m.group("user") or None
+            # Convention stricte : "" -> None
+            if user is not None and user.strip() == "":
+                user = None
+            return (
+                "ssh_failure",
+                m.group("ip"),
+                user,
+                22,
+                None,
+            )
+
+        # Utilisateur inexistant - "Invalid user foo from 10.0.1.50"
+        m = self.RE_SSH_INVALID.search(msg)
+        if m:
+            user = m.group("user").strip() or None
+            return "ssh_failure", m.group("ip"), user, 22, None
+
+        # Connexion acceptée
+        m = self.RE_SSH_SUCCESS.search(msg)
+        if m:
+            return (
+                "logon_success",
+                m.group("ip"),
+                m.group("user"),
+                22,
+                None,
+            )
+
+        # Déconnexion - bruit ignoré silencieusement
+        if self.RE_SSH_DISCONNECT.search(msg):
+            return None
+
+        if self.debug:
+            logger.debug("sshd message non reconnu : %s", msg[:80])
+        return None
+    
+    def _parse_smbd(self, msg: str) -> tuple | None:
+        """Parse un message smbd (Samba).
+
+        Args:
+            msg: Corps du message syslog du processus smbd.
+
+        Returns:
+            Tuple (event_type, actor_ip, actor_user, target_port, extra)
+            ou None si non reconnu.
+        """
+        # Échec d'authentification Samba
+        if self.RE_SMBD_AUTH_FAIL.search(msg):
+            m_ui = self.RE_SMBD_USER_IP.search(msg)
+            user = None
+            ip = None
+            if m_ui:
+                user = m_ui.group("user") or m_ui.group("user2")
+                ip = m_ui.group("ip")
+            return "smb_failure", ip, user, 445, {"detail": msg[:120]}
+
+        # Écriture fichier Samba (pattern principal)
+        m = self.RE_SMBD_WRITE.search(msg)
+        if m:
+            return (
+                "samba_write",
+                m.group("ip"),
+                m.group("user"),
+                445,
+                {
+                    "filename": m.group("filename"),
+                    "share": m.group("share"),
+                },
+            )
+
+        # Écriture fichier Samba (pattern alternatif smbd verbose)
+        if self.RE_SMBD_WRITE_ALT.search(msg):
+            return "samba_write", None, None, 445, {"detail": msg[:120]}
+
+        # Lecture fichier Samba
+        m = self.RE_SMBD_READ.search(msg)
+        if m:
+            return (
+                "samba_read",
+                m.group("ip"),
+                m.group("user"),
+                445,
+                {
+                    "filename": m.group("filename"),
+                    "share": m.group("share"),
+                },
+            )
+
+        if self.RE_SMBD_READ_ALT.search(msg):
+            return "samba_read", None, None, 445, None
+
+        if self.debug:
+            logger.debug("smbd message non reconnu : %s", msg[:80])
+        return None
+
+    def _parse_samba_json(self, msg: str) -> tuple | None:
+        """Parse un log d'audit Samba au format JSON (Samba >= 4.12).
+
+        Gère les EventIDs 4768 (TGT) et 4769 (TGS) pour la détection
+        d'AS-REP Roasting et Kerberoasting.
+        """
+        try:
+            data = json.loads(msg.strip())
+        except json.JSONDecodeError:
+            if self.debug:
+                logger.debug("Samba JSON invalide : %s", msg[:80])
+            return None
+
+        auth = data.get("Authentication", {})
+        event_id = auth.get("eventId")
+
+        if event_id == 4768:
+            event_type = "tgt_request"
+        elif event_id == 4769:
+            event_type = "tgs_request"
+        else:
+            return None
+
+        ip = auth.get("remoteAddress", "")
+        if ip.startswith("ipv4:"):
+            ip = ip[5:]
+        elif ip.startswith("ipv6:"):
+            ip = ip[5:]
+
+        if ":" in ip and not ip.startswith("["):
+            ip = ip.rsplit(":", 1)[0]
+
+        user = auth.get("accountName")
+        spn = auth.get("servicePrincipalName")
+
+        extra = {"spn": spn} if spn else None
+
+        return (event_type, ip or None, user or None, 88, extra)
+
+# Méthode principale
     def parse(self, line: str) -> dict | None:
         """Parse une ligne syslog Debian en événement normalisé.
 
@@ -147,10 +284,8 @@ class SyslogParser(BaseParser):
                 result = self._parse_samba_json(message)
             else:
                 result = self._parse_smbd(message)
-        elif program in ("apache2", "httpd"):
-            result = self._parse_apache(message)
         elif program == "nmbd":
-            return None  # bruit réseau Netbios — ignoré
+            return None  # bruit réseau Netbios - ignoré
         else:
             if self.debug:
                 logger.debug("Programme '%s' ignoré", program)
@@ -181,188 +316,3 @@ class SyslogParser(BaseParser):
             "yara_match":  None,
             "raw_log":     stripped,
         }
-
-    # ------------------------------------------------------------------
-    # Sous-parsers par programme
-    # ------------------------------------------------------------------
-
-    def _parse_sshd(self, msg: str) -> tuple | None:
-        """Parse un message sshd.
-
-        Args:
-            msg: Corps du message syslog du processus sshd.
-
-        Returns:
-            Tuple (event_type, actor_ip, actor_user, target_port, extra)
-            ou None si la ligne est du bruit SSH.
-        """
-        # Échec SSH — "Failed password for root from 10.0.1.50 port 52341"
-        m = self.RE_SSH_FAIL.search(msg)
-        if m:
-            user = m.group("user") or None
-            # Convention stricte : "" → None
-            if not user or user.strip() == "":
-                user = None
-            return (
-                "ssh_failure",
-                m.group("ip"),
-                user,
-                22,
-                None,
-            )
-
-        # Utilisateur inexistant — "Invalid user foo from 10.0.1.50"
-        m = self.RE_SSH_INVALID.search(msg)
-        if m:
-            user = m.group("user").strip() or None
-            return "ssh_failure", m.group("ip"), user, 22, None
-
-        # Connexion acceptée
-        m = self.RE_SSH_SUCCESS.search(msg)
-        if m:
-            return (
-                "logon_success",
-                m.group("ip"),
-                m.group("user"),
-                22,
-                None,
-            )
-
-        # Déconnexion / bruit — ignoré silencieusement
-        if self.RE_SSH_DISCONNECT.search(msg):
-            return None
-
-        if self.debug:
-            logger.debug("sshd message non reconnu : %s", msg[:80])
-        return None
-
-    def _parse_smbd(self, msg: str) -> tuple | None:
-        """Parse un message smbd (Samba).
-
-        Args:
-            msg: Corps du message syslog du processus smbd.
-
-        Returns:
-            Tuple (event_type, actor_ip, actor_user, target_port, extra)
-            ou None si non reconnu.
-        """
-        # Échec d'authentification Samba
-        if self.RE_SMBD_AUTH_FAIL.search(msg):
-            m_ui = self.RE_SMBD_USER_IP.search(msg)
-            user = None
-            ip   = None
-            if m_ui:
-                user = m_ui.group("user") or m_ui.group("user2")
-                ip   = m_ui.group("ip")
-            return "smb_failure", ip, user, 445, {"detail": msg[:120]}
-
-        # Écriture fichier Samba (pattern principal)
-        m = self.RE_SMBD_WRITE.search(msg)
-        if m:
-            return (
-                "samba_write",
-                m.group("ip"),
-                m.group("user"),
-                445,
-                {
-                    "filename": m.group("filename"),
-                    "share":    m.group("share"),
-                },
-            )
-
-        # Écriture fichier Samba (pattern alternatif smbd verbose)
-        if self.RE_SMBD_WRITE_ALT.search(msg):
-            return "samba_write", None, None, 445, {"detail": msg[:120]}
-
-        # Lecture fichier Samba
-        m = self.RE_SMBD_READ.search(msg)
-        if m:
-            return (
-                "samba_read",
-                m.group("ip"),
-                m.group("user"),
-                445,
-                {
-                    "filename": m.group("filename"),
-                    "share":    m.group("share"),
-                },
-            )
-
-        if self.RE_SMBD_READ_ALT.search(msg):
-            return "samba_read", None, None, 445, None
-
-        if self.debug:
-            logger.debug("smbd message non reconnu : %s", msg[:80])
-        return None
-
-    def _parse_samba_json(self, msg: str) -> tuple | None:
-        """Parse un log d'audit Samba au format JSON (Samba >= 4.12).
-        
-        Gère les EventIDs 4768 (TGT) et 4769 (TGS) pour la détection
-        d'AS-REP Roasting et Kerberoasting.
-        """
-        try:
-            data = json.loads(msg.strip())
-        except json.JSONDecodeError:
-            if self.debug:
-                logger.debug("Samba JSON invalide : %s", msg[:80])
-            return None
-
-        auth = data.get("Authentication", {})
-        event_id = auth.get("eventId")
-        
-        if event_id == 4768:
-            event_type = "tgt_request"
-        elif event_id == 4769:
-            event_type = "tgs_request"
-        else:
-            return None
-            
-        ip = auth.get("remoteAddress", "")
-        if ip.startswith("ipv4:"):
-            ip = ip[5:]
-        elif ip.startswith("ipv6:"):
-            ip = ip[5:]
-            
-        if ":" in ip and not ip.startswith("["): 
-            ip = ip.rsplit(":", 1)[0]
-            
-        user = auth.get("accountName")
-        spn = auth.get("servicePrincipalName")
-        
-        extra = {"spn": spn} if spn else None
-        
-        return (event_type, ip or None, user or None, 88, extra)
-
-    def _parse_apache(self, msg: str) -> tuple | None:
-        """Parse un message apache2 (Combined Log Format).
-
-        Args:
-            msg: Corps du message syslog du processus apache2.
-
-        Returns:
-            Tuple (event_type, actor_ip, actor_user, target_port, extra)
-            ou None si non reconnu.
-        """
-        m = self.RE_APACHE.search(msg)
-        if not m:
-            if self.debug:
-                logger.debug("apache2 message non reconnu : %s", msg[:80])
-            return None
-
-        try:
-            status = int(m.group("status"))
-        except ValueError:
-            status = 0
-
-        return (
-            "http_request",
-            m.group("ip"),
-            None,
-            80,
-            {
-                "method":      m.group("method"),
-                "path":        m.group("path"),
-                "http_status": status,
-            },
-        )

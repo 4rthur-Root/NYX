@@ -1,8 +1,21 @@
-# Mapping nom de fichier source → type de parser
 sources:
-  "debian.log":              "syslog"
+  "srv-pme.log":             "syslog"
+  "localhost.log":           "web"
   "OPNsense.internal.log":   "filterlog"
-  "DESKTOP-PME.log":         "windows"
+  "NYX-PME.nyx.tg.log":      "windows"
+
+# Résolution hostname -> IP statique de la topologie NyxSOC.
+# Utilisé par RuleEngine pour renseigner target_ip dans les alertes
+# (Option C - cf. engine.md : mapping connu en priorité, null en
+# fallback si un source_host n'y figure pas plutôt qu'une IP inventée).
+hosts:
+  "srv-pme":               "10.0.1.20"
+  "srv-pme.nyx.tg":        "10.0.1.20"
+  "debian-server":         "10.0.1.20"
+  "NYX-PME":               "10.0.1.30"
+  "NYX-PME.nyx.tg":        "10.0.1.30"
+  "OPNsense.internal":     "10.0.1.1"
+  "localhost":             "10.0.1.20"   # Dolibarr tourne en Docker sur srv-pme
 
 # Rétention des données SQLite
 retention:
@@ -38,7 +51,8 @@ rules:
 event_types: [
         "ssh_failure", "logon_success", "logon_failure",
         "samba_read", "samba_write", "smb_failure",
-        "http_request", "net_scan", "firewall_block",
+        "http_request",
+        "net_scan", "firewall_block",
         "file_create", "process_exec", "net_connect",
         "tgt_request", "tgs_request"
       ]

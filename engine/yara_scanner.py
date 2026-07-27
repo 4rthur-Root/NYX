@@ -10,7 +10,7 @@ try:
     _YARA_AVAILABLE = True
 except ImportError:
     _YARA_AVAILABLE = False
-    logger.warning("yara-python non disponible — YARA désactivé (pip install yara-python)")
+    logger.warning("yara-python non disponible - YARA désactivé (pip install yara-python)")
 
 
 class YaraScanner:
@@ -38,7 +38,7 @@ class YaraScanner:
 
         yar_files = list(self.rules_dir.glob("*.yar")) + list(self.rules_dir.glob("*.yara"))
         if not yar_files:
-            logger.warning("Aucun fichier .yar trouvé dans %s — YARA désactivé", rules_dir)
+            logger.warning("Aucun fichier .yar trouvé dans %s - YARA désactivé", rules_dir)
             return
 
         try:
@@ -54,8 +54,8 @@ class YaraScanner:
     def scan(self, file_path: str) -> dict | None:
         """Scanne un fichier contre les règles YARA compilées.
 
-        Le scan est indépendant de l'extension — YARA analyse les octets.
-        Un exécutable renommé en .docx est détecté normalement.
+        Le scan est indépendant de l'extension - YARA analyse les octets.
+        Un exécutable renommé en .docx ou autre extension est détecté normalement.
 
         Args:
             file_path: Chemin absolu du fichier sur le SOC
@@ -94,7 +94,7 @@ class YaraScanner:
         if not matches:
             return None
 
-        # On retourne le premier match — le plus significatif
+        # On retourne le premier match - le plus significatif
         first_match = matches[0]
         return {
             "rule_name": first_match.rule,

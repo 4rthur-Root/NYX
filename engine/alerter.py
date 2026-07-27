@@ -73,9 +73,7 @@ class Alerter:
         else:
             logger.error("Sévérité inconnue '%s' pour la règle %s", severity, rule_id)
 
-    # ------------------------------------------------------------------
     # Helpers privés
-    # ------------------------------------------------------------------
 
     def _log_warning(self, alert: dict) -> None:
         """Loggue l'alerte dans le fichier alerts.log.
@@ -154,10 +152,8 @@ def build_alert(
     count   = len(events)
     details = _truncate_events(events)
 
-    # Extraire le champ technique MITRE (sans sous-technique pour le schéma strict)
+    # Extraire le champ technique MITRE (avec sous-technique pour plus de précision pour le SOAR)
     mitre_technique = rule.get("mitre_technique", "T0000")
-    if "." in mitre_technique:
-        mitre_technique = mitre_technique.split(".")[0]
 
     return {
         "alert_id":        str(uuid.uuid4()),

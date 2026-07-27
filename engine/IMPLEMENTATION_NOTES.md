@@ -8,7 +8,7 @@
 
 ## et les ressources utiles par module
 
----
+--- 
 
 ## 0. Avant de commencer — checklist
 

@@ -58,7 +58,7 @@ class BaseParser(ABC):
                     # Timestamps sans timezone → on suppose UTC
                     dt = dt.replace(tzinfo=timezone.utc)
                 if dt.year == 1900:
-                    # RFC 3164 n'inclut pas l'année — on injecte l'année courante
+                    # RFC 3164 n'inclut pas l'année - on injecte l'année courante
                     now = datetime.now(tz=timezone.utc)
                     dt = dt.replace(year=now.year)
                     # Si le timestamp est dans le futur (changement d'année en fin déc.)

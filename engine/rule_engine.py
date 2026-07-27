@@ -28,7 +28,7 @@ class RuleEngine:
     - Type 3 : cooccurrence multi-sources (sans ordre)
     - Type 4 : détection YARA directe (samba_write + yara_match)
 
-    Les règles invalides sont loggées et ignorées — pas de crash.
+    Les règles invalides sont loggées et ignorées - pas de crash.
 
     Attributes:
         state: StateManager injecté depuis main.py.
@@ -41,6 +41,7 @@ class RuleEngine:
         state_manager: StateManager,
         yara_scanner: YaraScanner,
         rules_dir: str,
+        hosts_map: dict[str, str] | None = None
     ) -> None:
         """Charge et valide les règles YAML au démarrage.
 
@@ -48,16 +49,17 @@ class RuleEngine:
             state_manager: Instance StateManager partagée (injection de dépendance).
             yara_scanner: Instance YaraScanner partagée.
             rules_dir: Chemin vers engine/rules/attack/.
+            hosts_map: Mapping optionnel {source_host: target_ip} pour
+                résoudre l'IP cible depuis le hostname source.
         """
         self.state   = state_manager
         self.yara    = yara_scanner
         self.rules: list[dict] = []
         self._schema = self._load_rule_schema()
         self._load_rules(rules_dir)
+        self.hosts_map = hosts_map or {}
 
-    # ------------------------------------------------------------------
     # Interface publique
-    # ------------------------------------------------------------------
 
     def process_event(self, event: dict) -> list[dict] | None:
         """Évalue l'événement contre toutes les règles chargées.
@@ -98,9 +100,18 @@ class RuleEngine:
 
         return alerts if alerts else None
 
-    # ------------------------------------------------------------------
+    def _resolve_target_ip(self, source_host: str) -> str | None:
+        """Résout l'IP cible depuis le hostname source via hosts_map.
+
+        Args:
+            source_host: Hostname de la source de l'événement.
+
+        Returns:
+            IP cible si présente dans hosts_map, None sinon.
+        """
+        return self.hosts_map.get(source_host)
+
     # Évaluateurs par type
-    # ------------------------------------------------------------------
 
     def _eval_type1(self, rule: dict, event: dict) -> dict | None:
         """Évalue une règle Type 1 : seuil simple.
@@ -142,11 +153,11 @@ class RuleEngine:
         # Récupérer les événements pour l'alerte
         events = self.state.get_events(event_type, group_value, group_by, window_s)
         return build_alert(
-            rule=rule,
-            events=events,
-            attacker_ip=event.get("actor_ip"),
-            target_host=event.get("source_host", ""),
-            target_ip="",
+            rule = rule,
+            events = events,
+            attacker_ip = event.get("actor_ip"),
+            target_host = event.get("source_host", ""),
+            target_ip = self._resolve_target_ip(event.get("source_host", "")),
             yara_match=None,
         )
 
@@ -241,7 +252,7 @@ class RuleEngine:
                         events=[step1_event, self._slim_event(event)] if step1_event else [self._slim_event(event)],
                         attacker_ip=event.get("actor_ip"),
                         target_host=event.get("source_host", ""),
-                        target_ip="",
+                        target_ip=self._resolve_target_ip(event.get("source_host", "")),
                         yara_match=yara_match,
                     )
                 else:
@@ -300,12 +311,12 @@ class RuleEngine:
         all_events.sort(key=lambda e: e.get("timestamp", 0))
 
         return build_alert(
-            rule=rule,
-            events=all_events,
-            attacker_ip=event.get("actor_ip"),
-            target_host=event.get("source_host", ""),
-            target_ip="",
-            yara_match=None,
+            rule = rule,
+            events = all_events,
+            attacker_ip = event.get("actor_ip"),
+            target_host = event.get("source_host", ""),
+            target_ip = self._resolve_target_ip(event.get("source_host", "")),
+            yara_match = None,
         )
 
     def _eval_type4(self, rule: dict, event: dict) -> dict | None:
@@ -335,17 +346,15 @@ class RuleEngine:
             return None
 
         return build_alert(
-            rule=rule,
-            events=[event],
-            attacker_ip=event.get("actor_ip"),
-            target_host=event.get("source_host", ""),
-            target_ip="",
-            yara_match=yara_match,
+            rule = rule,
+            events = [event],
+            attacker_ip = event.get("actor_ip"),
+            target_host = event.get("source_host", ""),
+            target_ip = self._resolve_target_ip(event.get("source_host", "")),
+            yara_match = yara_match,
         )
 
-    # ------------------------------------------------------------------
     # Chargement des règles
-    # ------------------------------------------------------------------
 
     def _load_rules(self, rules_dir: str) -> None:
         """Charge et valide tous les fichiers YAML du répertoire de règles.

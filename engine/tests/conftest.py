@@ -4,7 +4,6 @@ import sys
 import os
 import pytest
 
-# Ajouter engine/ au sys.path pour les imports relatifs
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from state_manager import StateManager
@@ -83,5 +82,8 @@ def minimal_event():
         "target_port": 22,
         "extra":       None,
         "yara_match":  None,
-        "raw_log":     "Failed password for root from 10.0.1.50 port 52341 ssh2",
+        "raw_log":     (
+            "Failed password for root from 10.0.1.50 "
+            "port 52341 ssh2"
+        ),
     }
