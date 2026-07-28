@@ -1,4 +1,6 @@
-rule MAL_Hogfish_Report_Related_SampleMAL_Hogfish_Report_Related_Sample {
+import "pe"
+
+rule MAL_Hogfish_Report_Related_Sample {
    meta:
       description = "Detects APT10 / Hogfish related samples"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -20,7 +22,7 @@ rule MAL_Hogfish_Report_Related_SampleMAL_Hogfish_Report_Related_Sample {
 
 
 
-rule MAL_RedLeaves_Apr18_1MAL_RedLeaves_Apr18_1 {
+rule MAL_RedLeaves_Apr18_1 {
    meta:
       description = "Detects RedLeaves malware"
       author = "Florian Roth (Nextron Systems)"
@@ -38,7 +40,7 @@ rule MAL_RedLeaves_Apr18_1MAL_RedLeaves_Apr18_1 {
 }
 
 
-rule SUSP_ScheduledTasks_Nimbus_Manticore_Persistence_May26SUSP_ScheduledTasks_Nimbus_Manticore_Persistence_May26 {
+rule SUSP_ScheduledTasks_Nimbus_Manticore_Persistence_May26 {
    meta:
       description = "Detects scheduled task used for persistence by Nimbus Manticore (UNC1549). The task is used to persistenly load a custom implant that features data exfiltration and remote control capabilities."
       author = "Jonathan Peters (Nextron Systems)"
@@ -57,7 +59,7 @@ rule SUSP_ScheduledTasks_Nimbus_Manticore_Persistence_May26SUSP_ScheduledTasks_N
 
 
 
-rule MAL_APT_Nimbus_Manticore_Stager_May26MAL_APT_Nimbus_Manticore_Stager_May26 {
+rule MAL_APT_Nimbus_Manticore_Stager_May26 {
    meta:
       description = "Detects .NET based stager using AppDomain Hijacking observed to be used by Nimbus Manticore (UNC1549). The stager drops another payload and establishes persistence via scheduled task."
       author = "Jonathan Peters (Nextron Systems)"
@@ -90,7 +92,7 @@ rule MAL_APT_Nimbus_Manticore_Stager_May26MAL_APT_Nimbus_Manticore_Stager_May26 
 
 
 
-rule MAL_APT_Nimbus_Manticore_Agent_May26MAL_APT_Nimbus_Manticore_Agent_May26 {
+rule MAL_APT_Nimbus_Manticore_Agent_May26 {
    meta:
       description = "Detects Nimbus Manticore (UNC1549) agent implant featuring data exfiltration and remote control."
       author = "Jonathan Peters (Nextron Systems)"
@@ -114,7 +116,7 @@ rule MAL_APT_Nimbus_Manticore_Agent_May26MAL_APT_Nimbus_Manticore_Agent_May26 {
 
 
 
-rule MAL_Sindoor_Decryptor_Aug25MAL_Sindoor_Decryptor_Aug25 {
+rule MAL_Sindoor_Decryptor_Aug25 {
    meta:
       description = "Detects AES decryptor used by Sindoor dropper related to APT 36"
       author = "Pezier Pierre-Henri"
@@ -143,7 +145,7 @@ rule MAL_Sindoor_Decryptor_Aug25MAL_Sindoor_Decryptor_Aug25 {
 
 
 
-rule MAL_Sindoor_Downloader_Aug25MAL_Sindoor_Downloader_Aug25 {
+rule MAL_Sindoor_Downloader_Aug25 {
    meta:
       description = "Detects Sindoor downloader related to APT 36"
       author = "Pezier Pierre-Henri"
@@ -172,7 +174,7 @@ rule MAL_Sindoor_Downloader_Aug25MAL_Sindoor_Downloader_Aug25 {
 
 
 
-rule MAL_PE_Type_BabyShark_LoaderMAL_PE_Type_BabyShark_Loader {
+rule MAL_PE_Type_BabyShark_Loader {
    meta:
       description = "Detects PE Type babyShark loader mentioned in February 2019 blog post by PaloAltNetworks"
       author = "Florian Roth (Nextron Systems)"
@@ -185,7 +187,7 @@ rule MAL_PE_Type_BabyShark_LoaderMAL_PE_Type_BabyShark_Loader {
       $x2 = /mshta\.exe http:\/\/[a-z0-9\.\/]{5,30}\.hta/
 
       $xc1 = { 57 69 6E 45 78 65 63 00 6B 65 72 6E 65 6C 33 32
-               2E 44 4C 4C 00 00 00 00 } /* WinExec kernel32.DLL */
+               2E 44 4C 4C 00 00 00 00 } 
    condition:
       uint16(0) == 0x5a4d and (
          pe.imphash() == "57b6d88707d9cd1c87169076c24f962e" or
@@ -199,7 +201,7 @@ rule MAL_PE_Type_BabyShark_LoaderMAL_PE_Type_BabyShark_Loader {
 
 
 
-rule MAL_Emdivi_Gen3MAL_Emdivi_Gen3 {
+rule MAL_Emdivi_Gen3 {
    meta:
       description = "Detects Emdivi Malware"
       author = "Florian Roth (Nextron Systems)"
@@ -219,7 +221,7 @@ rule MAL_Emdivi_Gen3MAL_Emdivi_Gen3 {
       $s5 = "/ncsi.txt" fullword ascii
       $s6 = "/en-us/default.aspx" fullword ascii
       $s7 = "cmd /c" fullword ascii
-      $s9 = "APPDATA" fullword ascii /* Goodware String - occured 25 times */
+      $s9 = "APPDATA" fullword ascii 
    condition:
       uint16(0) == 0x5a4d and filesize < 850KB and
       (
@@ -230,7 +232,7 @@ rule MAL_Emdivi_Gen3MAL_Emdivi_Gen3 {
 
 
 
-rule MAL_DevilsTongue_HijackDllMAL_DevilsTongue_HijackDll {
+rule MAL_DevilsTongue_HijackDll {
    meta:
       description = "Detects SOURGUM's DevilsTongue hijack DLL"
       author = "Microsoft Threat Intelligence Center (MSTIC)"
@@ -277,7 +279,7 @@ rule MAL_DevilsTongue_HijackDllMAL_DevilsTongue_HijackDll {
 }
 
 
-rule MAL_Cisco_RayInitiator_Stage_3_LINE_VIPER_ShellCodeMAL_Cisco_RayInitiator_Stage_3_LINE_VIPER_ShellCode {
+rule MAL_Cisco_RayInitiator_Stage_3_LINE_VIPER_ShellCode {
    meta:
       author = "NCSC"
       description = "Detects RayInitiator GRUB bootkit stage 3 deploy phase code that copies LINE VIPER shellcode stub and marks executable."
@@ -297,7 +299,7 @@ rule MAL_Cisco_RayInitiator_Stage_3_LINE_VIPER_ShellCodeMAL_Cisco_RayInitiator_S
 
 
 
-rule MAL_Cisco_LINE_VIPER_Shellcode_Deobfuscation_RoutineMAL_Cisco_LINE_VIPER_Shellcode_Deobfuscation_Routine {
+rule MAL_Cisco_LINE_VIPER_Shellcode_Deobfuscation_Routine {
    meta:
       author = "NCSC"
       description = "Detects LINE VIPER Cisco ASA malware code as part of a shellcode deobfuscation routine."
@@ -321,7 +323,7 @@ rule MAL_Cisco_LINE_VIPER_Shellcode_Deobfuscation_RoutineMAL_Cisco_LINE_VIPER_Sh
 
 
 
-rule MAL_Cisco_LINE_VIPER_Shellcode_Initial_ExecutionMAL_Cisco_LINE_VIPER_Shellcode_Initial_Execution {
+rule MAL_Cisco_LINE_VIPER_Shellcode_Initial_Execution {
    meta:
       author = "NCSC (modifier by Florian Roth)"
       description = "Detects LINE VIPER Cisco ASA malware code as part of shellcode initial execution."
@@ -348,7 +350,7 @@ rule MAL_Cisco_LINE_VIPER_Shellcode_Initial_ExecutionMAL_Cisco_LINE_VIPER_Shellc
 
 
 
-rule MAL_Cisco_LINE_VIPER_RSA_Enc_Random_AES_Key_GenMAL_Cisco_LINE_VIPER_RSA_Enc_Random_AES_Key_Gen {
+rule MAL_Cisco_LINE_VIPER_RSA_Enc_Random_AES_Key_Gen {
    meta:
       author = "NCSC"
       description = "Detects LINE VIPER Cisco ASA malware code as part of RSA encrypted random AES key generation."
@@ -381,7 +383,7 @@ rule MAL_Cisco_LINE_VIPER_RSA_Enc_Random_AES_Key_GenMAL_Cisco_LINE_VIPER_RSA_Enc
 
 
 
-rule MAL_Cisco_LINE_VIPER_AES_Enc_Tasking_ExfilMAL_Cisco_LINE_VIPER_AES_Enc_Tasking_Exfil {
+rule MAL_Cisco_LINE_VIPER_AES_Enc_Tasking_Exfil {
    meta:
       author = "NCSC"
       description = "Detects LINE VIPER Cisco ASA malware code as part of AES encrypted tasking and exfiltration."
@@ -414,7 +416,7 @@ rule MAL_Cisco_LINE_VIPER_AES_Enc_Tasking_ExfilMAL_Cisco_LINE_VIPER_AES_Enc_Task
 
 
 
-rule MAL_Cisco_LINE_VIPER_ICMP_Tasking_Shellcode_PayloadsMAL_Cisco_LINE_VIPER_ICMP_Tasking_Shellcode_Payloads {
+rule MAL_Cisco_LINE_VIPER_ICMP_Tasking_Shellcode_Payloads {
    meta:
       author = "NCSC"
       description = "Detects LINE VIPER Cisco ASA malware code as part of ICMP tasking shellcode payloads."
@@ -447,7 +449,7 @@ rule MAL_Cisco_LINE_VIPER_ICMP_Tasking_Shellcode_PayloadsMAL_Cisco_LINE_VIPER_IC
 }
 
 
-rule MAL_G_Dropper_BRICKSTEAL_1MAL_G_Dropper_BRICKSTEAL_1 {
+rule MAL_G_Dropper_BRICKSTEAL_1 {
    meta:
       description = "Detects backdoor BRICKSTEAL dropper used by APT group UNC5221 (China Nexus)"
       author = "Google Threat Intelligence Group (GTIG) (modified by Florian Roth)"
@@ -469,7 +471,7 @@ rule MAL_G_Dropper_BRICKSTEAL_1MAL_G_Dropper_BRICKSTEAL_1 {
 
 
 
-rule MAL_G_Dropper_BRICKSTEAL_2MAL_G_Dropper_BRICKSTEAL_2 {
+rule MAL_G_Dropper_BRICKSTEAL_2 {
    meta:
       description = "Detects backdoor BRICKSTEAL dropper used by APT group UNC5221 (China Nexus)"
       author = "Google Threat Intelligence Group (GTIG) (modified by Florian Roth)"
@@ -490,7 +492,7 @@ rule MAL_G_Dropper_BRICKSTEAL_2MAL_G_Dropper_BRICKSTEAL_2 {
 }
 
 
-rule MAL_Netfilter_Dropper_Jun_2021_1MAL_Netfilter_Dropper_Jun_2021_1 {
+rule MAL_Netfilter_Dropper_Jun_2021_1 {
    meta:
         description = "Detects the dropper of Netfilter rootkit"
         author = "Arkbird_SOLG"
@@ -516,7 +518,7 @@ rule MAL_Netfilter_Dropper_Jun_2021_1MAL_Netfilter_Dropper_Jun_2021_1 {
 
 
 
-rule MAL_Netfilter_May_2021_1MAL_Netfilter_May_2021_1 {
+rule MAL_Netfilter_May_2021_1 {
    meta:
         description = "Detects Netfilter rootkit"
         author = "Arkbird_SOLG"
@@ -542,7 +544,7 @@ rule MAL_Netfilter_May_2021_1MAL_Netfilter_May_2021_1 {
         and (3 of ($seq*) or 2 of ($s*))
 }
 
-rule MAL_DNSPIONAGE_Malware_Nov18MAL_DNSPIONAGE_Malware_Nov18 {
+rule MAL_DNSPIONAGE_Malware_Nov18 {
    meta:
       description = "Detects DNSpionage Malware"
       author = "Florian Roth (Nextron Systems)"
@@ -565,7 +567,7 @@ rule MAL_DNSPIONAGE_Malware_Nov18MAL_DNSPIONAGE_Malware_Nov18 {
 
 
 
-rule MAL_ME_RawDisk_Agent_Jan20_1MAL_ME_RawDisk_Agent_Jan20_1 {
+rule MAL_ME_RawDisk_Agent_Jan20_1 {
    meta:
       description = "Detects suspicious malware using ElRawDisk"
       author = "Florian Roth (Nextron Systems)"
@@ -591,7 +593,7 @@ rule MAL_ME_RawDisk_Agent_Jan20_1MAL_ME_RawDisk_Agent_Jan20_1 {
 
 
 
-rule MAL_ME_RawDisk_Agent_Jan20_2MAL_ME_RawDisk_Agent_Jan20_2 {
+rule MAL_ME_RawDisk_Agent_Jan20_2 {
    meta:
       description = "Detects suspicious malware using ElRawDisk"
       author = "Florian Roth (Nextron Systems)"
@@ -618,7 +620,7 @@ rule MAL_ME_RawDisk_Agent_Jan20_2MAL_ME_RawDisk_Agent_Jan20_2 {
 }
 
 
-rule MAL_ExileRAT_Feb19_1MAL_ExileRAT_Feb19_1 {
+rule MAL_ExileRAT_Feb19_1 {
    meta:
       description = "Detects Exile RAT"
       author = "Florian Roth (Nextron Systems)"
@@ -643,7 +645,7 @@ rule MAL_ExileRAT_Feb19_1MAL_ExileRAT_Feb19_1 {
 }
 
 
-rule SUSP_VEST_Encryption_Core_Accumulator_Jan21SUSP_VEST_Encryption_Core_Accumulator_Jan21 {
+rule SUSP_VEST_Encryption_Core_Accumulator_Jan21 {
    meta:
       description = "Detects VEST encryption core accumulator in PE file as used by Lazarus malware"
       author = "Florian Roth (Nextron Systems)"
@@ -669,7 +671,7 @@ rule SUSP_VEST_Encryption_Core_Accumulator_Jan21SUSP_VEST_Encryption_Core_Accumu
 }
 
 
-rule MAL_MuddyWater_DroppedTask_Jun18_1MAL_MuddyWater_DroppedTask_Jun18_1 {
+rule MAL_MuddyWater_DroppedTask_Jun18_1 {
    meta:
       description = "Detects a dropped Windows task as used by MudyWater in June 2018"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -690,7 +692,7 @@ rule MAL_MuddyWater_DroppedTask_Jun18_1MAL_MuddyWater_DroppedTask_Jun18_1 {
 }
 
 
-rule MAL_Backdoor_Naikon_APT_Sample1MAL_Backdoor_Naikon_APT_Sample1 {
+rule MAL_Backdoor_Naikon_APT_Sample1 {
    meta:
       description = "Detects backdoors related to the Naikon APT"
       author = "Florian Roth (Nextron Systems)"
@@ -726,7 +728,7 @@ rule MAL_Backdoor_Naikon_APT_Sample1MAL_Backdoor_Naikon_APT_Sample1 {
       )
 }
 
-rule MAL_APT_NK_TriFaux_EasyRAT_JUPITERMAL_APT_NK_TriFaux_EasyRAT_JUPITER {
+rule MAL_APT_NK_TriFaux_EasyRAT_JUPITER {
    meta:
       author = "CISA.gov"
       description = "Detects a variant of the EasyRAT malware family"
@@ -745,7 +747,7 @@ rule MAL_APT_NK_TriFaux_EasyRAT_JUPITERMAL_APT_NK_TriFaux_EasyRAT_JUPITER {
 
 
 
-rule MAL_APT_NK_Andariel_CutieDrop_MagicRATMAL_APT_NK_Andariel_CutieDrop_MagicRAT {
+rule MAL_APT_NK_Andariel_CutieDrop_MagicRAT {
    meta:
       author = "CISA.gov (modified by Florian Roth, Nextron Systems)"
       description = "Detects the MagicRAT variant used by Andariel"
@@ -773,7 +775,7 @@ rule MAL_APT_NK_Andariel_CutieDrop_MagicRATMAL_APT_NK_Andariel_CutieDrop_MagicRA
 
 
 
-rule MAL_APT_NK_Andariel_HHSD_FileTransferToolMAL_APT_NK_Andariel_HHSD_FileTransferTool {
+rule MAL_APT_NK_Andariel_HHSD_FileTransferTool {
    meta:
       author = "CISA.gov"
       description = "Detects a variant of the HHSD File Transfer Tool"
@@ -815,7 +817,7 @@ rule MAL_APT_NK_Andariel_HHSD_FileTransferToolMAL_APT_NK_Andariel_HHSD_FileTrans
 
 
 
-rule MAL_APT_NK_Andariel_Atharvan_3RATMAL_APT_NK_Andariel_Atharvan_3RAT {
+rule MAL_APT_NK_Andariel_Atharvan_3RAT {
    meta:
       author = "CISA.gov"
       description = "Detects a variant of the Atharvan 3RAT malware family"
@@ -833,7 +835,7 @@ rule MAL_APT_NK_Andariel_Atharvan_3RATMAL_APT_NK_Andariel_Atharvan_3RAT {
 
 
 
-rule MAL_APT_NK_Andariel_LilithRAT_VariantMAL_APT_NK_Andariel_LilithRAT_Variant {
+rule MAL_APT_NK_Andariel_LilithRAT_Variant {
    meta:
       author = "CISA.gov (modified by Florian Roth, Nextron Systems)"
       description = "Detects a variant of the Lilith RAT malware family"
@@ -872,7 +874,7 @@ rule MAL_APT_NK_Andariel_LilithRAT_VariantMAL_APT_NK_Andariel_LilithRAT_Variant 
 
 
 
-rule MAL_APT_NK_Andariel_SocksTroy_Strings_OpCodesMAL_APT_NK_Andariel_SocksTroy_Strings_OpCodes {
+rule MAL_APT_NK_Andariel_SocksTroy_Strings_OpCodes {
    meta:
       author = "CISA.gov"
       description = "Detects a variant of the SocksTroy malware family"
@@ -895,7 +897,7 @@ rule MAL_APT_NK_Andariel_SocksTroy_Strings_OpCodesMAL_APT_NK_Andariel_SocksTroy_
 
 
 
-rule MAL_APT_NK_Andariel_AgniMAL_APT_NK_Andariel_Agni {
+rule MAL_APT_NK_Andariel_Agni {
    meta:
       author = "CISA.gov"
       description = "Detects samples of the Agni malware family"
@@ -914,38 +916,7 @@ rule MAL_APT_NK_Andariel_AgniMAL_APT_NK_Andariel_Agni {
 
 
 
-rule MAL_APT_NK_INDICATOR_EXE_Packed_VMProtectMAL_APT_NK_INDICATOR_EXE_Packed_VMProtect {
-        strings:
-        $s1 = ".vmp0" fullword ascii
-        $s2 = ".vmp1" fullword ascii
-    condition:
-        uint16(0) == 0x5a4d and all of them or
-        for any i in (0 .. pe.number_of_sections) : (
-            (
-                pe.sections[i].name == ".vmp0" or
-                pe.sections[i].name == ".vmp1"
-            )
-        )
-}
-
-
-
-rule MAL_APT_NK_INDICATOR_EXE_Packed_ThemidaMAL_APT_NK_INDICATOR_EXE_Packed_Themida {
-        strings:
-        $s1 = ".themida" fullword ascii
-    condition:
-        uint16(0) == 0x5a4d and all of them or
-        for any i in (0 .. pe.number_of_sections) : (
-            (
-                pe.sections[i].name == ".themida"
-            )
-        )
-}
-*/
-
-
-
-rule MAL_APT_NK_Andariel_TigerRAT_Crowdsourced_RuleMAL_APT_NK_Andariel_TigerRAT_Crowdsourced_Rule {
+rule MAL_APT_NK_Andariel_TigerRAT_Crowdsourced_Rule {
    meta:
       author = "CISA.gov (modified by Florian Roth, Nextron Systems)"
       description = "Detects the Tiger RAT variant used by Andariel"
@@ -978,7 +949,7 @@ rule MAL_APT_NK_Andariel_TigerRAT_Crowdsourced_RuleMAL_APT_NK_Andariel_TigerRAT_
 
 
 
-rule MAL_APT_NK_WIN_Tiger_RAT_AutoMAL_APT_NK_WIN_Tiger_RAT_Auto {
+rule MAL_APT_NK_WIN_Tiger_RAT_Auto {
    meta:
       author = "CISA.gov"
       description = "Detects the Tiger RAT variant used by Andariel"
@@ -1121,7 +1092,7 @@ rule MAL_APT_NK_WIN_Tiger_RAT_AutoMAL_APT_NK_WIN_Tiger_RAT_Auto {
 
 
 
-rule MAL_APT_NK_WIN_DTrack_AutoMAL_APT_NK_WIN_DTrack_Auto {
+rule MAL_APT_NK_WIN_DTrack_Auto {
    meta:
       author = "CISA.gov"
       description = "Detects DTrack variant used by Andariel"
@@ -1263,7 +1234,7 @@ rule MAL_APT_NK_WIN_DTrack_AutoMAL_APT_NK_WIN_DTrack_Auto {
 }
 
 
-rule MAL_APT_Operation_ShadowHammer_MalSetupMAL_APT_Operation_ShadowHammer_MalSetup {
+rule MAL_APT_Operation_ShadowHammer_MalSetup {
    meta:
       description = "Detects a malicious file used by BARIUM group in Operation ShadowHammer"
       date = "2019-03-25"
@@ -1286,7 +1257,7 @@ rule MAL_APT_Operation_ShadowHammer_MalSetupMAL_APT_Operation_ShadowHammer_MalSe
 }
 
 
-rule MAL_QuasarRAT_May19_1MAL_QuasarRAT_May19_1 {
+rule MAL_QuasarRAT_May19_1 {
    meta:
       description = "Detects QuasarRAT malware"
       author = "Florian Roth (Nextron Systems)"
@@ -1317,7 +1288,7 @@ rule MAL_QuasarRAT_May19_1MAL_QuasarRAT_May19_1 {
 }
 
 
-rule MAL_RANSOM_DarkBit_Feb23_1MAL_RANSOM_DarkBit_Feb23_1 {
+rule MAL_RANSOM_DarkBit_Feb23_1 {
    meta:
       description = "Detects indicators found in DarkBit ransomware"
       author = "Florian Roth"
@@ -1342,7 +1313,7 @@ rule MAL_RANSOM_DarkBit_Feb23_1MAL_RANSOM_DarkBit_Feb23_1 {
 
 
 
-rule MAL_RANSOM_DarkBit_Feb23_2MAL_RANSOM_DarkBit_Feb23_2 {
+rule MAL_RANSOM_DarkBit_Feb23_2 {
    meta:
       description = "Detects Go based DarkBit ransomware (garbled code; could trigger on other obfuscated samples, too)"
       author = "Florian Roth"
@@ -1365,7 +1336,7 @@ rule MAL_RANSOM_DarkBit_Feb23_2MAL_RANSOM_DarkBit_Feb23_2 {
 }
 
 
-rule MAL_Backdoor_DLL_Nov23_1MAL_Backdoor_DLL_Nov23_1 {
+rule MAL_Backdoor_DLL_Nov23_1 {
    meta:
       author = "X__Junior"
       description = "Detects a backdoor DLL, that was seen being used by LockBit 3.0 affiliates exploiting CVE-2023-4966"
@@ -1390,7 +1361,7 @@ rule MAL_Backdoor_DLL_Nov23_1MAL_Backdoor_DLL_Nov23_1 {
 
 
 
-rule MAL_Trojan_DLL_Nov23MAL_Trojan_DLL_Nov23 {
+rule MAL_Trojan_DLL_Nov23 {
    meta:
       author = "X__Junior"
       description = "Detects a trojan DLL that installs other components - was seen being used by LockBit 3.0 affiliates exploiting CVE-2023-4966"
@@ -1409,7 +1380,7 @@ rule MAL_Trojan_DLL_Nov23MAL_Trojan_DLL_Nov23 {
 
 
 
-rule MAL_DLL_Stealer_Nov23MAL_DLL_Stealer_Nov23 {
+rule MAL_DLL_Stealer_Nov23 {
    meta:
       author = "X__Junior"
       description = "Detects a DLL that steals authentication credentials - was seen being used by LockBit 3.0 affiliates exploiting CVE-2023-4966"
@@ -1426,7 +1397,7 @@ rule MAL_DLL_Stealer_Nov23MAL_DLL_Stealer_Nov23 {
 
 
 
-rule MAL_Sednit_DelphiDownloader_Apr18_3MAL_Sednit_DelphiDownloader_Apr18_3 {
+rule MAL_Sednit_DelphiDownloader_Apr18_3 {
    meta:
       description = "Detects malware from Sednit Delphi Downloader report"
       author = "Florian Roth (Nextron Systems)"
@@ -1451,26 +1422,7 @@ rule MAL_Sednit_DelphiDownloader_Apr18_3MAL_Sednit_DelphiDownloader_Apr18_3 {
 }
 
 
-rule SUSP_Solarwinds_SUNBURST_Revoked_CertSUSP_Solarwinds_SUNBURST_Revoked_Cert {
-   meta:
-      description = "Detects executables signed with a compromised certificate after 2019 (it doesn't mean that the "
-      date = "2020-12-14"
-      reference = "https://github.com/fireeye/sunburst_countermeasures/pull/3#issuecomment-747156202"
-      score = 50
-   condition:
-      uint16(0) == 0x5a4d and
-      for any i in (0 .. pe.number_of_signatures) : (
-         pe.signatures[i].issuer contains "Symantec Class 3 SHA256 Code Signing CA" and
-         pe.signatures[i].serial == "0f:e9:73:75:20:22:a6:06:ad:f2:a3:6e:34:5d:c0:ed" and
-         // valid after Tuesday, January 1, 2019 0:00:00
-         pe.signatures[i].not_before > 1546300800
-      )
-}
-*/
-
-
-
-rule MAL_Turla_Agent_BTZMAL_Turla_Agent_BTZ {
+rule MAL_Turla_Agent_BTZ {
    meta:
       description = "Detects Turla Agent.BTZ"
       author = "Florian Roth (Nextron Systems)"
@@ -1505,7 +1457,7 @@ rule MAL_Turla_Agent_BTZMAL_Turla_Agent_BTZ {
 
 
 
-rule MAL_Turla_Sample_May18_1MAL_Turla_Sample_May18_1 {
+rule MAL_Turla_Sample_May18_1 {
    meta:
       description = "Detects Turla samples"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1531,7 +1483,7 @@ rule MAL_Turla_Sample_May18_1MAL_Turla_Sample_May18_1 {
 
 
 
-rule MAL_WIPER_CaddyWiper_Mar22_1MAL_WIPER_CaddyWiper_Mar22_1 {
+rule MAL_WIPER_CaddyWiper_Mar22_1 {
    meta:
       description = "Detects CaddyWiper malware"
       author = "Florian Roth (Nextron Systems)"
@@ -1554,7 +1506,7 @@ rule MAL_WIPER_CaddyWiper_Mar22_1MAL_WIPER_CaddyWiper_Mar22_1 {
 }
 
 
-rule MAL_WIPER_IsaacWiper_Mar22_1MAL_WIPER_IsaacWiper_Mar22_1 {
+rule MAL_WIPER_IsaacWiper_Mar22_1 {
    meta:
       description = "Detects IsaacWiper malware"
       author = "Florian Roth (Nextron Systems)"
@@ -1583,7 +1535,7 @@ rule MAL_WIPER_IsaacWiper_Mar22_1MAL_WIPER_IsaacWiper_Mar22_1 {
 }
 
 
-rule MAL_OBFUSC_Unknown_Jan22_1MAL_OBFUSC_Unknown_Jan22_1 {
+rule MAL_OBFUSC_Unknown_Jan22_1 {
    meta:
       description = "Detects samples similar to reversed stage3 found in Ukrainian wiper incident named WhisperGate"
       author = "Florian Roth (Nextron Systems)"
@@ -1612,7 +1564,7 @@ rule MAL_OBFUSC_Unknown_Jan22_1MAL_OBFUSC_Unknown_Jan22_1 {
 
 
 
-rule MAL_Unknown_Discord_Characteristics_Jan22_1MAL_Unknown_Discord_Characteristics_Jan22_1 {
+rule MAL_Unknown_Discord_Characteristics_Jan22_1 {
    meta:
       description = "Detects unknown malware with a few indicators also found in Wiper malware"
       author = "Florian Roth (Nextron Systems)"
@@ -1631,7 +1583,7 @@ rule MAL_Unknown_Discord_Characteristics_Jan22_1MAL_Unknown_Discord_Characterist
 }
 
 
-rule MAL_UNC2891_WinghookMAL_UNC2891_Winghook {
+rule MAL_UNC2891_Winghook {
    meta:
       description = "Detects UNC2891 Winghook Keylogger"
       author = "Frank Boldewin (@r3c0nst)"
@@ -1650,7 +1602,7 @@ rule MAL_UNC2891_WinghookMAL_UNC2891_Winghook {
 }
 
 
-rule MAL_WebMonitor_RATMAL_WebMonitor_RAT {
+rule MAL_WebMonitor_RAT {
    meta:
       description = "Detects WebMonitor RAT"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1686,7 +1638,7 @@ rule MAL_WebMonitor_RATMAL_WebMonitor_RAT {
 }
 
 
-rule MAL_Winnti_BR_Report_TwinPeaksMAL_Winnti_BR_Report_TwinPeaks {
+rule MAL_Winnti_BR_Report_TwinPeaks {
    meta:
       description = "Detects Winnti samples"
       author = "@br_data repo"
@@ -1702,7 +1654,7 @@ rule MAL_Winnti_BR_Report_TwinPeaksMAL_Winnti_BR_Report_TwinPeaks {
 
 
 
-rule MAL_BR_Report_TheDaoMAL_BR_Report_TheDao {
+rule MAL_BR_Report_TheDao {
    meta:
       description = "Detects indicator in malicious UPX packed samples"
       author = "@br_data repo"
@@ -1717,7 +1669,7 @@ rule MAL_BR_Report_TheDaoMAL_BR_Report_TheDao {
 
 
 
-rule MAL_Winnti_BR_Report_MockingJayMAL_Winnti_BR_Report_MockingJay {
+rule MAL_Winnti_BR_Report_MockingJay {
    meta:
       description = "Detects Winnti samples"
       author = "@br_data repo"
@@ -1736,7 +1688,7 @@ rule MAL_Winnti_BR_Report_MockingJayMAL_Winnti_BR_Report_MockingJay {
 }
 
 
-rule MAL_BurningUmbrella_Sample_1MAL_BurningUmbrella_Sample_1 {
+rule MAL_BurningUmbrella_Sample_1 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1758,7 +1710,7 @@ rule MAL_BurningUmbrella_Sample_1MAL_BurningUmbrella_Sample_1 {
 
 
 
-rule MAL_BurningUmbrella_Sample_2MAL_BurningUmbrella_Sample_2 {
+rule MAL_BurningUmbrella_Sample_2 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1780,7 +1732,7 @@ rule MAL_BurningUmbrella_Sample_2MAL_BurningUmbrella_Sample_2 {
 
 
 
-rule MAL_BurningUmbrella_Sample_3MAL_BurningUmbrella_Sample_3 {
+rule MAL_BurningUmbrella_Sample_3 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1797,7 +1749,7 @@ rule MAL_BurningUmbrella_Sample_3MAL_BurningUmbrella_Sample_3 {
 
 
 
-rule MAL_BurningUmbrella_Sample_4MAL_BurningUmbrella_Sample_4 {
+rule MAL_BurningUmbrella_Sample_4 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1832,7 +1784,7 @@ rule MAL_BurningUmbrella_Sample_4MAL_BurningUmbrella_Sample_4 {
 
 
 
-rule MAL_BurningUmbrella_Sample_6MAL_BurningUmbrella_Sample_6 {
+rule MAL_BurningUmbrella_Sample_6 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1850,7 +1802,7 @@ rule MAL_BurningUmbrella_Sample_6MAL_BurningUmbrella_Sample_6 {
 
 
 
-rule MAL_BurningUmbrella_Sample_7MAL_BurningUmbrella_Sample_7 {
+rule MAL_BurningUmbrella_Sample_7 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1867,7 +1819,7 @@ rule MAL_BurningUmbrella_Sample_7MAL_BurningUmbrella_Sample_7 {
 
 
 
-rule MAL_BurningUmbrella_Sample_8MAL_BurningUmbrella_Sample_8 {
+rule MAL_BurningUmbrella_Sample_8 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1884,7 +1836,7 @@ rule MAL_BurningUmbrella_Sample_8MAL_BurningUmbrella_Sample_8 {
 
 
 
-rule MAL_BurningUmbrella_Sample_10MAL_BurningUmbrella_Sample_10 {
+rule MAL_BurningUmbrella_Sample_10 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1897,14 +1849,14 @@ rule MAL_BurningUmbrella_Sample_10MAL_BurningUmbrella_Sample_10 {
       id = "e4cb2211-efbe-55f9-99e3-c01601904509"
    strings:
       $s1 = "revjj.syshell.org" fullword ascii
-      /* $s2 = "Kernel.dll" fullword ascii */
+      
    condition:
       uint16(0) == 0x5a4d and filesize < 300KB and all of them
 }
 
 
 
-rule MAL_BurningUmbrella_Sample_12MAL_BurningUmbrella_Sample_12 {
+rule MAL_BurningUmbrella_Sample_12 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1929,7 +1881,7 @@ rule MAL_BurningUmbrella_Sample_12MAL_BurningUmbrella_Sample_12 {
 
 
 
-rule MAL_BurningUmbrella_Sample_13MAL_BurningUmbrella_Sample_13 {
+rule MAL_BurningUmbrella_Sample_13 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1945,7 +1897,7 @@ rule MAL_BurningUmbrella_Sample_13MAL_BurningUmbrella_Sample_13 {
 
 
 
-rule MAL_BurningUmbrella_Sample_14MAL_BurningUmbrella_Sample_14 {
+rule MAL_BurningUmbrella_Sample_14 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1956,14 +1908,14 @@ rule MAL_BurningUmbrella_Sample_14MAL_BurningUmbrella_Sample_14 {
       id = "a2b3a4bb-ca60-5dc2-8124-17e654e326b8"
    strings:
       $s1 = "C:\\tmp\\Google_updata.exe" fullword ascii
-      /* $s2 = "Kernel.dll" fullword ascii */
+      
    condition:
       uint16(0) == 0x5a4d and filesize < 40KB and 1 of them
 }
 
 
 
-rule MAL_BurningUmbrella_Sample_15MAL_BurningUmbrella_Sample_15 {
+rule MAL_BurningUmbrella_Sample_15 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1982,7 +1934,7 @@ rule MAL_BurningUmbrella_Sample_15MAL_BurningUmbrella_Sample_15 {
 
 
 
-rule MAL_BurningUmbrella_Sample_16MAL_BurningUmbrella_Sample_16 {
+rule MAL_BurningUmbrella_Sample_16 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -1999,7 +1951,7 @@ rule MAL_BurningUmbrella_Sample_16MAL_BurningUmbrella_Sample_16 {
 
 
 
-rule MAL_BurningUmbrella_Sample_17MAL_BurningUmbrella_Sample_17 {
+rule MAL_BurningUmbrella_Sample_17 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2022,7 +1974,7 @@ rule MAL_BurningUmbrella_Sample_17MAL_BurningUmbrella_Sample_17 {
 
 
 
-rule MAL_BurningUmbrella_Sample_18MAL_BurningUmbrella_Sample_18 {
+rule MAL_BurningUmbrella_Sample_18 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2053,7 +2005,7 @@ rule MAL_BurningUmbrella_Sample_18MAL_BurningUmbrella_Sample_18 {
 
 
 
-rule MAL_BurningUmbrella_Sample_19MAL_BurningUmbrella_Sample_19 {
+rule MAL_BurningUmbrella_Sample_19 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2074,7 +2026,7 @@ rule MAL_BurningUmbrella_Sample_19MAL_BurningUmbrella_Sample_19 {
 
 
 
-rule MAL_BurningUmbrella_Sample_20MAL_BurningUmbrella_Sample_20 {
+rule MAL_BurningUmbrella_Sample_20 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2099,7 +2051,7 @@ rule MAL_BurningUmbrella_Sample_20MAL_BurningUmbrella_Sample_20 {
 
 
 
-rule MAL_BurningUmbrella_Sample_21MAL_BurningUmbrella_Sample_21 {
+rule MAL_BurningUmbrella_Sample_21 {
    meta:
       description = "Detects malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2122,29 +2074,7 @@ rule MAL_BurningUmbrella_Sample_21MAL_BurningUmbrella_Sample_21 {
 
 
 
-rule MAL_BurningUmbrella_Sample_22MAL_BurningUmbrella_Sample_22 {
-   meta:
-      description = "Detects malware sample from Burning Umbrella report"
-      license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
-      author = "Florian Roth (Nextron Systems)"
-      reference = "https://401trg.pw/burning-umbrella/"
-      date = "2018-05-04"
-      hash1 = "fa116cf9410f1613003ca423ad6ca92657a61b8e9eda1b05caf4f30ca650aee5"
-      id = "90c6cda9-95a0-5de7-b1cd-110c238d993d"
-   strings:
-      $s1 = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\" ascii
-      $s3 = "Content-Disposition: form-data; name=\"txt\"; filename=\"" fullword ascii
-      $s4 = "Fail To Enum Service" fullword ascii
-      $s5 = "Host Power ON Time" fullword ascii
-      $s6 = "%d Hours %2d Minutes %2d Seconds " fullword ascii
-   condition:
-      uint16(0) == 0x5a4d and filesize < 200KB and 4 of them
-}
-
-
-
-
-rule MAL_AirdViper_Sample_Apr18_1MAL_AirdViper_Sample_Apr18_1 {
+rule MAL_AirdViper_Sample_Apr18_1 {
    meta:
       description = "Detects Arid Viper malware sample"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2170,11 +2100,11 @@ rule MAL_AirdViper_Sample_Apr18_1MAL_AirdViper_Sample_Apr18_1 {
       )
 }
 
-/* Generic Rules ------------------------------------ */
 
 
 
-rule MAL_Winnti_Sample_May18_1MAL_Winnti_Sample_May18_1 {
+
+rule MAL_Winnti_Sample_May18_1 {
    meta:
       description = "Detects malware sample from Burning Umbrella report - Generic Winnti Rule"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2192,7 +2122,7 @@ rule MAL_Winnti_Sample_May18_1MAL_Winnti_Sample_May18_1 {
 
 
 
-rule MAL_Visel_Sample_May18_1MAL_Visel_Sample_May18_1 {
+rule MAL_Visel_Sample_May18_1 {
    meta:
       description = "Detects Visel malware sample from Burning Umbrella report"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2213,7 +2143,7 @@ rule MAL_Visel_Sample_May18_1MAL_Visel_Sample_May18_1 {
 }
 
 
-rule SUSP_Patcher_Keygen_Indicators_Jun15SUSP_Patcher_Keygen_Indicators_Jun15 {
+rule SUSP_Patcher_Keygen_Indicators_Jun15 {
 	meta:
 		description = "Sample from CN Honker Pentest Toolset"
 		license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2224,16 +2154,16 @@ rule SUSP_Patcher_Keygen_Indicators_Jun15SUSP_Patcher_Keygen_Indicators_Jun15 {
 		hash = "e32f5de730e324fb386f97b6da9ba500cf3a4f8d"
 		id = "4dd65e4b-8178-5576-9740-b3c80a8127e2"
 	strings:
-		$s0 = "<description>Patch</description>" fullword ascii /* PEStudio Blacklist: strings */
+		$s0 = "<description>Patch</description>" fullword ascii 
 		$s2 = "\\dup2patcher.dll" ascii
-		$s3 = "load_patcher" fullword ascii /* PEStudio Blacklist: strings */
+		$s3 = "load_patcher" fullword ascii 
 	condition:
 		uint16(0) == 0x5a4d and filesize < 4000KB and all of them
 }
 
 
 
-rule MAL_CRIME_CobaltGang_Malware_Oct19_1MAL_CRIME_CobaltGang_Malware_Oct19_1 {
+rule MAL_CRIME_CobaltGang_Malware_Oct19_1 {
    meta:
       description = "Detects CobaltGang malware"
       author = "Florian Roth (Nextron Systems)"
@@ -2257,7 +2187,7 @@ rule MAL_CRIME_CobaltGang_Malware_Oct19_1MAL_CRIME_CobaltGang_Malware_Oct19_1 {
 }
 
 
-rule MAL_RANSOM_COVID19_Apr20_1MAL_RANSOM_COVID19_Apr20_1 {
+rule MAL_RANSOM_COVID19_Apr20_1 {
    meta:
       description = "Detects ransomware distributed in COVID-19 theme"
       author = "Florian Roth (Nextron Systems)"
@@ -2278,7 +2208,7 @@ rule MAL_RANSOM_COVID19_Apr20_1MAL_RANSOM_COVID19_Apr20_1 {
 }
 
 
-rule MAL_RANSOM_Crime_DearCry_Mar2021_1MAL_RANSOM_Crime_DearCry_Mar2021_1 {
+rule MAL_RANSOM_Crime_DearCry_Mar2021_1 {
     meta:
         description = "Triggers on strings of known DearCry samples"
         author = "Nils Kuhnert"
@@ -2308,7 +2238,7 @@ rule MAL_RANSOM_Crime_DearCry_Mar2021_1MAL_RANSOM_Crime_DearCry_Mar2021_1 {
 
 
 
-rule MAL_CRIME_RANSOM_DearCry_Mar21_1MAL_CRIME_RANSOM_DearCry_Mar21_1 {
+rule MAL_CRIME_RANSOM_DearCry_Mar21_1 {
    meta:
       description = "Detects DearCry Ransomware affecting Exchange servers"
       author = "Florian Roth (Nextron Systems)"
@@ -2335,7 +2265,7 @@ rule MAL_CRIME_RANSOM_DearCry_Mar21_1MAL_CRIME_RANSOM_DearCry_Mar21_1 {
 }
 
 
-rule MAL_Emotet_JS_Dropper_Oct19_1MAL_Emotet_JS_Dropper_Oct19_1 {
+rule MAL_Emotet_JS_Dropper_Oct19_1 {
    meta:
       description = "Detects Emotet JS dropper"
       author = "Florian Roth (Nextron Systems)"
@@ -2355,7 +2285,7 @@ import "pe"
 
 
 
-rule MAL_Emotet_Jan20_1MAL_Emotet_Jan20_1 {
+rule MAL_Emotet_Jan20_1 {
    meta:
       description = "Detects Emotet malware"
       author = "Florian Roth (Nextron Systems)"
@@ -2376,7 +2306,7 @@ rule MAL_Emotet_Jan20_1MAL_Emotet_Jan20_1 {
 
 
 
-rule MAL_Enfal_Nov22MAL_Enfal_Nov22 { 
+rule MAL_Enfal_Nov22 { 
    meta:
       old_rule_name = "Enfal_Malware"
       description = "Detects a certain type of Enfal Malware"
@@ -2404,7 +2334,7 @@ rule MAL_Enfal_Nov22MAL_Enfal_Nov22 {
 
 
 
-rule MAL_Envrial_Jan18_1MAL_Envrial_Jan18_1 {
+rule MAL_Envrial_Jan18_1 {
    meta:
       description = "Detects Encrial credential stealer malware"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2435,7 +2365,7 @@ rule MAL_Envrial_Jan18_1MAL_Envrial_Jan18_1 {
       )
 }
 
-rule MAL_Floxif_GenericMAL_Floxif_Generic {
+rule MAL_Floxif_Generic {
    meta:
       description = "Detects Floxif Malware"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2455,7 +2385,7 @@ rule MAL_Floxif_GenericMAL_Floxif_Generic {
 
 
 
-rule MAL_CN_FlyStudio_May18_1MAL_CN_FlyStudio_May18_1 {
+rule MAL_CN_FlyStudio_May18_1 {
    meta:
       description = "Detects malware / hacktool detected in May 2018"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2475,7 +2405,7 @@ rule MAL_CN_FlyStudio_May18_1MAL_CN_FlyStudio_May18_1 {
 }
 
 
-rule MAL_SUSP_Gamaredon_GetImportByHashMAL_SUSP_Gamaredon_GetImportByHash {
+rule MAL_SUSP_Gamaredon_GetImportByHash {
     meta:
         description = "Detects Gamaredon APIHashing"
         author = "Frank Boldewin (@r3c0nst)"
@@ -2487,12 +2417,12 @@ rule MAL_SUSP_Gamaredon_GetImportByHashMAL_SUSP_Gamaredon_GetImportByHash {
         id = "8f28273e-e8ca-52cb-8dbc-a235598b1975"
     strings:
         $ParseImgExportDir = { 8B 50 3C 03 D0 8B 52 78 03 D0 8B 4A 1C 03 C8 }
-        $djb2Hashing = { 8B 75 08 BA 05 15 00 00 8B C2 C1 E2 05 03 D0 33 DB 8A 1E 03 D3 46 33 DB 8A 1E 85 DB 75 } /* https://theartincode.stanis.me/008-djb2/ */
+        $djb2Hashing = { 8B 75 08 BA 05 15 00 00 8B C2 C1 E2 05 03 D0 33 DB 8A 1E 03 D3 46 33 DB 8A 1E 85 DB 75 } 
     condition:
         uint16(0) == 0x5a4d and all of them
 }
 
-rule MAL_crime_win32_loader_guloader_1_experimentalMAL_crime_win32_loader_guloader_1_experimental {
+rule MAL_crime_win32_loader_guloader_1_experimental {
    meta:
       description = "Detects injected GuLoader shellcode bin"
       author = "@VK_Intel"
@@ -2508,7 +2438,7 @@ rule MAL_crime_win32_loader_guloader_1_experimentalMAL_crime_win32_loader_guload
 }
 
 
-rule MAL_IcedID_GZIP_LDR_202104MAL_IcedID_GZIP_LDR_202104 {
+rule MAL_IcedID_GZIP_LDR_202104 {
    meta:
       author = "Thomas Barabosch, Telekom Security"
       date = "2021-04-12"
@@ -2538,7 +2468,7 @@ rule MAL_IcedID_GZIP_LDR_202104MAL_IcedID_GZIP_LDR_202104 {
 
 
 
-rule MAL_IcedId_Core_LDR_202104MAL_IcedId_Core_LDR_202104 {
+rule MAL_IcedId_Core_LDR_202104 {
    meta:
       author = "Thomas Barabosch, Telekom Security"
       date = "2021-04-13"
@@ -2566,7 +2496,7 @@ rule MAL_IcedId_Core_LDR_202104MAL_IcedId_Core_LDR_202104 {
 
 
 
-rule MAL_IceId_Core_202104MAL_IceId_Core_202104 {
+rule MAL_IceId_Core_202104 {
    meta:
       author = "Thomas Barabosch, Telekom Security"
       date = "2021-04-12"
@@ -2595,7 +2525,7 @@ rule MAL_IceId_Core_202104MAL_IceId_Core_202104 {
 }
 
 
-rule MAL_GandCrab_Apr18_1MAL_GandCrab_Apr18_1 {
+rule MAL_GandCrab_Apr18_1 {
    meta:
       description = "Detects GandCrab malware"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2609,7 +2539,7 @@ rule MAL_GandCrab_Apr18_1MAL_GandCrab_Apr18_1 {
 }
 
 
-rule MAL_Nitol_Malware_Jan19_1MAL_Nitol_Malware_Jan19_1 {
+rule MAL_Nitol_Malware_Jan19_1 {
    meta:
       description = "Detects Nitol Malware"
       author = "Florian Roth (Nextron Systems)"
@@ -2639,7 +2569,7 @@ rule MAL_Nitol_Malware_Jan19_1MAL_Nitol_Malware_Jan19_1 {
 }
 
 
-rule MAL_Ransomware_WadhramaMAL_Ransomware_Wadhrama {
+rule MAL_Ransomware_Wadhrama {
    meta:
       description = "Detects Wadhrama Ransomware via Imphash"
       author = "Florian Roth (Nextron Systems)"
@@ -2652,7 +2582,7 @@ rule MAL_Ransomware_WadhramaMAL_Ransomware_Wadhrama {
 }
 
 
-rule MAL_unspecified_Jan18_1MAL_unspecified_Jan18_1 {
+rule MAL_unspecified_Jan18_1 {
    meta:
       description = "Detects unspecified malware sample"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -2674,7 +2604,7 @@ rule MAL_unspecified_Jan18_1MAL_unspecified_Jan18_1 {
 }
 
 
-rule MAL_XMR_Miner_May19_1MAL_XMR_Miner_May19_1 : HIGHVOL {
+rule MAL_XMR_Miner_May19_1 : HIGHVOL {
    meta:
       description = "Detects Monero Crypto Coin Miner"
       author = "Florian Roth (Nextron Systems)"
@@ -2699,7 +2629,7 @@ rule MAL_XMR_Miner_May19_1MAL_XMR_Miner_May19_1 : HIGHVOL {
 
 
 
-rule SUSP_PDB_CN_Threat_Actor_May19_1SUSP_PDB_CN_Threat_Actor_May19_1 {
+rule SUSP_PDB_CN_Threat_Actor_May19_1 {
    meta:
       description = "Detects PDB path user name used by Chinese threat actors"
       author = "Florian Roth (Nextron Systems)"
@@ -2716,7 +2646,7 @@ rule SUSP_PDB_CN_Threat_Actor_May19_1SUSP_PDB_CN_Threat_Actor_May19_1 {
 
 
 
-rule MAL_Ramnit_May19_1MAL_Ramnit_May19_1 {
+rule MAL_Ramnit_May19_1 {
    meta:
       description = "Detects Ramnit malware"
       author = "Florian Roth (Nextron Systems)"
@@ -2731,7 +2661,7 @@ rule MAL_Ramnit_May19_1MAL_Ramnit_May19_1 {
 
 
 
-rule MAL_Parite_Malware_May19_1MAL_Parite_Malware_May19_1 {
+rule MAL_Parite_Malware_May19_1 {
    meta:
       description = "Detects Parite malware"
       author = "Florian Roth (Nextron Systems)"
@@ -2755,7 +2685,7 @@ rule MAL_Parite_Malware_May19_1MAL_Parite_Malware_May19_1 {
 
 
 
-rule MAL_Parite_Malware_May19_2MAL_Parite_Malware_May19_2 {
+rule MAL_Parite_Malware_May19_2 {
    meta:
       description = "Detects Parite malware based on Imphash"
       author = "Florian Roth (Nextron Systems)"
@@ -2775,7 +2705,7 @@ rule MAL_Parite_Malware_May19_2MAL_Parite_Malware_May19_2 {
 
 
 
-rule MAL_RANSOM_Darkside_May21_1MAL_RANSOM_Darkside_May21_1 {
+rule MAL_RANSOM_Darkside_May21_1 {
    meta:
       description = "Detects Darkside Ransomware"
       author = "Florian Roth (Nextron Systems)"
@@ -2800,7 +2730,7 @@ rule MAL_RANSOM_Darkside_May21_1MAL_RANSOM_Darkside_May21_1 {
 
 
 
-rule MAL_Ransomware_Win_DARKSIDE_v1_1MAL_Ransomware_Win_DARKSIDE_v1_1 {
+rule MAL_Ransomware_Win_DARKSIDE_v1_1 {
     meta:
         author = "FireEye"
         date = "2021-03-22"
@@ -2816,7 +2746,7 @@ rule MAL_Ransomware_Win_DARKSIDE_v1_1MAL_Ransomware_Win_DARKSIDE_v1_1 {
 
 
 
-rule MAL_Dropper_Win_Darkside_1MAL_Dropper_Win_Darkside_1 {
+rule MAL_Dropper_Win_Darkside_1 {
     meta:
         author = "FireEye"
         date_created = "2021-05-11"
@@ -2837,7 +2767,7 @@ rule MAL_Dropper_Win_Darkside_1MAL_Dropper_Win_Darkside_1 {
 
 
 
-rule MAL_Backdoor_Win_C3_1MAL_Backdoor_Win_C3_1 {
+rule MAL_Backdoor_Win_C3_1 {
     meta:
         author = "FireEye"
         date_created = "2021-05-11"
@@ -2859,7 +2789,7 @@ rule MAL_Backdoor_Win_C3_1MAL_Backdoor_Win_C3_1 {
 }
 
 
-rule SUSP_RANSOMWARE_Indicator_Jul20SUSP_RANSOMWARE_Indicator_Jul20 {
+rule SUSP_RANSOMWARE_Indicator_Jul20 {
    meta:
       description = "Detects ransomware indicator"
       author = "Florian Roth (Nextron Systems)"
@@ -2895,7 +2825,7 @@ rule SUSP_RANSOMWARE_Indicator_Jul20SUSP_RANSOMWARE_Indicator_Jul20 {
 }
 
 
-rule MAL_Ransomware_GermanWiperMAL_Ransomware_GermanWiper {
+rule MAL_Ransomware_GermanWiper {
    meta:
       description = "Detects RansomWare GermanWiper in Memory or in unpacked state"
       author = "Frank Boldewin (@r3c0nst), modified by Florian Roth"
@@ -2924,7 +2854,7 @@ rule MAL_Ransomware_GermanWiperMAL_Ransomware_GermanWiper {
 }
 
 
-rule MAL_Prolock_MalwareMAL_Prolock_Malware {
+rule MAL_Prolock_Malware {
 	meta:
 		description = "Detects Prolock malware in encrypted and decrypted mode"
 		author = "Frank Boldewin (@r3c0nst)"
@@ -2945,7 +2875,7 @@ rule MAL_Prolock_MalwareMAL_Prolock_Malware {
 		((uint16(0) == 0x5A4D) or (uint16(0) == 0x4D42)) and filesize < 100KB and (($DecryptionRoutine) or (1 of ($DecryptedString*) and $CryptoCode))
 }
 
-rule MAL_RANSOM_Ragna_Locker_Apr20_1MAL_RANSOM_Ragna_Locker_Apr20_1 {
+rule MAL_RANSOM_Ragna_Locker_Apr20_1 {
    meta:
       description = "Detects Ragna Locker Ransomware"
       author = "Florian Roth (Nextron Systems)"
@@ -2982,7 +2912,7 @@ rule MAL_RANSOM_Ragna_Locker_Apr20_1MAL_RANSOM_Ragna_Locker_Apr20_1 {
 
 
 
-rule MAL_Ransom_Ragnarlocker_July_2020_1MAL_Ransom_Ragnarlocker_July_2020_1 {
+rule MAL_Ransom_Ragnarlocker_July_2020_1 {
    meta:
       description = "Detects Ragnarlocker by strings (July 2020)"
       author = "Arkbird_SOLG"
@@ -2997,26 +2927,26 @@ rule MAL_Ransom_Ragnarlocker_July_2020_1MAL_Ransom_Ragnarlocker_July_2020_1 {
       $r1 = "$!.txt" fullword wide
       $r2 = "---BEGIN KEY R_R---" fullword ascii
       $r3 = "!$R4GN4R_" wide
-      $r4 = "RAGNRPW" fullword ascii /* parser */
+      $r4 = "RAGNRPW" fullword ascii 
       $r5 = "---END KEY R_R---" fullword ascii
       $a1 = "+RhRR!-uD8'O&Wjq1_P#Rw<9Oy?n^qSP6N{BngxNK!:TG*}\\|W]o?/]H*8z;26X0" fullword ascii    
-      $a2 = "\\\\.\\PHYSICALDRIVE%d" fullword wide /* parse disks */
-      $a3 = "WinSta0\\Default" fullword wide /* Token ref */
-      $a4 = "%s-%s-%s-%s-%s" fullword wide /* GUID parser*/
-      $a5 = "SOFTWARE\\Microsoft\\Cryptography" fullword wide /* Ref crypto used */
+      $a2 = "\\\\.\\PHYSICALDRIVE%d" fullword wide 
+      $a3 = "WinSta0\\Default" fullword wide 
+      $a4 = "%s-%s-%s-%s-%s" fullword wide 
+      $a5 = "SOFTWARE\\Microsoft\\Cryptography" fullword wide 
       $c1 = "-backup" fullword wide
       $c2 = "-force" fullword wide
       $c3 = "-vmback" fullword wide
       $c4 = "-list" fullword wide
-      $s1 = ".ragn@r_" wide /* ref */
-      $s2 = "\\notepad.exe" wide /* Show ransom note to the victim*/
-      $s3 = "Opera Software" fullword wide  /* Don't touch browsers for contact him*/
-      $s4 = "Tor browser" fullword wide /*Ref ransom note*/
+      $s1 = ".ragn@r_" wide 
+      $s2 = "\\notepad.exe" wide 
+      $s3 = "Opera Software" fullword wide  
+      $s4 = "Tor browser" fullword wide 
    condition:
       uint16(0) == 0x5a4d and filesize < 30KB and ( pe.imphash() == "2c2aab89a4cba444cf2729e2ed61ed4f" and ( (2 of ($f*)) and (3 of ($r*)) and (4 of ($a*)) and (2 of ($c*)) and (2 of ($s*)) ) )
 }
 
-rule MAL_RANSOM_REvil_Oct20_1MAL_RANSOM_REvil_Oct20_1 {
+rule MAL_RANSOM_REvil_Oct20_1 {
    meta:
       description = "Detects REvil ransomware"
       author = "Florian Roth (Nextron Systems)"
@@ -3040,7 +2970,7 @@ rule MAL_RANSOM_REvil_Oct20_1MAL_RANSOM_REvil_Oct20_1 {
 }
 
 
-rule MAL_RANSOM_RobinHood_May19_1MAL_RANSOM_RobinHood_May19_1 {
+rule MAL_RANSOM_RobinHood_May19_1 {
    meta:
       description = "Detects RobinHood Ransomware"
       author = "Florian Roth (Nextron Systems)"
@@ -3062,7 +2992,7 @@ rule MAL_RANSOM_RobinHood_May19_1MAL_RANSOM_RobinHood_May19_1 {
 }
 
 
-rule MAL_RANSOM_Venus_Nov22_1MAL_RANSOM_Venus_Nov22_1 {
+rule MAL_RANSOM_Venus_Nov22_1 {
    meta:
       description = "Detects Venus Ransomware samples"
       author = "Florian Roth (Nextron Systems)"
@@ -3101,7 +3031,7 @@ rule MAL_RANSOM_Venus_Nov22_1MAL_RANSOM_Venus_Nov22_1 {
 
 
 
-rule MAL_crime_win32_rat_parallax_shell_binMAL_crime_win32_rat_parallax_shell_bin {
+rule MAL_crime_win32_rat_parallax_shell_bin {
    meta:
       description = "Detects Parallax injected code"
       author = "@VK_Intel"
@@ -3118,7 +3048,7 @@ rule MAL_crime_win32_rat_parallax_shell_binMAL_crime_win32_rat_parallax_shell_bi
 }
 
 
-rule MAL_Ryuk_RansomwareMAL_Ryuk_Ransomware {
+rule MAL_Ryuk_Ransomware {
    meta:
       description = "Detects strings known from Ryuk Ransomware"
       author = "Florian Roth (Nextron Systems)"
@@ -3142,7 +3072,7 @@ rule MAL_Ryuk_RansomwareMAL_Ryuk_Ransomware {
 }
 
 
-rule MAL_Trickbot_Oct19_1MAL_Trickbot_Oct19_1 {
+rule MAL_Trickbot_Oct19_1 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3165,7 +3095,7 @@ rule MAL_Trickbot_Oct19_1MAL_Trickbot_Oct19_1 {
 
 
 
-rule MAL_Trickbot_Oct19_2MAL_Trickbot_Oct19_2 {
+rule MAL_Trickbot_Oct19_2 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3183,7 +3113,7 @@ rule MAL_Trickbot_Oct19_2MAL_Trickbot_Oct19_2 {
 
 
 
-rule MAL_Trickbot_Oct19_3MAL_Trickbot_Oct19_3 {
+rule MAL_Trickbot_Oct19_3 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3203,7 +3133,7 @@ rule MAL_Trickbot_Oct19_3MAL_Trickbot_Oct19_3 {
 
 
 
-rule MAL_Trickbot_Oct19_4MAL_Trickbot_Oct19_4 {
+rule MAL_Trickbot_Oct19_4 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3226,7 +3156,7 @@ rule MAL_Trickbot_Oct19_4MAL_Trickbot_Oct19_4 {
 
 
 
-rule MAL_Trickbot_Oct19_5MAL_Trickbot_Oct19_5 {
+rule MAL_Trickbot_Oct19_5 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3247,7 +3177,7 @@ rule MAL_Trickbot_Oct19_5MAL_Trickbot_Oct19_5 {
 
 
 
-rule MAL_Trickbot_Oct19_6MAL_Trickbot_Oct19_6 {
+rule MAL_Trickbot_Oct19_6 {
    meta:
       description = "Detects Trickbot malware"
       author = "Florian Roth (Nextron Systems)"
@@ -3267,7 +3197,7 @@ rule MAL_Trickbot_Oct19_6MAL_Trickbot_Oct19_6 {
 }
 
 
-rule SUSP_EXPL_CommVault_CVE_2025_57791_Aug25_1SUSP_EXPL_CommVault_CVE_2025_57791_Aug25_1 {
+rule SUSP_EXPL_CommVault_CVE_2025_57791_Aug25_1 {
    meta:
       description = "Detects potential exploit for WT-2025-0050, authentication bypass through QCommand argument injection"
       reference = "https://labs.watchtowr.com/guess-who-would-be-stupid-enough-to-rob-the-same-vault-twice-pre-auth-rce-chains-in-commvault/"
@@ -3285,7 +3215,7 @@ rule SUSP_EXPL_CommVault_CVE_2025_57791_Aug25_1SUSP_EXPL_CommVault_CVE_2025_5779
 
 
 
-rule SUSP_MAL_SigningCert_Feb24_1SUSP_MAL_SigningCert_Feb24_1 {
+rule SUSP_MAL_SigningCert_Feb24_1 {
    meta:
       description = "Detects PE files signed with a certificate used to sign malware samples mentioned in a HuntressLabs report on the exploitation of ScreenConnect vulnerability CVE-2024-1708 and CVE-2024-1709"
       author = "Florian Roth"
@@ -3307,7 +3237,7 @@ rule SUSP_MAL_SigningCert_Feb24_1SUSP_MAL_SigningCert_Feb24_1 {
 
 
 
-rule MAL_CS_Loader_Feb24_1MAL_CS_Loader_Feb24_1 {
+rule MAL_CS_Loader_Feb24_1 {
    meta:
       description = "Detects Cobalt Strike malware samples mentioned in a HuntressLabs report on the exploitation of ScreenConnect vulnerability CVE-2024-1708 and CVE-2024-1709"
       author = "Florian Roth"
@@ -3331,7 +3261,7 @@ rule MAL_CS_Loader_Feb24_1MAL_CS_Loader_Feb24_1 {
 
 
 
-rule MAL_RANSOM_LockBit_Indicators_Feb24MAL_RANSOM_LockBit_Indicators_Feb24 {
+rule MAL_RANSOM_LockBit_Indicators_Feb24 {
    meta:
       description = "Detects Lockbit ransomware samples mentioned in a HuntressLabs report on the exploitation of ScreenConnect vulnerability CVE-2024-1708 and CVE-2024-1709"
       author = "Florian Roth"
@@ -3355,7 +3285,7 @@ rule MAL_RANSOM_LockBit_Indicators_Feb24MAL_RANSOM_LockBit_Indicators_Feb24 {
 
 
 
-rule MAL_Beacon_Unknown_Feb24_1MAL_Beacon_Unknown_Feb24_1 {
+rule MAL_Beacon_Unknown_Feb24_1 {
    meta:
       description = "Detects malware samples mentioned in a HuntressLabs report on the exploitation of ScreenConnect vulnerability CVE-2024-1708 and CVE-2024-1709 "
       author = "Florian Roth"
@@ -3376,12 +3306,12 @@ rule MAL_Beacon_Unknown_Feb24_1MAL_Beacon_Unknown_Feb24_1 {
       and 3 of ($s*)
 }
 
-/* --------------------------------------------------------------------------------- */
-/* only usable with THOR or THOR Lite, e.g. in THOR Cloud */
 
 
 
-rule SUSP_ASPX_PossibleDropperArtifact_Aug21SUSP_ASPX_PossibleDropperArtifact_Aug21 {
+
+
+rule SUSP_ASPX_PossibleDropperArtifact_Aug21 {
    meta:
       description = "Detects an ASPX file with a non-ASCII header, often a result of MS Exchange drop techniques"
       reference = "Internal Research"
@@ -3402,20 +3332,20 @@ rule SUSP_ASPX_PossibleDropperArtifact_Aug21SUSP_ASPX_PossibleDropperArtifact_Au
       and not uint16(0) == 0x534D  // CAB
       and all of ($s*) and not 1 of ($fp*) and
       (
-         ((uint8(0) < 0x20 or uint8(0) > 0x7E  /*non-ASCII*/ ) and uint8(0) != 0x9  /* tab */ and uint8(0) != 0x0D  /* carriage return */ and uint8(0) != 0x0A  /* new line */ and uint8(0) != 0xEF  /* BOM UTF-8 */ )
-         or ((uint8(1) < 0x20 or uint8(1) > 0x7E  /*non-ASCII*/ ) and uint8(1) != 0x9  /* tab */ and uint8(1) != 0x0D  /* carriage return */ and uint8(1) != 0x0A  /* new line */ and uint8(1) != 0xBB  /* BOM UTF-8 */ )
-         or ((uint8(2) < 0x20 or uint8(2) > 0x7E  /*non-ASCII*/ ) and uint8(2) != 0x9  /* tab */ and uint8(2) != 0x0D  /* carriage return */ and uint8(2) != 0x0A  /* new line */ and uint8(2) != 0xBF  /* BOM UTF-8 */ )
-         or ((uint8(3) < 0x20 or uint8(3) > 0x7E  /*non-ASCII*/ ) and uint8(3) != 0x9  /* tab */ and uint8(3) != 0x0D  /* carriage return */ and uint8(3) != 0x0A  /* new line */ )
-         or ((uint8(4) < 0x20 or uint8(4) > 0x7E  /*non-ASCII*/ ) and uint8(4) != 0x9  /* tab */ and uint8(4) != 0x0D  /* carriage return */ and uint8(4) != 0x0A  /* new line */ )
-         or ((uint8(5) < 0x20 or uint8(5) > 0x7E  /*non-ASCII*/ ) and uint8(5) != 0x9  /* tab */ and uint8(5) != 0x0D  /* carriage return */ and uint8(5) != 0x0A  /* new line */ )
-         or ((uint8(6) < 0x20 or uint8(6) > 0x7E  /*non-ASCII*/ ) and uint8(6) != 0x9  /* tab */ and uint8(6) != 0x0D  /* carriage return */ and uint8(6) != 0x0A  /* new line */ )
-         or ((uint8(7) < 0x20 or uint8(7) > 0x7E  /*non-ASCII*/ ) and uint8(7) != 0x9  /* tab */ and uint8(7) != 0x0D  /* carriage return */ and uint8(7) != 0x0A  /* new line */ )
+         ((uint8(0) < 0x20 or uint8(0) > 0x7E   ) and uint8(0) != 0x9   and uint8(0) != 0x0D   and uint8(0) != 0x0A   and uint8(0) != 0xEF   )
+         or ((uint8(1) < 0x20 or uint8(1) > 0x7E   ) and uint8(1) != 0x9   and uint8(1) != 0x0D   and uint8(1) != 0x0A   and uint8(1) != 0xBB   )
+         or ((uint8(2) < 0x20 or uint8(2) > 0x7E   ) and uint8(2) != 0x9   and uint8(2) != 0x0D   and uint8(2) != 0x0A   and uint8(2) != 0xBF   )
+         or ((uint8(3) < 0x20 or uint8(3) > 0x7E   ) and uint8(3) != 0x9   and uint8(3) != 0x0D   and uint8(3) != 0x0A   )
+         or ((uint8(4) < 0x20 or uint8(4) > 0x7E   ) and uint8(4) != 0x9   and uint8(4) != 0x0D   and uint8(4) != 0x0A   )
+         or ((uint8(5) < 0x20 or uint8(5) > 0x7E   ) and uint8(5) != 0x9   and uint8(5) != 0x0D   and uint8(5) != 0x0A   )
+         or ((uint8(6) < 0x20 or uint8(6) > 0x7E   ) and uint8(6) != 0x9   and uint8(6) != 0x0D   and uint8(6) != 0x0A   )
+         or ((uint8(7) < 0x20 or uint8(7) > 0x7E   ) and uint8(7) != 0x9   and uint8(7) != 0x0D   and uint8(7) != 0x0A   )
       )
 }
 
 
 
-rule MAL_Loader_TurtleLoader_Nov23MAL_Loader_TurtleLoader_Nov23 {
+rule MAL_Loader_TurtleLoader_Nov23 {
    meta:
       description = "Detects Tutle loader used in attacks against SysAid CVE-2023-47246"
       author = "Florian Roth"
@@ -3440,8 +3370,7 @@ rule MAL_Loader_TurtleLoader_Nov23MAL_Loader_TurtleLoader_Nov23 {
 
 
 
-rule MAL_EXE_LockBit_v2MAL_EXE_LockBit_v2
-{
+rule MAL_EXE_LockBit_v2 {
 	meta:
 		author = "Silas Cutler, modified by Florian Roth"
 		description = "Detection for LockBit version 2.x from 2011"
@@ -3469,7 +3398,7 @@ rule MAL_EXE_LockBit_v2MAL_EXE_LockBit_v2
 
 
 
-rule MAL_EXE_PrestigeRansomwareMAL_EXE_PrestigeRansomware {
+rule MAL_EXE_PrestigeRansomware {
 	meta:
 		author = "Silas Cutler, modfied by Florian Roth"
 		description = "Detection for Prestige Ransomware"
@@ -3497,7 +3426,7 @@ rule MAL_EXE_PrestigeRansomwareMAL_EXE_PrestigeRansomware {
 
 
 
-rule MAL_EXE_RoyalRansomwareMAL_EXE_RoyalRansomware {
+rule MAL_EXE_RoyalRansomware {
 	meta:
 		author = "Silas Cutler, modfied by Florian Roth"
 		description = "Detection for Royal Ransomware seen Dec 2022"
@@ -3526,8 +3455,7 @@ rule MAL_EXE_RoyalRansomwareMAL_EXE_RoyalRansomware {
 
 
 
-rule SUSP_Excel4Macro_AutoOpenSUSP_Excel4Macro_AutoOpen
-{
+rule SUSP_Excel4Macro_AutoOpen {
     meta:
         description = "Detects Excel4 macro use with auto open / close"
         author = "John Lambert @JohnLaTwC"
@@ -3571,7 +3499,7 @@ rule SUSP_Excel4Macro_AutoOpenSUSP_Excel4Macro_AutoOpen
 }
 
 
-rule SUSP_NullSoftInst_Combo_Oct20_1SUSP_NullSoftInst_Combo_Oct20_1 {
+rule SUSP_NullSoftInst_Combo_Oct20_1 {
    meta:
       description = "Detects suspicious NullSoft Installer combination with common Copyright strings"
       author = "Florian Roth (Nextron Systems)"
@@ -3605,7 +3533,7 @@ rule SUSP_NullSoftInst_Combo_Oct20_1SUSP_NullSoftInst_Combo_Oct20_1 {
 }
 
 
-rule SUSP_AnyDesk_Compromised_Certificate_Jan24_1SUSP_AnyDesk_Compromised_Certificate_Jan24_1 {
+rule SUSP_AnyDesk_Compromised_Certificate_Jan24_1 {
    meta:
       description = "Detects binaries signed with a compromised signing certificate of AnyDesk that aren't AnyDesk itself (philandro Software GmbH, 0DBF152DEAF0B981A8A938D53F769DB8; strict version)"
       date = "2024-02-02"
@@ -3626,7 +3554,7 @@ rule SUSP_AnyDesk_Compromised_Certificate_Jan24_1SUSP_AnyDesk_Compromised_Certif
 
 
 
-rule SUSP_AnyDesk_Compromised_Certificate_Jan24_2SUSP_AnyDesk_Compromised_Certificate_Jan24_2 {
+rule SUSP_AnyDesk_Compromised_Certificate_Jan24_2 {
    meta:
       description = "Detects binaries signed with a compromised signing certificate of AnyDesk that aren't AnyDesk itself (philandro Software GmbH, 0DBF152DEAF0B981A8A938D53F769DB8; permissive version)"
       date = "2024-02-02"
@@ -3648,7 +3576,7 @@ rule SUSP_AnyDesk_Compromised_Certificate_Jan24_2SUSP_AnyDesk_Compromised_Certif
 
 
 
-rule SUSP_AnyDesk_Compromised_Certificate_Jan24_3SUSP_AnyDesk_Compromised_Certificate_Jan24_3 {
+rule SUSP_AnyDesk_Compromised_Certificate_Jan24_3 {
    meta:
       description = "Detects binaries signed with a compromised signing certificate of AnyDesk after it was revoked (philandro Software GmbH, 0DBF152DEAF0B981A8A938D53F769DB8; version that uses dates for validation)"
       date = "2024-02-02"
@@ -3670,7 +3598,7 @@ rule SUSP_AnyDesk_Compromised_Certificate_Jan24_3SUSP_AnyDesk_Compromised_Certif
 }
 
 
-rule SUSP_autocad_lsp_malwareSUSP_autocad_lsp_malware {
+rule SUSP_autocad_lsp_malware {
     meta:
         description = "Recognizes malicious autocad files written in LISP"
         author = "John Lambert @JohnLaTwC"
@@ -3724,7 +3652,7 @@ rule SUSP_autocad_lsp_malwareSUSP_autocad_lsp_malware {
 } 
 
 
-rule SUSP_PS1_Msdt_Execution_May22SUSP_PS1_Msdt_Execution_May22 {
+rule SUSP_PS1_Msdt_Execution_May22 {
    meta:
       description = "Detects suspicious calls of msdt.exe as seen in CVE-2022-30190 / Follina exploitation"
       author = "Nasreddine Bencherchali, Christian Burkard"
@@ -3743,7 +3671,7 @@ rule SUSP_PS1_Msdt_Execution_May22SUSP_PS1_Msdt_Execution_May22 {
       $sb2 = "-af " ascii wide
       $sb3 = "IT_BrowseForFile=" ascii wide
 
-      /* OriginalFilename pcwrun.exe */
+      
       $fp1 = { 4F 00 72 00 69 00 67 00 69 00 6E 00 61 00 6C 00
                46 00 69 00 6C 00 65 00 6E 00 61 00 6D 00 65 00
                00 00 70 00 63 00 77 00 72 00 75 00 6E 00 2E 00
@@ -3763,7 +3691,7 @@ rule SUSP_PS1_Msdt_Execution_May22SUSP_PS1_Msdt_Execution_May22 {
 
 
 
-rule SUSP_Fake_AMSI_DLL_Jun23_1SUSP_Fake_AMSI_DLL_Jun23_1 {
+rule SUSP_Fake_AMSI_DLL_Jun23_1 {
    meta:
       description = "Detects an amsi.dll that has the same exports as the legitimate one but very different contents or file sizes"
       author = "Florian Roth"
@@ -3797,43 +3725,11 @@ rule SUSP_Fake_AMSI_DLL_Jun23_1SUSP_Fake_AMSI_DLL_Jun23_1 {
       and not 1 of ($fp*)
 }
 
-/* Uses the external variable "filename" and can thus only be used in LOKI or THOR */
 
 
 
-rule SUSP_Fake_AMSI_DLL_Jun23_2SUSP_Fake_AMSI_DLL_Jun23_2 {
-   meta:
-      description = "Detects an amsi.dll that has very different contents or file sizes than the legitimate"
-      author = "Florian Roth"
-      reference = "https://twitter.com/eversinc33/status/1666121784192581633?s=20"
-      date = "2023-06-07"
-      modified = "2023-06-14"
-      score = 65
-      id = "adec9525-6299-52d5-8f4e-a83366d3dcfd"
-   strings:
-      $a1 = "Microsoft.Antimalware.Scan.Interface" ascii
-      $a2 = "Amsi.pdb" ascii fullword
-      $a3 = "api-ms-win-core-sysinfo-" ascii
-      $a4 = "Software\\Microsoft\\AMSI\\Providers" wide
-      $a5 = "AmsiAntimalware@" ascii
-      $a6 = "AMSI UAC Scan" ascii
 
-      $fp1 = "Wine builtin DLL"
-   condition:
-      uint16(0) == 0x5a4d 
-      // AMSI.DLL
-      and filename == "amsi.dll"
-      // and now the anomalies
-      and (
-         filesize > 200KB     // files bigger than 100kB
-         or filesize < 35KB   // files smaller than 35kB 
-         or not 4 of ($a*)  // files that don't contain the expected strings
-      )
-      and not 1 of ($fp*)
-}
-
-
-rule SUSP_TINY_PESUSP_TINY_PE {
+rule SUSP_TINY_PE {
    meta:
       description = "Detects Tiny PE file"
       author = "Florian Roth (Nextron Systems)"
@@ -3849,7 +3745,7 @@ rule SUSP_TINY_PESUSP_TINY_PE {
 
 
 
-rule SUSP_HxD_Icon_Anomaly_May23_1SUSP_HxD_Icon_Anomaly_May23_1 {
+rule SUSP_HxD_Icon_Anomaly_May23_1 {
    meta:
       description = "Detects suspicious use of the the free hex editor HxD's icon in PE files that don't seem to be a legitimate version of HxD"
       author = "Florian Roth"
@@ -3858,7 +3754,7 @@ rule SUSP_HxD_Icon_Anomaly_May23_1SUSP_HxD_Icon_Anomaly_May23_1 {
       score = 65
       id = "3ac8cc92-6d76-5787-ada0-cfb6eabb4b20"
    strings:
-      /* part of the icon bitmap : we're not using resource hashes etc because YARA's string matching is much faster */
+      
       $ac1 = { 99 00 77 0D DD 09 99 80 99 00 77 0D DD 09 99 80
                99 00 77 0D DD 09 99 80 99 00 77 0D DD 09 99 80
                99 00 77 0D DD 09 99 80 99 00 77 0D DD 09 99 80
@@ -3875,14 +3771,14 @@ rule SUSP_HxD_Icon_Anomaly_May23_1SUSP_HxD_Icon_Anomaly_May23_1 {
                39 A2 F1 39 A2 F1 68 B8 F4 B9 DE FA FF FF FF FF
                FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF }
 
-      /* strings to expect in a HxD executable */
-      $s1 = { 00 4D 00 61 00 EB 00 6C 00 20 00 48 00 F6 00 72 00 7A } /* Developer: Maael Hoerz */
+      
+      $s1 = { 00 4D 00 61 00 EB 00 6C 00 20 00 48 00 F6 00 72 00 7A } 
       $s2 = "mh-nexus.de" ascii wide
 
-      /* UPX marker */
+      
       $upx1 = "UPX0" ascii fullword
 
-      /* Keywords that are known to appear in malicious  samples */
+      
       $xs1 = "terminator" ascii wide fullword // https://www.linkedin.com/feed/update/urn:li:activity:7068631930040188929/?utm_source=share&utm_medium=member_ios
       $xs2 = "Terminator" ascii wide fullword // https://www.linkedin.com/feed/update/urn:li:activity:7068631930040188929/?utm_source=share&utm_medium=member_ios
    condition:
@@ -3904,7 +3800,7 @@ rule SUSP_HxD_Icon_Anomaly_May23_1SUSP_HxD_Icon_Anomaly_May23_1 {
 }
 
 
-rule SUSP_Unsigned_GoogleUpdateSUSP_Unsigned_GoogleUpdate {
+rule SUSP_Unsigned_GoogleUpdate {
    meta:
       description = "Detects suspicious unsigned GoogleUpdate.exe"
       author = "Florian Roth (Nextron Systems)"
@@ -3914,7 +3810,7 @@ rule SUSP_Unsigned_GoogleUpdateSUSP_Unsigned_GoogleUpdate {
       hash1 = "5aa84aa5c90ec34b7f7d75eb350349ae3aa5060f3ad6dd0520e851626e9f8354"
       id = "2575b882-3526-5c42-9d50-83fb0b7df3f5"
    strings:
-      /* OriginalName GoogleUpdate.exe */
+      
       $ac1 = { 00 4F 00 72 00 69 00 67 00 69 00 6E 00 61 00 6C
                00 46 00 69 00 6C 00 65 00 6E 00 61 00 6D 00 65
                00 00 00 47 00 6F 00 6F 00 67 00 6C 00 65 00 55
@@ -3926,7 +3822,7 @@ rule SUSP_Unsigned_GoogleUpdateSUSP_Unsigned_GoogleUpdate {
 }
 
 
-rule SUSP_AdobePDF_SFX_Bitmap_Combo_ExecutableSUSP_AdobePDF_SFX_Bitmap_Combo_Executable {
+rule SUSP_AdobePDF_SFX_Bitmap_Combo_Executable {
    meta:
       description = "Detects a suspicious executable that contains both a SFX icon and an Adobe PDF icon"
       author = "Florian Roth (Nextron Systems)"
@@ -3936,7 +3832,7 @@ rule SUSP_AdobePDF_SFX_Bitmap_Combo_ExecutableSUSP_AdobePDF_SFX_Bitmap_Combo_Exe
       hash1 = "13655f536fac31e6c2eaa9e6e113ada2a0b5e2b50a93b6bbfc0aaadd670cde9b"
       id = "d2d078c9-fbe5-51f4-8f7e-5d943c5a8197"
    strings:
-      /* Adobe PDF Icon Bitmap */
+      
       $sc1 = { FF 00 CC FF FF 00 99 FF FF 00 66 FF FF 00 33 FF
                FF 80 00 FF FF 80 FF CC FF 80 CC CC FF C0 99 CC
                FF 80 66 CC FF 00 33 CC FF 00 00 CC FF 00 FF 99
@@ -3949,7 +3845,7 @@ rule SUSP_AdobePDF_SFX_Bitmap_Combo_ExecutableSUSP_AdobePDF_SFX_Bitmap_Combo_Exe
                CC 99 CC FF CC 99 99 FF CC 99 66 FF CC 58 33 FF
                CC 01 00 FF CC FF FF CC CC FF CC CC CC FF 99 CC
                CC FF 66 CC CC 58 33 CC CC 01 00 CC CC FF FF 99 }
-      /* SFX Icon Bitmap */
+      
       $sc2 = { 28 66 27 00 60 00 00 00 80 00 00 00 80 80 80 00
                C0 C0 C0 00 FF FF FF 00 FF FF FF 00 FF FF FF 00
                FF FF FF 00 FF FF FF 00 FF FF FF 00 FF FF FF 00
@@ -3964,7 +3860,7 @@ rule SUSP_AdobePDF_SFX_Bitmap_Combo_ExecutableSUSP_AdobePDF_SFX_Bitmap_Combo_Exe
 
 
 
-rule SUSP_AdobePDF_Bitmap_ExecutableSUSP_AdobePDF_Bitmap_Executable {
+rule SUSP_AdobePDF_Bitmap_Executable {
    meta:
       description = "Detects a suspicious executable that contains a Adobe PDF icon and no shows no sign of actual Adobe software"
       author = "Florian Roth (Nextron Systems)"
@@ -3974,7 +3870,7 @@ rule SUSP_AdobePDF_Bitmap_ExecutableSUSP_AdobePDF_Bitmap_Executable {
       hash1 = "13655f536fac31e6c2eaa9e6e113ada2a0b5e2b50a93b6bbfc0aaadd670cde9b"
       id = "86ebadd4-64a8-5290-b45e-ac125a10ea66"
    strings:
-      /* Adobe PDF Icon Bitmap */
+      
       $sc1 = { FF 00 CC FF FF 00 99 FF FF 00 66 FF FF 00 33 FF
                FF 80 00 FF FF 80 FF CC FF 80 CC CC FF C0 99 CC
                FF 80 66 CC FF 00 33 CC FF 00 00 CC FF 00 FF 99
@@ -3987,7 +3883,7 @@ rule SUSP_AdobePDF_Bitmap_ExecutableSUSP_AdobePDF_Bitmap_Executable {
                CC 99 CC FF CC 99 99 FF CC 99 66 FF CC 58 33 FF
                CC 01 00 FF CC FF FF CC CC FF CC CC CC FF 99 CC
                CC FF 66 CC CC 58 33 CC CC 01 00 CC CC FF FF 99 }
-      /* Exclude actual Adobe software */
+      
       $fp1 = "Adobe" ascii wide fullword
    condition:
       uint16(0) == 0x5a4d and
@@ -3996,7 +3892,7 @@ rule SUSP_AdobePDF_Bitmap_ExecutableSUSP_AdobePDF_Bitmap_Executable {
 }
 
 
-rule MAL_Malware_Imphash_Mar23_1MAL_Malware_Imphash_Mar23_1 : HIGHVOL {
+rule MAL_Malware_Imphash_Mar23_1 : HIGHVOL {
     meta:
         description = "Detects malware by known bad imphash or rich_pe_header_hash"
         reference = "https://yaraify.abuse.ch/statistics/"
@@ -4087,7 +3983,7 @@ rule MAL_Malware_Imphash_Mar23_1MAL_Malware_Imphash_Mar23_1 : HIGHVOL {
 
 
 
-rule SUSP_LNX_Linux_Malware_Indicators_Aug20_1SUSP_LNX_Linux_Malware_Indicators_Aug20_1 {
+rule SUSP_LNX_Linux_Malware_Indicators_Aug20_1 {
    meta:
       description = "Detects indicators often found in linux malware samples. Note: This detection is based on common characteristics typically associated with the mentioned threats, must be considered a clue and does not conclusively prove maliciousness."
       author = "Florian Roth (Nextron Systems)"
@@ -4114,7 +4010,7 @@ rule SUSP_LNX_Linux_Malware_Indicators_Aug20_1SUSP_LNX_Linux_Malware_Indicators_
 }
 
 
-rule SUSP_3CX_App_Signed_Binary_Mar23_1SUSP_3CX_App_Signed_Binary_Mar23_1 {
+rule SUSP_3CX_App_Signed_Binary_Mar23_1 {
    meta:
       description = "Detects 3CX application binaries signed with a certificate and created in a time frame in which other known malicious binaries have been created"
       author = "Florian Roth (Nextron Systems)"
@@ -4138,7 +4034,7 @@ rule SUSP_3CX_App_Signed_Binary_Mar23_1SUSP_3CX_App_Signed_Binary_Mar23_1 {
 
 
 
-rule MAL_BackNet_Nov18_1MAL_BackNet_Nov18_1 {
+rule MAL_BackNet_Nov18_1 {
    meta:
       description = "Detects BackNet samples"
       author = "Florian Roth (Nextron Systems)"
@@ -4159,7 +4055,7 @@ rule MAL_BackNet_Nov18_1MAL_BackNet_Nov18_1 {
 }
 
 
-rule SUSP_Doc_WindowsInstaller_Call_Feb22_1SUSP_Doc_WindowsInstaller_Call_Feb22_1 {
+rule SUSP_Doc_WindowsInstaller_Call_Feb22_1 {
     meta:
         author = "Nils Kuhnert"
         date = "2022-02-26"
@@ -4177,7 +4073,7 @@ rule SUSP_Doc_WindowsInstaller_Call_Feb22_1SUSP_Doc_WindowsInstaller_Call_Feb22_
 }
 
 
-rule MAL_Metasploit_Framework_UAMAL_Metasploit_Framework_UA {
+rule MAL_Metasploit_Framework_UA {
    meta:
       description = "Detects User Agent used in Metasploit Framework"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -4195,7 +4091,7 @@ rule MAL_Metasploit_Framework_UAMAL_Metasploit_Framework_UA {
 
 
 
-rule SUSP_NVIDIA_LAPSUS_Leak_Compromised_Cert_Mar22_1SUSP_NVIDIA_LAPSUS_Leak_Compromised_Cert_Mar22_1 {
+rule SUSP_NVIDIA_LAPSUS_Leak_Compromised_Cert_Mar22_1 {
    meta:
       description = "Detects a binary signed with the leaked NVIDIA certifcate and compiled after March 1st 2022"
       author = "Florian Roth (Nextron Systems)"
@@ -4216,7 +4112,7 @@ rule SUSP_NVIDIA_LAPSUS_Leak_Compromised_Cert_Mar22_1SUSP_NVIDIA_LAPSUS_Leak_Com
 }
 
 
-rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_1SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_1 {
+rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_1 {
    meta:
       description = "Detects suspicious embedded file types in OneNote files"
       author = "Florian Roth"
@@ -4226,7 +4122,7 @@ rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_1SUSP_OneNote_Embedded
       score = 65
       id = "b8ea8c7b-052f-5a97-9577-99903462ea84"
    strings:
-      /* GUID FileDataStoreObject https://blog.didierstevens.com/ */
+      
       $x1 = { e7 16 e3 bd 65 26 11 45 a4 c4 8d 4d 0b 7a 9e ac 
               ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ??
               ?? ?? ?? ?? 4d 5a } // PE
@@ -4263,7 +4159,7 @@ rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_1SUSP_OneNote_Embedded
 
 
 
-rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_2SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_2 {
+rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_2 {
    meta:
       description = "Detects suspicious embedded file types in OneNote files"
       author = "Florian Roth (Nextron Systems)"
@@ -4272,7 +4168,7 @@ rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_2SUSP_OneNote_Embedded
       score = 65
       id = "0664d202-ab4c-57b6-91ee-ea21ac08909e"
    strings:
-      /* GUID FileDataStoreObject https://blog.didierstevens.com/ */
+      
       $a1 = { 00 e7 16 e3 bd 65 26 11 45 a4 c4 8d 4d 0b 7a 9e ac }
 
       $s1 = "<HTA:APPLICATION "
@@ -4283,7 +4179,7 @@ rule SUSP_OneNote_Embedded_FileDataStoreObject_Type_Jan23_2SUSP_OneNote_Embedded
 }
 
 
-rule SUSP_Microsoft_7z_SFX_ComboSUSP_Microsoft_7z_SFX_Combo {
+rule SUSP_Microsoft_7z_SFX_Combo {
    meta:
       description = "Detects a suspicious file that has a Microsoft copyright and is a 7z SFX"
       author = "Florian Roth (Nextron Systems)"
@@ -4295,7 +4191,7 @@ rule SUSP_Microsoft_7z_SFX_ComboSUSP_Microsoft_7z_SFX_Combo {
       $s1 = "7ZSfx%03x.cmd" fullword wide
       $s2 = "7z SFX: error" fullword ascii
 
-      /* PE Header : LegalCopyright (C) Microsoft Corporation. All rights reserved.*/
+      
       $c1 = { 00 4C 00 65 00 67 00 61 00 6C 00 43 00 6F 00 70
               00 79 00 72 00 69 00 67 00 68 00 74 00 00 00 A9
               00 20 00 4D 00 69 00 63 00 72 00 6F 00 73 00 6F
@@ -4311,7 +4207,7 @@ rule SUSP_Microsoft_7z_SFX_ComboSUSP_Microsoft_7z_SFX_Combo {
 
 
 
-rule SUSP_Microsoft_RAR_SFX_ComboSUSP_Microsoft_RAR_SFX_Combo {
+rule SUSP_Microsoft_RAR_SFX_Combo {
    meta:
       description = "Detects a suspicious file that has a Microsoft copyright and is a RAR SFX"
       author = "Florian Roth (Nextron Systems)"
@@ -4323,7 +4219,7 @@ rule SUSP_Microsoft_RAR_SFX_ComboSUSP_Microsoft_RAR_SFX_Combo {
       $s2 = "WinRAR self-extracting archive" fullword wide
       $s3 = "WINRAR.SFX" fullword
 
-      /* PE Header : LegalCopyright (C) Microsoft Corporation. All rights reserved.*/
+      
       $c1 = { 00 4C 00 65 00 67 00 61 00 6C 00 43 00 6F 00 70
               00 79 00 72 00 69 00 67 00 68 00 74 00 00 00 A9
               00 20 00 4D 00 69 00 63 00 72 00 6F 00 73 00 6F
@@ -4337,7 +4233,7 @@ rule SUSP_Microsoft_RAR_SFX_ComboSUSP_Microsoft_RAR_SFX_Combo {
 }
 
 
-rule SUSP_Unsigned_OSPPSVCSUSP_Unsigned_OSPPSVC {
+rule SUSP_Unsigned_OSPPSVC {
    meta:
       description = "Detects a suspicious unsigned office software protection platform service binary"
       author = "Florian Roth (Nextron Systems)"
@@ -4346,7 +4242,7 @@ rule SUSP_Unsigned_OSPPSVCSUSP_Unsigned_OSPPSVC {
       hash1 = "5294a730f1f0a176583b9ca2b988b3f5ec65dad8c6ebe556b5135566f2c16a56"
       id = "0e312237-0c82-59da-b62d-56065c6075f0"
    strings:
-      /* FileDescription Microsoft Office Software Protection Platform Service */
+      
       $sc1 = { 00 46 00 69 00 6C 00 65 00 44 00 65 00 73 00 63
                00 72 00 69 00 70 00 74 00 69 00 6F 00 6E 00 00
                00 00 00 4D 00 69 00 63 00 72 00 6F 00 73 00 6F
@@ -4363,8 +4259,7 @@ rule SUSP_Unsigned_OSPPSVCSUSP_Unsigned_OSPPSVC {
 
 
 
-rule SUSP_PE_Signed_by_Suspicious_Entitiy_Mar23SUSP_PE_Signed_by_Suspicious_Entitiy_Mar23
-{
+rule SUSP_PE_Signed_by_Suspicious_Entitiy_Mar23 {
     meta:
         author = "Arnim Rupp (https://github.com/ruppde)"
         date_created = "2023-03-06"
@@ -4552,7 +4447,7 @@ rule SUSP_PE_Signed_by_Suspicious_Entitiy_Mar23SUSP_PE_Signed_by_Suspicious_Enti
 }
 
 
-rule SUSP_BAT2EXE_BDargo_Converted_BATSUSP_BAT2EXE_BDargo_Converted_BAT {
+rule SUSP_BAT2EXE_BDargo_Converted_BAT {
    meta:
       description = "Detects binaries created with BDARGO Advanced BAT to EXE converter"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -4568,21 +4463,18 @@ rule SUSP_BAT2EXE_BDargo_Converted_BATSUSP_BAT2EXE_BDargo_Converted_BAT {
       $s1 = "Error #bdembed1 -- Quiting" fullword ascii
       $s2 = "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s" fullword ascii
       $s3 = "\\a.txt" ascii
-      $s4 = "command.com" fullword ascii /* Goodware String - occured 91 times */
+      $s4 = "command.com" fullword ascii 
       $s6 = "DFDHERGDCV" fullword ascii
       $s7 = "DFDHERGGZV" fullword ascii
-      $s8 = "%s%s%s%s%s%s%s%s" fullword ascii /* Goodware String - occured 4 times */
+      $s8 = "%s%s%s%s%s%s%s%s" fullword ascii 
    condition:
       uint16(0) == 0x5a4d and filesize < 300KB and 5 of them
 }
 
 
-rule SUSP_NET_Msil_Suspicious_Use_StrReverseSUSP_NET_Msil_Suspicious_Use_StrReverse {
+rule SUSP_NET_Msil_Suspicious_Use_StrReverse {
    meta:
-      /* 
-         This combination of imports and usage of StrReverse appears often
-         in .NET crypters and malware trying to evade static string analysis
-      */
+      
       description = "Detects mixed use of Microsoft.CSharp and VisualBasic to use StrReverse"
       author = "dr4k0nia, modified by Florian Roth"
       reference = "https://github.com/dr4k0nia/yara-rules"
@@ -4609,53 +4501,7 @@ rule SUSP_NET_Msil_Suspicious_Use_StrReverseSUSP_NET_Msil_Suspicious_Use_StrReve
 }
 
 
-rule SUSP_Double_Base64_Encoded_ExecutableSUSP_Double_Base64_Encoded_Executable {
-   meta:
-      description = "Detects an executable that has been encoded with base64 twice"
-      author = "Florian Roth"
-      reference = "https://twitter.com/TweeterCyber/status/1189073238803877889"
-      score = 70
-      date = "2019-10-29"
-      modified = "2025-03-21"
-      hash = "ef2fc4e10cadb9a1e890208e8ec634d09bb505cce87a3c91a80e5c796bfafb43"
-      hash = "f40c6116c05fbd0433fe4031a896e882c5d31059b93b5015a019c04e2a1add32"
-      hash = "e396d1e1957e12595250ff85a7613873a065177c6e5b665e0f2b9f14224e33a3"
-      hash = "ea96c8696d48884f337e19dfa4220c13200a28192220ebb1a856a7fd850dff99"
-      id = "2e714e91-c7e6-5c6f-930a-270ce452ff0c"
-   strings:
-   /* Double encoded MSDOS stubs
-   This program cannot be run in DOS mode
-   This program must be run under Win32
-   https://ygdrasil.nextron:8000/#recipe=Fork('%5C%5Cn','%5C%5Cn',false)Show_Base64_offsets('A-Za-z0-9%2B/%3D',false,'Raw')Fork('%5C%5Cn','%5C%5Cn',false)Show_Base64_offsets('A-Za-z0-9%2B/%3D',false,'Raw')&input=VGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGUKVGhpcyBwcm9ncmFtIG11c3QgYmUgcnVuIHVuZGVyIFdpbjMy
-   */
-      $ = "VkdocGN5QndjbTluY21GdElHTmhibTV2ZENCaVpTQnlkVzRnYVc0Z1JFOVRJRzF2Wk" ascii wide
-      $ = "ZHaHBjeUJ3Y205bmNtRnRJR05oYm01dmRDQmlaU0J5ZFc0Z2FXNGdSRTlUSUcxdlpH" ascii wide
-      $ = "WR2hwY3lCd2NtOW5jbUZ0SUdOaGJtNXZkQ0JpWlNCeWRXNGdhVzRnUkU5VElHMXZaR" ascii wide
-      $ = "Um9hWE1nY0hKdlozSmhiU0JqWVc1dWIzUWdZbVVnY25WdUlHbHVJRVJQVXlCdGIyUm" ascii wide
-      $ = "JvYVhNZ2NISnZaM0poYlNCallXNXViM1FnWW1VZ2NuVnVJR2x1SUVSUFV5QnRiMlJs" ascii wide
-      $ = "Sb2FYTWdjSEp2WjNKaGJTQmpZVzV1YjNRZ1ltVWdjblZ1SUdsdUlFUlBVeUJ0YjJSb" ascii wide
-      $ = "VWFHbHpJSEJ5YjJkeVlXMGdZMkZ1Ym05MElHSmxJSEoxYmlCcGJpQkVUMU1nYlc5a1" ascii wide
-      $ = "VhR2x6SUhCeWIyZHlZVzBnWTJGdWJtOTBJR0psSUhKMWJpQnBiaUJFVDFNZ2JXOWta" ascii wide
-      $ = "VYUdseklIQnliMmR5WVcwZ1kyRnVibTkwSUdKbElISjFiaUJwYmlCRVQxTWdiVzlrW" ascii wide
-      $ = "VkdocGN5QndjbTluY21GdElHMTFjM1FnWW1VZ2NuVnVJSFZ1WkdWeUlGZHBiak15" ascii wide
-      $ = "ZHaHBjeUJ3Y205bmNtRnRJRzExYzNRZ1ltVWdjblZ1SUhWdVpHVnlJRmRwYmpNe" ascii wide
-      $ = "WR2hwY3lCd2NtOW5jbUZ0SUcxMWMzUWdZbVVnY25WdUlIVnVaR1Z5SUZkcGJqTX" ascii wide
-      $ = "Um9hWE1nY0hKdlozSmhiU0J0ZFhOMElHSmxJSEoxYmlCMWJtUmxjaUJYYVc0ek" ascii wide
-      $ = "JvYVhNZ2NISnZaM0poYlNCdGRYTjBJR0psSUhKMWJpQjFibVJsY2lCWGFXNHpN" ascii wide
-      $ = "Sb2FYTWdjSEp2WjNKaGJTQnRkWE4wSUdKbElISjFiaUIxYm1SbGNpQlhhVzR6T" ascii wide
-      $ = "VWFHbHpJSEJ5YjJkeVlXMGdiWFZ6ZENCaVpTQnlkVzRnZFc1a1pYSWdWMmx1TX" ascii wide
-      $ = "VhR2x6SUhCeWIyZHlZVzBnYlhWemRDQmlaU0J5ZFc0Z2RXNWtaWElnVjJsdU16" ascii wide
-      $ = "VYUdseklIQnliMmR5WVcwZ2JYVnpkQ0JpWlNCeWRXNGdkVzVrWlhJZ1YybHVNe" ascii wide
-   condition:
-      1 of them
-      and not filepath contains "\\User Data\\Default\\Cache\\" // chrome cache
-      and not filepath contains "\\cache2\\entries\\" // FF cache
-      and not filepath contains "\\Microsoft\\Windows\\INetCache\\IE\\" // old IE
-}
-
-
-
-rule SUSP_Reversed_Base64_Encoded_EXESUSP_Reversed_Base64_Encoded_EXE : FILE {
+rule SUSP_Reversed_Base64_Encoded_EXE : FILE {
    meta:
       description = "Detects an base64 encoded executable with reversed characters"
       author = "Florian Roth (Nextron Systems)"
@@ -4680,7 +4526,7 @@ rule SUSP_Reversed_Base64_Encoded_EXESUSP_Reversed_Base64_Encoded_EXE : FILE {
 
 
 
-rule SUSP_Office_Dropper_StringsSUSP_Office_Dropper_Strings {
+rule SUSP_Office_Dropper_Strings {
    meta:
       description = "Detects Office droppers that include a notice to enable active content"
       author = "Florian Roth (Nextron Systems)"
@@ -4700,7 +4546,7 @@ rule SUSP_Office_Dropper_StringsSUSP_Office_Dropper_Strings {
 
 
 
-rule SUSP_SFX_RunProgram_WScriptSUSP_SFX_RunProgram_WScript {
+rule SUSP_SFX_RunProgram_WScript {
    meta:
       description = "Detects suspicious SFX that runs wscript.exe"
       author = "Florian Roth (Nextron Systems)"
@@ -4721,7 +4567,7 @@ rule SUSP_SFX_RunProgram_WScriptSUSP_SFX_RunProgram_WScript {
 }
 
 
-rule MAL_RTF_Embedded_OLE_PEMAL_RTF_Embedded_OLE_PE {
+rule MAL_RTF_Embedded_OLE_PE {
    meta:
       description = "Detects a suspicious string often used in PE files in a hex encoded object stream"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -4732,24 +4578,24 @@ rule MAL_RTF_Embedded_OLE_PEMAL_RTF_Embedded_OLE_PE {
       score = 65
       id = "20044f08-9574-5baf-b91e-47613e490d62"
    strings:
-      /* Hex encoded strings */
-      /* This program cannot be run in DOS mode */
+      
+      
       $a1 = "546869732070726f6772616d2063616e6e6f742062652072756e20696e20444f53206d6f6465" ascii
-      /* KERNEL32.dll */
+      
       $a2 = "4b45524e454c33322e646c6c" ascii
-      /* C:\fakepath\ */
+      
       $a3 = "433a5c66616b65706174685c" ascii
-      /* DOS Magic Header */
+      
       $m3 = "4d5a40000100000006000000ffff"
       $m2 = "4d5a50000200000004000f00ffff"
       $m1 = "4d5a90000300000004000000ffff"
    condition:
-      uint32be(0) == 0x7B5C7274 /* RTF */
+      uint32be(0) == 0x7B5C7274 
       and 1 of them
 }
 
 
-rule SUSP_XORed_URL_In_EXESUSP_XORed_URL_In_EXE {
+rule SUSP_XORed_URL_In_EXE {
    meta:
       description = "Detects an XORed URL in an executable"
       author = "Florian Roth (Nextron Systems)"
@@ -4764,8 +4610,8 @@ rule SUSP_XORed_URL_In_EXESUSP_XORed_URL_In_EXE {
       $f1 = "http://" ascii
       $f2 = "https://" ascii
 
-      $fp01 = "3Com Corporation" ascii  /* old driver */
-      $fp02 = "bootloader.jar" ascii  /* DeepGit */
+      $fp01 = "3Com Corporation" ascii  
+      $fp02 = "bootloader.jar" ascii  
       $fp03 = "AVAST Software" ascii wide
       $fp04 = "smartsvn" wide ascii fullword
       $fp05 = "Avira Operations GmbH" wide fullword
@@ -4792,7 +4638,7 @@ rule SUSP_XORed_URL_In_EXESUSP_XORed_URL_In_EXE {
 
 
 
-rule SUSP_PDB_Strings_Keylogger_BackdoorSUSP_PDB_Strings_Keylogger_Backdoor : HIGHVOL {
+rule SUSP_PDB_Strings_Keylogger_Backdoor : HIGHVOL {
    meta:
       description = "Detects PDB strings used in backdoors or keyloggers"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -4817,7 +4663,7 @@ rule SUSP_PDB_Strings_Keylogger_BackdoorSUSP_PDB_Strings_Keylogger_Backdoor : HI
 
 
 
-rule SUSP_Microsoft_Copyright_String_Anomaly_2SUSP_Microsoft_Copyright_String_Anomaly_2 {
+rule SUSP_Microsoft_Copyright_String_Anomaly_2 {
    meta:
       description = "Detects Floxif Malware"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -4835,7 +4681,7 @@ rule SUSP_Microsoft_Copyright_String_Anomaly_2SUSP_Microsoft_Copyright_String_An
 
 
 
-rule SUSP_Win32dll_StringSUSP_Win32dll_String {
+rule SUSP_Win32dll_String {
    meta:
       description = "Detects suspicious string in executables"
       author = "Florian Roth (Nextron Systems)"
@@ -4851,7 +4697,7 @@ rule SUSP_Win32dll_StringSUSP_Win32dll_String {
 
 
 
-rule SUSP_Modified_SystemExeFileName_in_FileSUSP_Modified_SystemExeFileName_in_File {
+rule SUSP_Modified_SystemExeFileName_in_File {
    meta:
       description = "Detecst a variant of a system file name often used by attackers to cloak their activity"
       author = "Florian Roth (Nextron Systems)"
@@ -4869,7 +4715,7 @@ rule SUSP_Modified_SystemExeFileName_in_FileSUSP_Modified_SystemExeFileName_in_F
 
 
 
-rule SUSP_DropperBackdoor_KeywordsSUSP_DropperBackdoor_Keywords {
+rule SUSP_DropperBackdoor_Keywords {
    meta:
       description = "Detects suspicious keywords that indicate a backdoor"
       author = "Florian Roth (Nextron Systems)"
@@ -4885,7 +4731,7 @@ rule SUSP_DropperBackdoor_KeywordsSUSP_DropperBackdoor_Keywords {
 
 
 
-rule SUSP_SFX_cmdSUSP_SFX_cmd {
+rule SUSP_SFX_cmd {
    meta:
       description = "Detects suspicious SFX as used by Gamaredon group"
       author = "Florian Roth (Nextron Systems)"
@@ -4901,7 +4747,7 @@ rule SUSP_SFX_cmdSUSP_SFX_cmd {
 
 
 
-rule SUSP_XMRIG_ReferenceSUSP_XMRIG_Reference {
+rule SUSP_XMRIG_Reference {
    meta:
       description = "Detects an executable with a suspicious XMRIG crypto miner reference"
       author = "Florian Roth (Nextron Systems)"
@@ -4917,7 +4763,7 @@ rule SUSP_XMRIG_ReferenceSUSP_XMRIG_Reference {
 
 
 
-rule SUSP_PDB_Path_KeywordsSUSP_PDB_Path_Keywords {
+rule SUSP_PDB_Path_Keywords {
    meta:
       description = "Detects suspicious PDB paths"
       author = "Florian Roth (Nextron Systems)"
@@ -4947,7 +4793,7 @@ rule SUSP_PDB_Path_KeywordsSUSP_PDB_Path_Keywords {
 
 
 
-rule SUSP_PE_Discord_Attachment_Oct21_1SUSP_PE_Discord_Attachment_Oct21_1 {
+rule SUSP_PE_Discord_Attachment_Oct21_1 {
    meta:
       description = "Detects suspicious executable with reference to a Discord attachment (often used for malware hosting on a legitimate FQDN)"
       author = "Florian Roth (Nextron Systems)"
@@ -4965,7 +4811,7 @@ rule SUSP_PE_Discord_Attachment_Oct21_1SUSP_PE_Discord_Attachment_Oct21_1 {
 
 
 
-rule SUSP_THOR_Unsigned_Oct23_1SUSP_THOR_Unsigned_Oct23_1 {
+rule SUSP_THOR_Unsigned_Oct23_1 {
    meta:
       description = "Detects unsigned version of THOR scanner, which could be a backdoored / modified version of the scanner"
       author = "Florian Roth"
@@ -4977,7 +4823,7 @@ rule SUSP_THOR_Unsigned_Oct23_1SUSP_THOR_Unsigned_Oct23_1 {
       $s1 = "THOR APT Scanner" wide fullword
       $s2 = "Nextron Systems GmbH" wide fullword
 
-      /* OriginalFilename\x00thor */
+      
       $sc1 = { 00 4F 00 72 00 69 00 67 00 69 00 6E 00 61 00 6C 00 46 00 69 00 6C 00 65 00 6E 00 61 00 6D 00 65 00 00 00 74 00 68 00 6F 00 72 } 
    condition:
       uint16(0) == 0x5a4d
@@ -4986,7 +4832,7 @@ rule SUSP_THOR_Unsigned_Oct23_1SUSP_THOR_Unsigned_Oct23_1 {
 }
 
 
-rule SUSP_VHD_Suspicious_Small_SizeSUSP_VHD_Suspicious_Small_Size {
+rule SUSP_VHD_Suspicious_Small_Size {
    meta:
       description = "Detects suspicious VHD files"
       author = "Florian Roth (Nextron Systems)"
@@ -4997,7 +4843,7 @@ rule SUSP_VHD_Suspicious_Small_SizeSUSP_VHD_Suspicious_Small_Size {
       hash1 = "3382a75bd959d2194c4b1a8885df93e8770f4ebaeaff441a5180ceadf1656cd9"
       id = "f4a72e7b-ddd3-5038-9440-1e81dc27755d"
    strings:
-      /* VHD */
+      
       $hc1 = { 63 6F 6E 65 63 74 69 78 }
       $hc2a = { 49 6E 76 61 6C 69 64 20 70 61 72 74 69 74 69 6F
                6E 20 74 61 62 6C 65 00 45 72 72 6F 72 20 6C 6F
@@ -5015,7 +4861,7 @@ rule SUSP_VHD_Suspicious_Small_SizeSUSP_VHD_Suspicious_Small_Size {
 }
 
 
-rule SUSP_Two_Byte_XOR_PE_And_MZSUSP_Two_Byte_XOR_PE_And_MZ {
+rule SUSP_Two_Byte_XOR_PE_And_MZ {
    meta:
       author = "Wesley Shields <wxs@atarininja.org>"
       description = "Look for 2 byte xor of a PE starting at offset 0"
@@ -5030,7 +4876,7 @@ rule SUSP_Two_Byte_XOR_PE_And_MZSUSP_Two_Byte_XOR_PE_And_MZ {
 
 
 
-rule SUSP_Four_Byte_XOR_PE_And_MZSUSP_Four_Byte_XOR_PE_And_MZ {
+rule SUSP_Four_Byte_XOR_PE_And_MZ {
    meta:
       author = "Wesley Shields <wxs@atarininja.org>"
       description = "Look for 4 byte xor of a PE starting at offset 0"
@@ -5046,44 +4892,7 @@ rule SUSP_Four_Byte_XOR_PE_And_MZSUSP_Four_Byte_XOR_PE_And_MZ {
 }
 
 
-rule SUSP_Known_Type_Cloaked_as_JPGSUSP_Known_Type_Cloaked_as_JPG {
-   meta:
-      description = "Detects a non-JPEG file type cloaked as .jpg"
-      author = "Florian Roth (Nextron Systems)"
-      reference = "Internal Research - replacement for Cloaked_as_JPG rule"
-      date = "2022-09-16"
-      score = 60
-      id = "728908a6-74cf-5bab-a23f-cd03ed209430"
-   condition:
-      (extension == ".jpg" or extension == ".jpeg") and (
-         filetype == "EXE" or
-         filetype == "ELF" or
-         filetype == "MACH-O" or
-         filetype == "VBS" or
-         filetype == "PHP" or
-         filetype == "JSP" or
-         filetype == "Python" or
-         filetype == "LSASS Dump File" or
-         filetype == "ASP" or
-         filetype == "BATCH" or
-         filetype == "RTF" or
-         filetype == "MDMP" or
-
-         filetype contains "PowerShell" or
-         filetype contains "Base64"
-      )
-}
-
-/*
-    Yara Rule Set
-    Author: Florian Roth
-    Date: 2015-12-21
-    Identifier: Uncommon File Sizes
-*/
-
-
-
-rule SUSP_Size_of_ASUS_TuningToolSUSP_Size_of_ASUS_TuningTool {
+rule SUSP_Size_of_ASUS_TuningTool {
    meta:
       description = "Detects an ASUS tuning tool with a suspicious size"
       author = "Florian Roth (Nextron Systems)"
@@ -5102,7 +4911,7 @@ rule SUSP_Size_of_ASUS_TuningToolSUSP_Size_of_ASUS_TuningTool {
 
 
 
-rule SUSP_Putty_Unnormal_SizeSUSP_Putty_Unnormal_Size {
+rule SUSP_Putty_Unnormal_Size {
    meta:
       description = "Detects a putty version with a size different than the one provided by Simon Tatham (could be caused by an additional signature or malware)"
       author = "Florian Roth (Nextron Systems)"
@@ -5147,16 +4956,16 @@ rule SUSP_Putty_Unnormal_SizeSUSP_Putty_Unnormal_Size {
       and filesize != 774200
       and filesize != 854072
       and filesize != 665144
-      and filesize != 640000  /* putty provided by Safenet https://thalesdocs.com/gphsm/luna/7.1/docs/network/Content/install/sa_hw_install/hardware_installation_lunasa.htm */
-      and filesize != 650720  /* Citrix XenCenter */
-      and filesize != 662808  /* Citrix XenCenter */
-      and filesize != 651256  /* Citrix XenCenter */
-      and filesize != 664432  /* Citrix XenCenter */
+      and filesize != 640000  
+      and filesize != 650720  
+      and filesize != 662808  
+      and filesize != 651256  
+      and filesize != 664432  
 }
 
 
 
-rule MAL_Chrysalis_DllLoader_Feb26MAL_Chrysalis_DllLoader_Feb26 {
+rule MAL_Chrysalis_DllLoader_Feb26 {
    meta:
       description = "Detects DLL used to load Chrysalis backdoor, seen being used in the compromise of the infrastructure hosting Notepad++ by Chinese APT group Lotus Blossom"
       author = "X__Junior"
@@ -5174,7 +4983,7 @@ rule MAL_Chrysalis_DllLoader_Feb26MAL_Chrysalis_DllLoader_Feb26 {
 
 
 
-rule MAL_CobaltStrike_Beacon_Loader_Feb26MAL_CobaltStrike_Beacon_Loader_Feb26 {
+rule MAL_CobaltStrike_Beacon_Loader_Feb26 {
    meta:
       description = "Detects Cobalt Strike beacon loader"
       author = "X__Junior"
@@ -5198,7 +5007,7 @@ rule MAL_CobaltStrike_Beacon_Loader_Feb26MAL_CobaltStrike_Beacon_Loader_Feb26 {
 
 
 
-rule MAL_POC_Microsoft_Warbird_Loader_Feb26MAL_POC_Microsoft_Warbird_Loader_Feb26 {
+rule MAL_POC_Microsoft_Warbird_Loader_Feb26 {
    meta:
       description = "Detects a POC to turn Microsoft Warbird into a shellcode loader"
       author = "X__Junior"
@@ -5214,7 +5023,7 @@ rule MAL_POC_Microsoft_Warbird_Loader_Feb26MAL_POC_Microsoft_Warbird_Loader_Feb2
 }
 
 
-rule MAL_AveMaria_RAT_Jul19MAL_AveMaria_RAT_Jul19 {
+rule MAL_AveMaria_RAT_Jul19 {
    meta:
       description = "Detects AveMaria RAT"
       author = "Florian Roth (Nextron Systems)"
@@ -5231,30 +5040,7 @@ rule MAL_AveMaria_RAT_Jul19MAL_AveMaria_RAT_Jul19 {
 }
 
 
-rule MAL_LNX_BiBi_Linux_WiperMAL_LNX_BiBi_Linux_Wiper {
-	meta:
-		author ="Felipe Duarte, Security Joes"
-		description ="Detects BiBi-Linux Wiper"
-		hash ="23bae09b5699c2d5c4cb1b8aa908a3af898b00f88f06e021edcb16d7d558efad"
-		reference = "https://www.securityjoes.com/post/bibi-linux-a-new-wiper-dropped-by-pro-hamas-hacktivist-group"
-		
-	strings:
-		$str1 = "[+] Stats: "
-		$str2 = { 2e 00 00 00 42 00 00 00 69 00 00 00 42 00 00 00 69 00 }
-		$str3 = "[!] Waiting For Queue "
-		$str4 = "[+] Round "
-		$str5 = "[+] Path: "
-		$str6 = "[+] CPU cores: " 
-		$str7 = "Threads: "
-
-	condition:
-		all of them
-}
-*/
-
-
-
-rule MAL_WIPER_BiBi_Oct23MAL_WIPER_BiBi_Oct23 {
+rule MAL_WIPER_BiBi_Oct23 {
    meta:
       description = "Detects BiBi wiper samples for Windows and Linux"
       author = "Florian Roth"
@@ -5280,7 +5066,7 @@ rule MAL_WIPER_BiBi_Oct23MAL_WIPER_BiBi_Oct23 {
 }
 
 
-rule MAL_CRIME_suspicious_hex_string_Jun21_1MAL_CRIME_suspicious_hex_string_Jun21_1 : CRIME PE {
+rule MAL_CRIME_suspicious_hex_string_Jun21_1 : CRIME PE {
     meta:
         author = "Nils Kuhnert"
         date = "2021-06-04"
@@ -5299,7 +5085,7 @@ rule MAL_CRIME_suspicious_hex_string_Jun21_1MAL_CRIME_suspicious_hex_string_Jun2
 
 
 
-rule MAL_CRIME_RAT_WIN_PE_GodRat_Aug25:MAL_CRIME_RAT_WIN_PE_GodRat_Aug25: GodRAT {
+rule MAL_CRIME_RAT_WIN_PE_GodRat_Aug25: GodRAT {
    meta:
       description = "Detects GodRAT malware targeting Windows systems"
       author = "Arda Buyukkaya"
@@ -5378,7 +5164,7 @@ rule MAL_CRIME_RAT_WIN_PE_GodRat_Aug25:MAL_CRIME_RAT_WIN_PE_GodRat_Aug25: GodRAT
 }
 
 
-rule MAL_CrypRAT_Jan19_1MAL_CrypRAT_Jan19_1 {
+rule MAL_CrypRAT_Jan19_1 {
    meta:
       description = "Detects CrypRAT"
       author = "Florian Roth (Nextron Systems)"
@@ -5397,7 +5183,7 @@ rule MAL_CrypRAT_Jan19_1MAL_CrypRAT_Jan19_1 {
 }
 
 
-rule MAL_Compromised_Cert_DuckTail_Stealer_Jun23MAL_Compromised_Cert_DuckTail_Stealer_Jun23 {
+rule MAL_Compromised_Cert_DuckTail_Stealer_Jun23 {
    meta:
       author = "dr4k0nia"
       description = "Detects binaries signed with compromised certificates used by DuckTail stealer - identified in June 2023"
@@ -5435,7 +5221,7 @@ rule MAL_Compromised_Cert_DuckTail_Stealer_Jun23MAL_Compromised_Cert_DuckTail_St
 }
 
 
-rule MAL_Etoroloro_Malicious_NodePackage_Dec25MAL_Etoroloro_Malicious_NodePackage_Dec25 {
+rule MAL_Etoroloro_Malicious_NodePackage_Dec25 {
    meta:
       description = "Detects malicious component of node package named Etoroloro"
       reference = "Internal Research"
@@ -5464,7 +5250,7 @@ rule MAL_Etoroloro_Malicious_NodePackage_Dec25MAL_Etoroloro_Malicious_NodePackag
 
 
 
-rule MAL_Fake_Document_Software_Indicators_Nov23MAL_Fake_Document_Software_Indicators_Nov23 {
+rule MAL_Fake_Document_Software_Indicators_Nov23 {
    meta:
       description = "Detects indicators of fake document/image utility software that acts as a downloader for additional malware"
       author = "Jonathan Peters"
@@ -5486,7 +5272,7 @@ rule MAL_Fake_Document_Software_Indicators_Nov23MAL_Fake_Document_Software_Indic
 }
 
 
-rule MAL_Katz_Stealer_May25MAL_Katz_Stealer_May25 {
+rule MAL_Katz_Stealer_May25 {
    meta:
       description = "Detects Katz stealer"
       author = "MalGamy (Nextron Systems)"
@@ -5511,7 +5297,7 @@ rule MAL_Katz_Stealer_May25MAL_Katz_Stealer_May25 {
 
 
 
-rule MAL_DLL_Chrome_App_Bound_Encryption_Decryption_May25MAL_DLL_Chrome_App_Bound_Encryption_Decryption_May25 {
+rule MAL_DLL_Chrome_App_Bound_Encryption_Decryption_May25 {
    meta:
       description = "Detects a DLL used to decrypt App-Bound Encrypted (ABE) cookies, passwords and payment methods from Chromium-based browsers. Seen being used by Katz stealer"
       author = "MAlGamy"
@@ -5534,7 +5320,7 @@ rule MAL_DLL_Chrome_App_Bound_Encryption_Decryption_May25MAL_DLL_Chrome_App_Boun
 
 
 
-rule MAL_NET_UAC_Bypass_May25MAL_NET_UAC_Bypass_May25 {
+rule MAL_NET_UAC_Bypass_May25 {
    meta:
       description = "Detects .NET based tool abusing legitimate Windows utility cmstp.exe to bypass UAC (User-Admin-Controls)"
       author = "Jonathan Peters (cod3nym)"
@@ -5555,7 +5341,7 @@ rule MAL_NET_UAC_Bypass_May25MAL_NET_UAC_Bypass_May25 {
 }
 
 
-rule MAL_Kernel_RegPhantom_Mar26MAL_Kernel_RegPhantom_Mar26 {
+rule MAL_Kernel_RegPhantom_Mar26 {
    meta:
       description = "Detects RegPhantom, a kernel-mode rootkit that allow attacker to inject arbitrary code from unprivileged user-mode into kernel-mode and execute it."
       author = "Pezier Pierre-Henri (Nextron Systems)"
@@ -5589,7 +5375,7 @@ rule MAL_Kernel_RegPhantom_Mar26MAL_Kernel_RegPhantom_Mar26 {
 
 
 
-rule MAL_Neshta_GenericMAL_Neshta_Generic : HIGHVOL {
+rule MAL_Neshta_Generic : HIGHVOL {
    meta:
       description = "Detects Neshta malware"
       author = "Florian Roth (Nextron Systems)"
@@ -5625,7 +5411,7 @@ rule MAL_Neshta_GenericMAL_Neshta_Generic : HIGHVOL {
 }
 
 
-rule SUSP_JS_Dropper_Mar26SUSP_JS_Dropper_Mar26 {
+rule SUSP_JS_Dropper_Mar26 {
    meta:
       description = "Detects suspicious JavaScript dropper used in plain-crypto-js supply chain attacks"
       author = "Marius Benthin"
@@ -5650,7 +5436,7 @@ rule SUSP_JS_Dropper_Mar26SUSP_JS_Dropper_Mar26 {
 }
 
 
-rule MAL_Passwordstate_Moserware_Backdoor_Apr21_1MAL_Passwordstate_Moserware_Backdoor_Apr21_1 {
+rule MAL_Passwordstate_Moserware_Backdoor_Apr21_1 {
    meta:
       description = "Detects backdoor used in Passwordstate incident"
       author = "Florian Roth (Nextron Systems)"
@@ -5676,7 +5462,7 @@ rule MAL_Passwordstate_Moserware_Backdoor_Apr21_1MAL_Passwordstate_Moserware_Bac
 }
 
 
-rule MAL_EXPL_Perfctl_Oct24MAL_EXPL_Perfctl_Oct24 {
+rule MAL_EXPL_Perfctl_Oct24 {
    meta:
       description = "Detects exploits used in relation with Perfctl malware campaigns"
       author = "Florian Roth"
@@ -5699,7 +5485,7 @@ rule MAL_EXPL_Perfctl_Oct24MAL_EXPL_Perfctl_Oct24 {
 
 
 
-rule MAL_LNX_Perfctl_Oct24MAL_LNX_Perfctl_Oct24 {
+rule MAL_LNX_Perfctl_Oct24 {
    meta:
       description = "Detects Perfctl malware samples"
       author = "Florian Roth"
@@ -5721,7 +5507,7 @@ rule MAL_LNX_Perfctl_Oct24MAL_LNX_Perfctl_Oct24 {
 }
 
 
-rule MAL_PHISH_ShellCode_Enc_Payload_Feb25MAL_PHISH_ShellCode_Enc_Payload_Feb25 {
+rule MAL_PHISH_ShellCode_Enc_Payload_Feb25 {
    meta:
       author = "X__Junior"
       description = "Detects unknown of phishing-delivered malware"
@@ -5738,7 +5524,7 @@ rule MAL_PHISH_ShellCode_Enc_Payload_Feb25MAL_PHISH_ShellCode_Enc_Payload_Feb25 
 
 
 
-rule SUSP_Sysinternals_Desktops_Anomaly_Feb25SUSP_Sysinternals_Desktops_Anomaly_Feb25 {
+rule SUSP_Sysinternals_Desktops_Anomaly_Feb25 {
    meta:
       description = "Detects anomalies in Sysinternals Desktops binaries"
       author = "Florian Roth"
@@ -5765,7 +5551,7 @@ rule SUSP_Sysinternals_Desktops_Anomaly_Feb25SUSP_Sysinternals_Desktops_Anomaly_
 
 
 
-rule SUSP_PE_Compromised_Certificate_Feb25SUSP_PE_Compromised_Certificate_Feb25 {
+rule SUSP_PE_Compromised_Certificate_Feb25 {
    meta:
       description = "Detects suspicious PE files signed with a certificate used in a widespread phishing attack in February 2025"
       author = "Jonathan Peters"
@@ -5791,7 +5577,7 @@ rule SUSP_PE_Compromised_Certificate_Feb25SUSP_PE_Compromised_Certificate_Feb25 
 }
 
 
-rule MAL_WIN_Ralordv1_Apr25MAL_WIN_Ralordv1_Apr25 {
+rule MAL_WIN_Ralordv1_Apr25 {
     meta:
         description = "This ISH Tecnologia Yara rule, detects the main components of the first version of RALord Ransomware"
         author = "0x0d4y-Icaro Cesar"
@@ -5822,7 +5608,7 @@ rule MAL_WIN_Ralordv1_Apr25MAL_WIN_Ralordv1_Apr25 {
 }
 
 
-rule MAL_RANSOM_Lorenz_May21_1MAL_RANSOM_Lorenz_May21_1 {
+rule MAL_RANSOM_Lorenz_May21_1 {
    meta:
       description = "Detects Lorenz Ransomware samples"
       author = "Florian Roth (Nextron Systems)"
@@ -5851,7 +5637,7 @@ rule MAL_RANSOM_Lorenz_May21_1MAL_RANSOM_Lorenz_May21_1 {
       ) 
 }
 
-rule MAL_PeerBlight_Dec25MAL_PeerBlight_Dec25 {
+rule MAL_PeerBlight_Dec25 {
    meta:
       description = "Detects PeerBlight Linux backdoor with systemd persistence artifacts and user-mode masquerading strings, linked to React2Shell exploitation"
       author = "RussianPanda"
@@ -5872,7 +5658,7 @@ rule MAL_PeerBlight_Dec25MAL_PeerBlight_Dec25 {
 }
 
 
-rule MAL_WIN_Akira_Apr25MAL_WIN_Akira_Apr25 {
+rule MAL_WIN_Akira_Apr25 {
     meta:
         description = "This Yara rule from ISH Tecnologia's Heimdall Security Research Team detects key components of Akira Ransomware"
         author = "0x0d4y-Icaro Cesar"
@@ -5902,7 +5688,7 @@ rule MAL_WIN_Akira_Apr25MAL_WIN_Akira_Apr25 {
 }
 
 
-rule MAL_Win_Amadey_Jun25MAL_Win_Amadey_Jun25 {
+rule MAL_Win_Amadey_Jun25 {
    meta:
       author = "0x0d4y"
       description = "This rule detects intrinsic patterns of Amadey version 5.34"
@@ -5927,7 +5713,7 @@ rule MAL_Win_Amadey_Jun25MAL_Win_Amadey_Jun25 {
 }
 
 
-rule MAL_BACKORDER_LOADER_WIN_Go_Jan23MAL_BACKORDER_LOADER_WIN_Go_Jan23 {
+rule MAL_BACKORDER_LOADER_WIN_Go_Jan23 {
    meta:
       description = "Detects the BACKORDER loader compiled in GO which download and executes a second stage payload from a remote server."
       author = "Arda Buyukkaya (modified by Florian Roth)"
@@ -5960,7 +5746,7 @@ rule MAL_BACKORDER_LOADER_WIN_Go_Jan23MAL_BACKORDER_LOADER_WIN_Go_Jan23 {
 }
 
 
-rule MAL_WIN_Megazord_Apr25MAL_WIN_Megazord_Apr25 {
+rule MAL_WIN_Megazord_Apr25 {
     meta:
         description = "This Yara rule from ISH Tecnologia's Heimdall Security Research Team, detects the main components of the Megazord Ransomware"
         author = "0x0d4y-Icaro Cesar"
@@ -5992,7 +5778,7 @@ rule MAL_WIN_Megazord_Apr25MAL_WIN_Megazord_Apr25 {
 }
 
 
-rule MAL_WIPER_Unknown_Jun25MAL_WIPER_Unknown_Jun25 {
+rule MAL_WIPER_Unknown_Jun25 {
    meta:
       description = "Detects unknown disk wiper first spotted in June 2025 and uploaded from Israel"
       author = "Florian Roth"
@@ -6016,7 +5802,7 @@ rule MAL_WIPER_Unknown_Jun25MAL_WIPER_Unknown_Jun25 {
 }
 
 
-rule SUSP_LNX_SH_Disk_Wiper_Script_Jun25SUSP_LNX_SH_Disk_Wiper_Script_Jun25 {
+rule SUSP_LNX_SH_Disk_Wiper_Script_Jun25 {
    meta:
       description = "Detects unknown disk wiper script for Linux systems"
       author = "Florian Roth"
@@ -6037,7 +5823,7 @@ rule SUSP_LNX_SH_Disk_Wiper_Script_Jun25SUSP_LNX_SH_Disk_Wiper_Script_Jun25 {
 
 
 
-rule SUSP_PY_PYInstaller_Swiper_Jun25SUSP_PY_PYInstaller_Swiper_Jun25 {
+rule SUSP_PY_PYInstaller_Swiper_Jun25 {
    meta:
       description = "Detects suspicious Python based executable with similarities to a known disk wiper"
       author = "Florian Roth"
@@ -6060,7 +5846,7 @@ rule SUSP_PY_PYInstaller_Swiper_Jun25SUSP_PY_PYInstaller_Swiper_Jun25 {
 
 
 
-rule SUSP_XMRIG_StringSUSP_XMRIG_String {
+rule SUSP_XMRIG_String {
    meta:
       description = "Detects a suspicious XMRIG crypto miner executable string in filr"
       author = "Florian Roth (Nextron Systems)"
@@ -6075,7 +5861,7 @@ rule SUSP_XMRIG_StringSUSP_XMRIG_String {
 }
 
 
-rule SUSP_LNX_ARCH_PKGBUILD_NPM_Dependency_Jun26SUSP_LNX_ARCH_PKGBUILD_NPM_Dependency_Jun26 {
+rule SUSP_LNX_ARCH_PKGBUILD_NPM_Dependency_Jun26 {
    meta:
       description = "Detects suspicious PKGBUILD with NPM dependency and install script"
       author = "Marius Benthin"
@@ -6102,7 +5888,7 @@ rule SUSP_LNX_ARCH_PKGBUILD_NPM_Dependency_Jun26SUSP_LNX_ARCH_PKGBUILD_NPM_Depen
 
 
 
-rule SUSP_LNX_ARCH_SRCINFO_NPM_Dependency_Jun26SUSP_LNX_ARCH_SRCINFO_NPM_Dependency_Jun26 {
+rule SUSP_LNX_ARCH_SRCINFO_NPM_Dependency_Jun26 {
    meta:
       description = "Detects suspicious .SRCINFO with NPM dependency and install script"
       author = "Marius Benthin"
@@ -6121,7 +5907,7 @@ rule SUSP_LNX_ARCH_SRCINFO_NPM_Dependency_Jun26SUSP_LNX_ARCH_SRCINFO_NPM_Depende
 
 
 
-rule SUSP_AppDomainInjection_Keyword_May26SUSP_AppDomainInjection_Keyword_May26 {
+rule SUSP_AppDomainInjection_Keyword_May26 {
    meta:
       description = "Detects link files, archives and binaries that contain keywords related to AppDomain hijacking/injection a technique used by malware to sideload payloads."
       author = "Jonathan Peters (Nextron Systems)"
@@ -6144,7 +5930,7 @@ rule SUSP_AppDomainInjection_Keyword_May26SUSP_AppDomainInjection_Keyword_May26 
 
 
 
-rule SUSP_PE_Contains_Encrypted_Executable_May26SUSP_PE_Contains_Encrypted_Executable_May26 {
+rule SUSP_PE_Contains_Encrypted_Executable_May26 {
    meta:
       description = "Detects executables containing an encrypted embedded payload using parameters commonly observed in malware, suggesting obfuscation or staged execution."
       author = "Jonathan Peters (Nextron Systems)"
@@ -6161,7 +5947,7 @@ rule SUSP_PE_Contains_Encrypted_Executable_May26SUSP_PE_Contains_Encrypted_Execu
 }
 
 
-rule SUSP_VulnDriver_HP_Hardware_Diagnostics_Etdsupp_May23SUSP_VulnDriver_HP_Hardware_Diagnostics_Etdsupp_May23 {
+rule SUSP_VulnDriver_HP_Hardware_Diagnostics_Etdsupp_May23 {
    meta:
       description = "Detects vulnerable versions of the HP Hardware Diagnostics driver (etdsupp.sys) based on PE metadata info"
       author = "X__Junior (Nextron Systems)"
@@ -6171,15 +5957,15 @@ rule SUSP_VulnDriver_HP_Hardware_Diagnostics_Etdsupp_May23SUSP_VulnDriver_HP_Har
       score = 65
       id = "8f838e4f-3e3e-5131-9d67-e49f6848bb37"
     strings:
-        $s1 = {4f 00 72 00 69 00 67 00 69 00 6e 00 61 00 6c 00 46 00 69 00 6c 00 65 00 6e 00 61 00 6d 00 65 00 00 00 65 00 74 00 64 00 73 00 75 00 70 00 70 00 2e 00 73 00 79 00 73 00} /*OriginalFilename  etdsupp.sys*/
+        $s1 = {4f 00 72 00 69 00 67 00 69 00 6e 00 61 00 6c 00 46 00 69 00 6c 00 65 00 6e 00 61 00 6d 00 65 00 00 00 65 00 74 00 64 00 73 00 75 00 70 00 70 00 2e 00 73 00 79 00 73 00} 
         $s2 = "etdsupp.pdb"
-        $s3 = /V\x00S\x00_\x00V\x00E\x00R\x00S\x00I\x00O\x00N\x00_\x00I\x00N\x00F\x00O\x00\x00\x00{0,4}\xbd\x04\xef\xfe[\x00-\xff]{4}([\x00-\xff]{2}[\x00-\x11]\x00[\x00-\xff]{4}|\x00\x00\x12\x00\x00\x00\x00\x00)/  /* Vuln Versions*/
+        $s3 = /V\x00S\x00_\x00V\x00E\x00R\x00S\x00I\x00O\x00N\x00_\x00I\x00N\x00F\x00O\x00\x00\x00{0,4}\xbd\x04\xef\xfe[\x00-\xff]{4}([\x00-\xff]{2}[\x00-\x11]\x00[\x00-\xff]{4}|\x00\x00\x12\x00\x00\x00\x00\x00)/  
     condition:
         uint16(0) == 0x5a4d and int16(uint32(0x3C) + 0x5c) == 0x0001 and filesize < 100KB and all of them
 }
 
 
-rule SUSP_Imphash_PassRevealer_PY_EXESUSP_Imphash_PassRevealer_PY_EXE {
+rule SUSP_Imphash_PassRevealer_PY_EXE {
    meta:
       description = "Detects an imphash used by password revealer and hack tools (some false positives with hardware driver installers)"
       author = "Florian Roth (Nextron Systems)"
@@ -6192,7 +5978,7 @@ rule SUSP_Imphash_PassRevealer_PY_EXESUSP_Imphash_PassRevealer_PY_EXE {
    strings:
       $fp1 = "Assmann Electronic GmbH" ascii wide
       $fp2 = "Oculus VR" ascii wide
-      $fp3 = "efm8load" ascii  /* Corsair software */
+      $fp3 = "efm8load" ascii  
    condition:
       uint16(0) == 0x5a4d and filesize < 10000KB
       and pe.imphash() == "ed61beebc8d019dd9bec823e2d694afd"
@@ -6201,7 +5987,7 @@ rule SUSP_Imphash_PassRevealer_PY_EXESUSP_Imphash_PassRevealer_PY_EXE {
 
 
 
-rule MAL_Unknown_PWDumper_Apr18_3MAL_Unknown_PWDumper_Apr18_3 {
+rule MAL_Unknown_PWDumper_Apr18_3 {
    meta:
       description = "Detects sample from unknown sample set - IL origin"
       license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
@@ -6224,7 +6010,7 @@ rule MAL_Unknown_PWDumper_Apr18_3MAL_Unknown_PWDumper_Apr18_3 {
 
 
 
-rule SUSP_Katz_PDBSUSP_Katz_PDB {
+rule SUSP_Katz_PDB {
    meta:
       description = "Detects suspicious PDB in file"
       author = "Florian Roth (Nextron Systems)"
@@ -6241,27 +6027,7 @@ rule SUSP_Katz_PDBSUSP_Katz_PDB {
 
 
 
-rule SUSP_Renamed_Dot1XtraySUSP_Renamed_Dot1Xtray {
-   meta:
-      description = "Detects a legitimate renamed dot1ctray.exe, which is often used by PlugX for DLL side-loading"
-      author = "Florian Roth (Nextron Systems)"
-      reference = "Internal Research"
-      date = "2018-11-15"
-      hash1 = "f9ebf6aeb3f0fb0c29bd8f3d652476cd1fe8bd9a0c11cb15c43de33bbce0bf68"
-      id = "3685a79e-7dd6-5221-b58a-6ec1c61030cc"
-   strings:
-      $a1 = "\\Symantec_Network_Access_Control\\"  ascii
-      $a2 = "\\dot1xtray.pdb" ascii
-      $a3 = "DOT1X_NAMED_PIPE_CONNECT" fullword wide /* Goodware String - occured 2 times */
-   condition:
-      uint16(0) == 0x5a4d and filesize < 300KB and all of them
-      and not filename matches /dot1xtray.exe/i
-      and not filepath matches /Recycle.Bin/i
-}
-
-
-
-rule SUSP_VULN_DRV_PROCEXP152_May23SUSP_VULN_DRV_PROCEXP152_May23 {
+rule SUSP_VULN_DRV_PROCEXP152_May23 {
    meta:
       description = "Detects vulnerable process explorer driver (original file name: PROCEXP152.SYS), often used by attackers to elevate privileges (false positives are possible in cases in which old versions of process explorer are still present on the system)"
       author = "Florian Roth"
@@ -6283,29 +6049,7 @@ rule SUSP_VULN_DRV_PROCEXP152_May23SUSP_VULN_DRV_PROCEXP152_May23 {
 
 
 
-rule SUSP_VULN_DRV_PROCEXP152_Renamed_May23SUSP_VULN_DRV_PROCEXP152_Renamed_May23 {
-   meta:
-      description = "Detects vulnerable process explorer driver (original file name: PROCEXP152.SYS) that has been renamed (often used by attackers to elevate privileges)"
-      author = "Florian Roth"
-      reference = "https://news.sophos.com/en-us/2023/04/19/aukill-edr-killer-malware-abuses-process-explorer-driver/"
-      date = "2023-05-05"
-      score = 70
-      hash1 = "cdfbe62ef515546f1728189260d0bdf77167063b6dbb77f1db6ed8b61145a2bc"
-      id = "af2ec5d5-3453-5d35-8d19-4f37c61fabce"
-   strings:
-      $a1 = "\\ProcExpDriver.pdb" ascii
-      $a2 = "\\Device\\PROCEXP152" wide fullword
-      $a3 = "procexp.Sys" wide fullword
-   condition:
-      uint16(0) == 0x5a4d
-      and filesize < 200KB 
-      and all of them
-      and not filename matches /PROCEXP152\.SYS/i
-}
-
-
-
-rule MAL_Information_Collector_May26MAL_Information_Collector_May26 {
+rule MAL_Information_Collector_May26 {
    meta:
       description = "Detects reconaissance payload used in the DAEMON Tools supplychain compromise. The tools collects detailed information about the infected system like hardware, installed software, running processes etc. all data is exfilled to an attacker controlled server."
       author = "MalGamy, Jonathan Peters (cod3nym)"
@@ -6335,7 +6079,7 @@ rule MAL_Information_Collector_May26MAL_Information_Collector_May26 {
 
 
 
-rule MAL_DAEMON_Tools_Lite_Compromised_May26MAL_DAEMON_Tools_Lite_Compromised_May26 {
+rule MAL_DAEMON_Tools_Lite_Compromised_May26 {
    meta:
       description = "Detects compromised DAEMON Tools Lite versions deployed in a supplychain compromise campaign affected versions include: 12.5.0.2421 up to 12.5.0.2434 The infected binaries drop Quic RAT and various custom data exfiltration payloads."
       author = "Jonathan Peters (cod3nym)"
@@ -6360,7 +6104,7 @@ rule MAL_DAEMON_Tools_Lite_Compromised_May26MAL_DAEMON_Tools_Lite_Compromised_Ma
 
 
 
-rule MAL_Minimalistic_Backdoor_May26MAL_Minimalistic_Backdoor_May26 {
+rule MAL_Minimalistic_Backdoor_May26 {
    meta:
       description = "Detects minimalistic backdoor deployment where a shellcode loader downloads an encrypted payload and executes it in memory after RC4 decryption using a command-line provided key"
       author = "MalGamy"
@@ -6387,7 +6131,7 @@ rule MAL_Minimalistic_Backdoor_May26MAL_Minimalistic_Backdoor_May26 {
 }
 
 
-rule SUSP_LNX_Base64_Download_Exec_Apr24SUSP_LNX_Base64_Download_Exec_Apr24 : SCRIPT {
+rule SUSP_LNX_Base64_Download_Exec_Apr24 : SCRIPT {
    meta:
       description = "Detects suspicious base64 encoded shell commands used for downloading and executing further stages"
       author = "Paul Hager"
@@ -6408,7 +6152,7 @@ rule SUSP_LNX_Base64_Download_Exec_Apr24SUSP_LNX_Base64_Download_Exec_Apr24 : SC
 
 
 
-rule SUSP_LNX_Base64_Exec_Apr24SUSP_LNX_Base64_Exec_Apr24 : SCRIPT {
+rule SUSP_LNX_Base64_Exec_Apr24 : SCRIPT {
    meta:
       description = "Detects suspicious base64 encoded shell commands (as seen in Palo Alto CVE-2024-3400 exploitation)"
       author = "Christian Burkard"
@@ -6435,7 +6179,7 @@ rule SUSP_LNX_Base64_Exec_Apr24SUSP_LNX_Base64_Exec_Apr24 : SCRIPT {
 }
 
 
-rule MAL_Driver_Microsoftcorporation_Windbgsys_Microsoftwindowsoperatingsystem_6994MAL_Driver_Microsoftcorporation_Windbgsys_Microsoftwindowsoperatingsystem_6994 {
+rule MAL_Driver_Microsoftcorporation_Windbgsys_Microsoftwindowsoperatingsystem_6994 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - windbg.sys"
 		author = "Florian Roth"
@@ -6461,14 +6205,14 @@ rule MAL_Driver_Microsoftcorporation_Windbgsys_Microsoftwindowsoperatingsystem_6
 		score = 70
 		id = "05060e37-3c01-5b86-a3ee-6e141399164a"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570069006e0064006f007700730020004700550049002000730079006d0062006f006c00690063002000640065006200750067006700650072 } /* FileDescription WindowsGUIsymbolicdebugger */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]00310030002e0030002e00310039003000340031002e0036003800350020002800570069006e004200750069006c0064002e003100360030003100300031002e00300038003000300029 } /* FileVersion WinBuild */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]00310030002e0030002e00310039003000340031002e003600380035 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770069006e006400620067002e007300790073 } /* InternalName windbgsys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074003f002000570069006e0064006f00770073003f0020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770069006e006400620067002e007300790073 } /* OriginalFilename windbgsys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]003f0020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570069006e0064006f007700730020004700550049002000730079006d0062006f006c00690063002000640065006200750067006700650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]00310030002e0030002e00310039003000340031002e0036003800350020002800570069006e004200750069006c0064002e003100360030003100300031002e00300038003000300029 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]00310030002e0030002e00310039003000340031002e003600380035 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770069006e006400620067002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074003f002000570069006e0064006f00770073003f0020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770069006e006400620067002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]003f0020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6476,7 +6220,7 @@ rule MAL_Driver_Microsoftcorporation_Windbgsys_Microsoftwindowsoperatingsystem_6
 
 
 
-rule MAL_Driver_Microsoftcorporation_Ntbiosys_Microsoftrwindowsrntoperatingsystem_C0D8MAL_Driver_Microsoftcorporation_Ntbiosys_Microsoftrwindowsrntoperatingsystem_C0D8 {
+rule MAL_Driver_Microsoftcorporation_Ntbiosys_Microsoftrwindowsrntoperatingsystem_C0D8 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - ntbios_2.sys"
 		author = "Florian Roth"
@@ -6487,14 +6231,14 @@ rule MAL_Driver_Microsoftcorporation_Ntbiosys_Microsoftrwindowsrntoperatingsyste
 		score = 70
 		id = "f16b4b22-985a-5d39-ae51-709aa9a69d8d"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]006e007400620069006f00730020006400720069007600650072 } /* FileDescription ntbiosdriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0035002c00200030002c00200032002c00200031 } /* FileVersion  */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0035002c00200030002c00200032002c00200031 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]006e007400620069006f002e007300790073 } /* InternalName ntbiosys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]0020004d006900630072006f0073006f00660074002800520029002000570069006e0064006f0077007300200028005200290020004e00540020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftRWindowsRNTOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]006e007400620069006f0073002e007300790073 } /* OriginalFilename ntbiossys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]7248674362406709002000280043002900200032003000300033 } /* LegalCopyright C */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]006e007400620069006f00730020006400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0035002c00200030002c00200032002c00200031 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0035002c00200030002c00200032002c00200031 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]006e007400620069006f002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]0020004d006900630072006f0073006f00660074002800520029002000570069006e0064006f0077007300200028005200290020004e00540020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]006e007400620069006f0073002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]7248674362406709002000280043002900200032003000300033 } 
 	condition:
 		all of them
 }
@@ -6502,7 +6246,7 @@ rule MAL_Driver_Microsoftcorporation_Ntbiosys_Microsoftrwindowsrntoperatingsyste
 
 
 
-rule MAL_Driver_Microsoftcorporation_Wintapixsys_Microsoftwindowsoperatingsystem_8578MAL_Driver_Microsoftcorporation_Wintapixsys_Microsoftwindowsoperatingsystem_8578 {
+rule MAL_Driver_Microsoftcorporation_Wintapixsys_Microsoftwindowsoperatingsystem_8578 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - WinTapix.sys, SRVNET2.SYS"
 		author = "Florian Roth"
@@ -6513,14 +6257,14 @@ rule MAL_Driver_Microsoftcorporation_Wintapixsys_Microsoftwindowsoperatingsystem
 		score = 70
 		id = "0bb182e8-e64b-5b01-9ca5-105212ebeb51"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570069006e0064006f007700730020004b00650072006e0065006c00200045007800650063007500740069007600650020004d006f00640075006c0065 } /* FileDescription WindowsKernelExecutiveModule */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0033002e0039003600300030002e003100360033003800340020002800770069006e0062006c00750065005f00720074006d002e003100330030003800320031002d00310036003200330029 } /* FileVersion winbluertm */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0033002e0039003600300030002e00310036003300380034 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00570069006e00540061007000690078002e007300790073 } /* InternalName WinTapixsys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00570069006e00540061007000690078002e007300790073 } /* OriginalFilename WinTapixsys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570069006e0064006f007700730020004b00650072006e0065006c00200045007800650063007500740069007600650020004d006f00640075006c0065 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0033002e0039003600300030002e003100360033003800340020002800770069006e0062006c00750065005f00720074006d002e003100330030003800320031002d00310036003200330029 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0033002e0039003600300030002e00310036003300380034 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00570069006e00540061007000690078002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00570069006e00540061007000690078002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6528,7 +6272,7 @@ rule MAL_Driver_Microsoftcorporation_Wintapixsys_Microsoftwindowsoperatingsystem
 
 
 
-rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_E7AFMAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_E7AF {
+rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_E7AF {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - wantd_6.sys"
 		author = "Florian Roth"
@@ -6541,14 +6285,14 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_E7
 		score = 70
 		id = "5f883209-6887-5cb4-96bb-988898d47c09"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } /* FileDescription WANTransportDriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003100370032 } /* FileVersion  */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003100370032 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* InternalName wantdsys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* OriginalFilename wantdsys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003100370032 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003100370032 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6556,7 +6300,7 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_E7
 
 
 
-rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_6908MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_6908 {
+rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_6908 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - wantd_2.sys"
 		author = "Florian Roth"
@@ -6566,14 +6310,14 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_69
 		score = 70
 		id = "3bd8b888-8170-5da6-ba1c-f13c1ca27e6f"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } /* FileDescription WANTransportDriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e003900330038 } /* FileVersion  */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e003900330038 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* InternalName wantdsys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* OriginalFilename wantdsys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e003900330038 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e003900330038 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6581,7 +6325,7 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_69
 
 
 
-rule MAL_Driver_Microsoftcorporation_Srvnetsys_Microsoftwindowsoperatingsystem_F6C3MAL_Driver_Microsoftcorporation_Srvnetsys_Microsoftwindowsoperatingsystem_F6C3 {
+rule MAL_Driver_Microsoftcorporation_Srvnetsys_Microsoftwindowsoperatingsystem_F6C3 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - WinTapix.sys, SRVNET2.SYS"
 		author = "Florian Roth"
@@ -6591,14 +6335,14 @@ rule MAL_Driver_Microsoftcorporation_Srvnetsys_Microsoftwindowsoperatingsystem_F
 		score = 70
 		id = "3559718f-59d7-5bff-860c-6a073f4c05d9"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]0053006500720076006500720020004e006500740077006f0072006b0020006400720069007600650072 } /* FileDescription ServerNetworkdriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]00310030002e0030002e00310038003300360032002e0036003900330020002800570069006e004200750069006c0064002e003100360030003100300031002e00300038003000300029 } /* FileVersion WinBuild */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]00310030002e0030002e00310038003300360032002e003600390033 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]005300520056004e004500540032002e005300590053 } /* InternalName SRVNETSYS */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]005300520056004e004500540032002e005300590053 } /* OriginalFilename SRVNETSYS */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]0053006500720076006500720020004e006500740077006f0072006b0020006400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]00310030002e0030002e00310038003300360032002e0036003900330020002800570069006e004200750069006c0064002e003100360030003100300031002e00300038003000300029 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]00310030002e0030002e00310038003300360032002e003600390033 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]005300520056004e004500540032002e005300590053 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]005300520056004e004500540032002e005300590053 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6606,7 +6350,7 @@ rule MAL_Driver_Microsoftcorporation_Srvnetsys_Microsoftwindowsoperatingsystem_F
 
 
 
-rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_81C7MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_81C7 {
+rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_81C7 {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - wantd_3.sys"
 		author = "Florian Roth"
@@ -6616,14 +6360,14 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_81
 		score = 70
 		id = "43ae822a-c4c4-5525-bfd3-a05d1ec50bd0"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } /* FileDescription WANTransportDriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0035002e0032002e0033003700390030002e003900330038 } /* FileVersion  */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0035002e0032002e0033003700390030002e003900330038 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* InternalName wantdsys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } /* OriginalFilename wantdsys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]00570041004e0020005400720061006e00730070006f007200740020004400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0035002e0032002e0033003700390030002e003900330038 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0035002e0032002e0033003700390030002e003900330038 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f00660074002000570069006e0064006f007700730020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]00770061006e00740064002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
 }
@@ -6631,7 +6375,7 @@ rule MAL_Driver_Microsoftcorporation_Wantdsys_Microsoftwindowsoperatingsystem_81
 
 
 
-rule MAL_Driver_Microsoftcorporation_Ndislansys_Microsoftwindowsoperatingsystem_B0EBMAL_Driver_Microsoftcorporation_Ndislansys_Microsoftwindowsoperatingsystem_B0EB {
+rule MAL_Driver_Microsoftcorporation_Ndislansys_Microsoftwindowsoperatingsystem_B0EB {
 	meta:
 		description = "Detects malicious driver mentioned in LOLDrivers project using VersionInfo values from the PE header - ndislan.sys"
 		author = "Florian Roth"
@@ -6641,126 +6385,14 @@ rule MAL_Driver_Microsoftcorporation_Ndislansys_Microsoftwindowsoperatingsystem_
 		score = 70
 		id = "c94adcf3-2ea6-5856-9327-2e5ed1c49b22"
 	strings:
-		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]004d00530020004c0041004e0020004400720069007600650072 } /* FileDescription MSLANDriver */
-		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } /* CompanyName MicrosoftCorporation */
-		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003400320031 } /* FileVersion  */
-		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003400320031 } /* ProductVersion  */
-		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]006e006400690073006c0061006e002e007300790073 } /* InternalName ndislansys */
-		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } /* ProductName MicrosoftWindowsOperatingSystem */
-		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]006e006400690073006c0061006e002e007300790073 } /* OriginalFilename ndislansys */
-		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } /* LegalCopyright MicrosoftCorporationAllrightsreserved */
+		$ = { 00460069006c0065004400650073006300720069007000740069006f006e[1-8]004d00530020004c0041004e0020004400720069007600650072 } 
+		$ = { 0043006f006d00700061006e0079004e0061006d0065[1-8]004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e } 
+		$ = { 00460069006c006500560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003400320031 } 
+		$ = { 00500072006f006400750063007400560065007200730069006f006e[1-8]0036002e0031002e0037003600300030002e0031003400320031 } 
+		$ = { 0049006e007400650072006e0061006c004e0061006d0065[1-8]006e006400690073006c0061006e002e007300790073 } 
+		$ = { 00500072006f0064007500630074004e0061006d0065[1-8]004d006900630072006f0073006f0066007400ae002000570069006e0064006f0077007300ae0020004f007000650072006100740069006e0067002000530079007300740065006d } 
+		$ = { 004f0072006900670069006e0061006c00460069006c0065006e0061006d0065[1-8]006e006400690073006c0061006e002e007300790073 } 
+		$ = { 004c006500670061006c0043006f0070007900720069006700680074[1-8]00a90020004d006900630072006f0073006f0066007400200043006f00720070006f0072006100740069006f006e002e00200041006c006c0020007200690067006800740073002000720065007300650072007600650064002e } 
 	condition:
 		all of them
-}
-
-
-rule SUSP_Blocked_Download_Proxy_Replacement_Jan23_1SUSP_Blocked_Download_Proxy_Replacement_Jan23_1 {
-   meta:
-      description = "Detects a file that has been replaced with a note by a security solution like an Antivirus or a filtering proxy server"
-      author = "Florian Roth (Nextron Systems)"
-      reference = "https://www.virustotal.com/gui/search/filename%253A*.exe%2520tag%253Ahtml%2520size%253A10kb-%2520size%253A2kb%252B/files"
-      date = "2023-01-28"
-      score = 60
-      id = "58bc8288-6bdb-57d5-9de5-a54a39584838"
-   strings:
-      $x01 = "Web Filter Violation"
-      $x02 = "Google Drive can't scan this file for viruses."
-      $x03 = " target=\"_blank\">Cloudflare <img "
-      $x04 = "Sorry, this file is infected with a virus.</p>"
-      $x05 = "-- Sophos Warn FileType Page -->"
-      $x06 = "<p>Certain Sophos products may not be exported for use by government end-users"  // accept EULA 
-      $x07 = "<p class=\"content-list\">Bitly displays this warning when a link has been flagged as suspect. There are many"
-      $x08 = "Something went wrong. Don't worry, your files are still safe and the Dropbox team has been notified."
-      $x09 = "<p>sinkhole</p>"
-      $x10 = "The requested short link is blocked by website administration due to violation of the website policy terms."
-      $x11 = "<img src=\"https://www.malwarebytes.com/images/"
-      $x12 = "<title>Malwarebytes</title>"
-      $x13 = "<title>Blocked by VIPRE</title>"
-      $x14 = "<title>Your request appears to be from an automated process</title>"
-      $x15 = "<p>Advanced Security blocked access to"
-      $x16 = "<title>Suspected phishing site | Cloudflare</title>"
-      $x17 = ">This link has been flagged "
-      $x18 = "<h1>Trend Micro Apex One</h1>"
-      $x19 = "Hitachi ID Identity and Access Management Suite"
-      $x20 = ">http://www.fortinet.com/ve?vn="
-      $x21 = "access to URL with fixed IP not allowed"  // FritzBox
-      $x23 = "<title>Web Page Blocked</title>"
-      $x24 = "<title>Malicious Website Blocked</title>"
-      $x25 = "<h2>STOPzilla has detected"
-      $x26 = ">Seqrite Endpoint Security</span>"
-      $x27 = "<TITLE>K7 Safe Surf</TITLE>"
-      $x28 = "<title>Blocked by VIPRE</title>"
-
-      $g01 = "blocked access" fullword
-      $g02 = "policy violation" fullword
-      $g03 = "violation of "
-      $g04 = "blocked by" fullword
-      $g05 = "Blocked by" fullword
-      $g07 = "Suspected Phishing"
-      $g08 = "ile quarantined"
-      $g09 = " is infected "
-      $g10 = "Blocked</title>"
-      $g11 = "site blocked" fullword
-      $g12 = "Site Blocked" fullword
-      $g13 = "blocked for" fullword
-      $g14 = "is blocked" fullword
-      $g15 = "potentially harmful"
-      $g16 = "Page Blocked" fullword
-      $g17 = "page blocked" fullword
-   condition:
-      extension == ".exe" and not uint16(0) == 0x5a4d and 1 of them
-      or (
-         extension == ".rar" or
-         extension == ".ps1" or
-         extension == ".vbs" or
-         extension == ".bat"
-      )
-      and 1 of ($x*)
-}
-
-/* too many FPs
-
-
-rule SUSP_DLL_SideLoading_Characteristics_Feb26SUSP_DLL_SideLoading_Characteristics_Feb26 {
-   meta:
-      description = "Detects suspicious log.dll used by Bitdefender Submission Wizard and seen being used in LotusBlossom toolkit"
-      author = "Florian Roth"
-      reference = "https://www.rapid7.com/blog/post/tr-chrysalis-backdoor-dive-into-lotus-blossoms-toolkit/"
-      date = "2026-02-03"
-      score = 70
-      hash1 = "3bdc4c0637591533f1d4198a72a33426c01f69bd2e15ceee547866f65e26b7ad"
-      id = "465badb7-f550-5a12-87a0-e6977cbcb208"
-   strings:
-      $s1 = "log.dll" fullword ascii
-   condition:
-      uint16(0) == 0x5a4d
-      and (  // this is what makes it suspicious
-         filesize < 300KB
-         or filesize > 500KB
-      )
-      and pe.exports("LogInit")
-      and pe.exports("LogWrite")
-      and $s1
-      and filename == "log.dll"
-}
-
-
-
-rule SUSP_Renamed_Bitdefender_Submission_Wizard_Feb26SUSP_Renamed_Bitdefender_Submission_Wizard_Feb26 {
-   meta:
-      description = "Detects renamed Bitdefender Submission Wizard, seen being used in the compromise of the infrastructure hosting Notepad++ by Chinese APT group Lotus Blossom"
-      author = "X__Junior"
-      reference = "https://www.rapid7.com/blog/post/tr-chrysalis-backdoor-dive-into-lotus-blossoms-toolkit/"
-      date = "2026-02-03"
-      score = 65
-      hash1 = "2da00de67720f5f13b17e9d985fe70f10f153da60c9ab1086fe58f069a156924"
-      id = "1c5e0314-8ced-5680-92eb-df03cc4e5847"
-   strings:
-      $s1 = "BDSubWiz.exe" wide fullword
-      $s2 = "Bitdefender Submission Wizard" wide
-      $s3 = "Software\\Bitdefender" wide
-   condition:
-      uint16(0) == 0x5a4d
-      and all of ($s*)
-      and not filename == "BDSubWiz.exe"
 }
