@@ -1,0 +1,53 @@
+S6 — Kerberoasting / AS-REP Roasting : Preuve de détection
+=========================================================
+
+Date : 2026-07-28
+Test  : verification.py
+État  : VALIDÉ
+
+==========================================================
+  1) Test d'intégration — pipeline complète
+==========================================================
+  PASS  test_full_kerberoasting ✓
+    engine/tests/integration/test_engine_full.py::test_full_kerberoasting PASSED
+
+==========================================================
+  2) SOAR mappings
+==========================================================
+  PASS  PLAYBOOK KERBEROASTING_001
+  PASS  PLAYBOOK ASREP_ROASTING_001
+  PASS  RULE_TO_SCENARIO KERBEROASTING_001
+  PASS  RULE_TO_SCENARIO ASREP_ROASTING_001
+  PASS  SCENARIOS_EXPECTING_IP S6
+
+==========================================================
+  3) Règles YAML — compilation
+==========================================================
+  PASS  kerberoasting.yaml → KERBEROASTING_001      type 1
+  PASS  asrep_roasting.yaml → ASREP_ROASTING_001    type 1
+
+==========================================================
+  4) Événements synthétiques — format
+==========================================================
+  PASS  TGS events present (4769)
+  PASS  TGT events present (4768)
+  PASS  Format syslog RFC 5424
+  PASS  samba-audit[2]: present
+  PASS  remoteAddress ipv4:
+
+==========================================================
+  BILAN S6
+==========================================================
+  ✓  Pipeline intégration
+  ✓  Événements synthétiques
+  ✓  SOAR mappings
+  ✓  Règles YAML
+
+  RÉSULTAT : TOUS LES TESTS PASSENT ✓
+
+Flux de détection validé :
+  Log Samba AD (JSON) → syslog_parser._parse_samba_json()
+                     → event_type: tgs_request / tgt_request
+                     → RuleEngine._eval_type1() (seuil 5 en 30s)
+                     → Alerte KERBEROASTING_001 / ASREP_ROASTING_001
+                     → SOAR block_ip
