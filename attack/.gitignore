@@ -12,5 +12,7 @@ logs/
 # Payloads générés (S3/S5 — binaires malveillants, ne doivent jamais être commit)
 *.exe
 *.docm
+*.pdf
 payload*
+S5-file-upload/payloads/
 *.csv
