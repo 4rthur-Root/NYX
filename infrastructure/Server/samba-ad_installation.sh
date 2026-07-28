@@ -172,6 +172,50 @@ log "  → tech1 → technique"
 log "  → soc_reader : aucun groupe (lecture seule)"
 
 # ============================================================
+# ÉTAPE 9b — Comptes S6 (Kerberoasting / AS-REP Roasting)
+# ============================================================
+
+log "ÉTAPE 9b : Création des comptes AD pour scénario S6"
+
+S6_PASS="P@ssw0rd"
+
+# svc_backup — compte de service avec SPN pour Kerberoasting
+if echo "$EXISTING_USERS" | grep -q "^svc_backup$"; then
+  log "  → svc_backup existe déjà"
+else
+  samba-tool user create svc_backup "$S6_PASS" \
+    --given-name="Service" --surname="Backup"
+  samba-tool spn add "cifs/srv-pme.nyx.tg" svc_backup
+  samba-tool spn add "svc_backup/srv-pme.nyx.tg" svc_backup
+  samba-tool spn add "svc_backup/srv-pme" svc_backup
+  log "  → svc_backup créé (3 SPNs)"
+fi
+
+# user_nopreauth — compte sans pré-auth Kerberos pour AS-REP Roasting
+if echo "$EXISTING_USERS" | grep -q "^user_nopreauth$"; then
+  log "  → user_nopreauth existe déjà"
+else
+  samba-tool user create user_nopreauth "$S6_PASS" \
+    --given-name="NoPre" --surname="Auth"
+  # Positionner UF_DONT_REQUIRE_PREAUTH via samba-tool user edit
+  cat > /tmp/edit_uac_s6.py << 'PYEOF'
+#!/usr/bin/env python3
+import sys, re
+with open(sys.argv[1]) as f:
+    content = f.read()
+if 'userAccountControl' in content:
+    content = re.sub(r'userAccountControl:.*', 'userAccountControl: 4260352', content)
+else:
+    content += '\nuserAccountControl: 4260352\n'
+with open(sys.argv[1], 'w') as f:
+    f.write(content)
+PYEOF
+  chmod +x /tmp/edit_uac_s6.py
+  samba-tool user edit user_nopreauth --editor=/tmp/edit_uac_s6.py
+  log "  → user_nopreauth créé (UAC: 4260352 = UF_DONT_REQUIRE_PREAUTH)"
+fi
+
+# ============================================================
 # ÉTAPE 10 : VÉRIFICATIONS
 # ============================================================
 
