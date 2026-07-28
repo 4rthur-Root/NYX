@@ -101,6 +101,9 @@ dans la condition, ou tags PE/WIN/DLL/EXE, ou nom contenant WIN/PE/DLL/EXE).
 ## Usage
 
 ```bash
+# 0. Builder l'image engine (une fois)
+cd engine && podman build -t nyxsoc-engine -f Dockerfile .
+
 # 1. Générer les fichiers test
 cd attack/S5-file-upload
 python3 gen_test_files.py
@@ -112,10 +115,28 @@ python3 gen_test_files.py
 
 ## Vérification
 
+### Validation YARA locale (hors moteur)
+
 ```bash
-# Côté SOC :
+# Avec Podman (recommandé) :
+podman run --rm \
+  -v /home/adrien/My_codes_and_Projects/NYX:/nyx:Z \
+  nyxsoc-engine \
+  python3 /nyx/attack/S5-file-upload/verify.py
+
+# Résultat attendu :
+#   PASS  facture_2026-07.pdf           → MAL_Sindoor_Decryptor_Aug25
+#   PASS  mise_a_jour_critique.exe      → MAL_RANSOM_DarkBit_Feb23_1
+#   PASS  note_interne.docm             → SUSP_NET_Msil_Suspicious_Use_StrReverse
+#   PASS  rapport_financier.xls         → MAL_DNSPIONAGE_Malware_Nov18
+#   RÉSULTAT : 4/4 OK — Tous les fichiers détectés ✓
+```
+
+### Côté SOC (moteur en production)
+
+```bash
 tail -f /var/log/nyxsoc/alerts/*.log
-# Chercher une alerte contenant : SMB_MALICIOUS_FILE_001
+# Chercher : SMB_MALICIOUS_FILE_001
 
 # Vérifier le scan YARA dans les logs moteur :
 grep yara /var/log/nyxsoc/engine.log
@@ -138,3 +159,12 @@ Le champ `yara_match` dans l'alerte contient :
 - `file_hash` : hash MD5 calculé par le YARA scanner avant le scan
 - `ruleset` : namespace du fichier `.yar` source (`susp_mal_pe` depuis v1.2.0,
   plus de hardcode `neo23x0/signature-base`)
+
+## Fichiers générés et règles YARA ciblées
+
+| Fichier | Pattern testé | Règle YARA ciblée | Condition de la règle |
+|---------|--------------|-------------------|----------------------|
+| `facture_2026-07.pdf` | `Go build`, `main.rc4EncryptDecrypt`, `main.processFile`, `main.deriveKeyAES`, `use RC4 instead of AES` | `MAL_Sindoor_Decryptor_Aug25` | `uint16(0) == 0x5a4d AND filesize < 100MB AND all of them` |
+| `note_interne.docm` | `, PublicKeyToken=`, `.NETFramework,Version=`, `Microsoft.CSharp`, `Microsoft.VisualBasic`, `StrReverse` | `SUSP_NET_Msil_Suspicious_Use_StrReverse` | `uint16(0) == 0x5a4d AND filesize < 50MB AND all of ($a*) AND $csharp AND $vbnet AND $strreverse` |
+| `rapport_financier.xls` | `.0ffice36o.com`, `/Client/Login?id=` | `MAL_DNSPIONAGE_Malware_Nov18` | `uint16(0) == 0x5a4d AND filesize < 1000KB AND (1 of ($x*) or 2 of them)` |
+| `mise_a_jour_critique.exe` | `You will receive decrypting key after the payment.`, `Go build`, `C:/updatescheck/main.go` | `MAL_RANSOM_DarkBit_Feb23_1` | `filesize < 100KB AND $xn1` |
