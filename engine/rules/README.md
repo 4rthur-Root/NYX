@@ -1,10 +1,9 @@
 # Catalogue des règles de détection Nyx
-# Ce dossier contient les règles de corrélation et celles yara récupérées depuis le dépôt 
 
 ### Règles de corrélation
 **Référence schéma** : `docs/rule-schema.json`  
 **Règles stockées dans** : `engine/rules/attack/*.yaml`  
-**Version** : 1.1.0  
+**Version** : 1.2.0  
 
 ---
 
@@ -70,7 +69,7 @@ avec fenêtre plus large — documenté ici avec justification explicite.
 règle dans son travail normal → `WARNING`. Si seul un attaquant peut
 déclencher cette séquence dans ce lab → `CRITICAL`.
 
-### 1.5 YARA — rôle dans l'architecture
+### 1.5 YARA — couche d'enrichissement systématique
 
 YARA n'est pas une condition dans une règle. C'est une couche d'enrichissement
 systématique déclenchée par le **Dispatcher** sur tout événement `samba_write`,
@@ -79,14 +78,49 @@ sur n'importe quel partage Samba (montés en read-only sur le SOC via CIFS) est
 scanné par YARA, indépendamment de son extension ou de son nom.
 
 Le résultat du scan est stocké dans le champ `yara_match` de l'événement
-normalisé. Les règles peuvent utiliser ce champ comme condition
-(`condition.yara_match: required`) mais n'ont pas à déclencher YARA
-elles-mêmes.
+normalisé. Les règles de Type 4 utilisent ce champ comme condition
+(`yara_match: required`) pour une alerte immédiate.
 
-Le Type 4 est une règle autonome qui se déclenche sur `samba_write` + `yara_match`
-présent — sans étapes supplémentaires. Cela couvre le cas d'un employé
-naïf qui dépose un fichier malveillant sans qu'aucune chaîne d'attaque
-préalable ne soit nécessaire.
+#### Règles YARA utilisées
+
+**Source** : [Neo23x0/signature-base](https://github.com/Neo23x0/signature-base)
+— dépôt communautaire de référence.
+
+**Filtrage** : seules les règles `SUSP_*` et `MAL_*` ciblant les exécutables
+Windows PE (PE32, DLL, EXE) sont conservées. Le filtre est appliqué par
+`engine/scripts/filter_yara_rules.py`.
+
+**Stockage** : un seul fichier consolidé, `engine/rules/yara/susp_mal_pe.yar`,
+qui contient 249 règles compilées en une seule passe par `yara.compile()`.
+Le choix d'un fichier unique est délibéré :
+- **Performance** : une seule compilation, un seul `mmap` en mémoire
+- **Simplicité** : pas de namespace management complexe
+- **Aucun inconvénient** : YARA indexe les règles par nom en interne, le
+  résultat du match indique quelle règle a déclenché via `match.rule`
+
+**Le `ruleset` dans l'alerte** : depuis la v1.2.0, `ruleset` n'est plus codé
+en dur. Il utilise le `namespace` YARA du fichier qui a matché — s'adapte
+automatiquement si les règles sont remplacées ou réorganisées.
+
+#### Script de filtrage : `engine/scripts/filter_yara_rules.py`
+
+```bash
+# Usage : régénérer les règles YARA filtrées depuis une copie locale du dépôt
+python3 engine/scripts/filter_yara_rules.py /tmp/signature-base
+```
+
+**Utilité étendue** : le script peut être réutilisé pour tout dépôt YARA
+tierce. Il suffit de modifier les préfixes de règle à conserver
+(variable `name.startswith(...)` dans le code) et l'expression de
+ciblage de plateforme (fonction `is_pe_rule`). Par exemple, pour filtrer
+uniquement les règles `APT_*` ciblant Linux ELF :
+
+```python
+if not (name.startswith("APT_") or name.startswith("GEN_")):
+    continue
+if "0x7f454c46" not in body:  # \x7fELF
+    continue
+```
 
 ### 1.6 Calibration des seuils — contexte lab
 
@@ -266,19 +300,18 @@ response:
 |---|---|
 | **Fichier** | `engine/rules/attack/web_bruteforce.yaml` |
 | **Type** | 1 — seuil simple |
-| **Sévérité** | WARNING |
+| **Sévérité** | CRITICAL |
 | **MITRE** | TA0006 / T1110.001 |
 | **Scénario** | S4 — Dolibarr |
 
-**Ce que détecte la règle** : volume anormal de requêtes HTTP en échec
-(codes 401/403) sur Dolibarr depuis la même IP en 2 minutes.
+**Ce que détecte la règle** : volume anormal de requêtes HTTP POST (code 200)
+sur la page login Dolibarr depuis la même IP en 2 minutes. Dolibarr retourne
+systématiquement HTTP 200 sur login échoué (pas de 401/403) — le filtre
+`extra` permet de cibler les POST login sans dépendre du code HTTP.
 
-**Pourquoi WARNING et non CRITICAL** : un brute-force web peut être
-déclenché par un scanner de vulnérabilités légitime, un outil de test
-de performance, ou un navigateur rejoujant des credentials expirés.
-Le taux de faux positifs est structurellement plus élevé que sur SSH.
-WARNING indique que le pattern est suspect mais qu'une confirmation
-est nécessaire avant action.
+**Pourquoi CRITICAL** : le filtrage par `extra: {http_method: ["POST"]}` élimine
+le bruit des GET, images, CSS et autres requêtes passives. Les faux positifs
+sont très faibles dans ce lab.
 
 **Pourquoi une règle séparée de SSH_BRUTEFORCE_001** : les deux comportements
 sont fonctionnellement identiques (tentatives répétées sur un service
@@ -290,72 +323,74 @@ pas couvrir les deux sans modifier la taxonomie.
 rule_id: WEB_BRUTEFORCE_001
 type: 1
 description: >
-  Brute-force interface web Dolibarr — volume anormal de requêtes HTTP
-  en échec (401/403) depuis la même IP en 2 minutes. Sévérité WARNING
-  car taux de faux positifs plus élevé que sur SSH.
-severity: WARNING
+  Brute-force interface web Dolibarr — volume anormal de requêtes HTTP POST
+  (code 200) depuis la même IP en 2 minutes. Filtre extra cible les POST
+  login pour ignorer le bruit des requêtes passives.
+severity: CRITICAL
 mitre_tactic: "TA0006"
 mitre_technique: "T1110.001"
 source_host_pattern: "debian*"
 trigger:
   event_type: http_request
-  threshold: 20
+  threshold: 15
   window_seconds: 120
   group_by: actor_ip
   filter:
-    http_status: [401, 403]
+    extra:
+      http_status: [200]
+      http_method: ["POST"]
 response:
   alert: true
 ```
 
 ---
 
-### YARA_MALICIOUS_FILE_001
+### SMB_MALICIOUS_FILE_001
 
 | | |
 |---|---|
-| **Fichier** | `engine/rules/attack/yara_malicious_file.yaml` |
+| **Fichier** | `engine/rules/attack/smb_malicious_file.yaml` |
 | **Type** | 4 — détection YARA directe |
 | **Sévérité** | CRITICAL |
-| **MITRE** | TA0001 / T1566.002 |
-| **Scénario** | S3 variante — employé naïf, upload direct sans chaîne préalable |
+| **MITRE** | T1080 / T1204.002 |
+| **Scénario** | S5 — Upload de fichier malveillant sur partage Samba |
 
 **Ce que détecte la règle** : tout fichier déposé sur n'importe quel partage
 Samba qui déclenche un match YARA. Aucune condition préalable — pas de
-brute-force, pas de scan réseau. Couvre le cas d'un employé qui reçoit
-un fichier malveillant par mail et l'uploade directement sur le partage
-sans que l'attaquant ait eu à compromettre quoi que ce soit en amont.
+brute-force, pas de scan réseau. Couvre le cas d'un attaquant (ou employé
+compromis) qui uploade directement un fichier malveillant.
 
 **Pourquoi Type 4 et non Type 2** : Type 2 attend une chaîne d'événements.
-Un employé naïf n'est pas précédé d'un brute-force. Le fichier malveillant
-arrive directement via un vecteur social (phishing, clé USB, mail). YARA
-est la seule détection possible dans ce cas — pas d'événement réseau
-préalable observable.
+Ici, l'attaquant a déjà les credentials (compromis antérieur ou employé
+malveillant). Le dépôt est direct, sans événement réseau préalable
+observable. YARA est la unique détection.
 
-**Pourquoi CRITICAL immédiatement** : un match YARA sur un fichier exécutable
-malveillant connu a un taux de faux positifs proche de zéro dans ce contexte.
-Les règles `neo23x0/signature-base` sont conservatrices et précises. Une
-alerte immédiate est justifiée pour permettre au SOAR de supprimer le fichier
-du partage avant qu'un employé ne l'exécute.
+**Pourquoi CRITICAL immédiatement** : un match YARA sur des règles
+SUSP_*/MAL_* issues de `Neo23x0/signature-base` a un taux de faux positifs
+proche de zéro dans ce contexte. Le SOAR peut supprimer le fichier du
+partage avant qu'un employé ne l'exécute.
 
 **Complémentarité avec MALICIOUS_FILE_EXEC_001** : les deux règles peuvent
-déclencher sur le même incident. `YARA_MALICIOUS_FILE_001` alerte dès le
+déclencher sur le même incident. `SMB_MALICIOUS_FILE_001` alerte dès le
 dépôt (CRITICAL immédiat). `MALICIOUS_FILE_EXEC_001` confirme l'exécution
-effective (CRITICAL avec contexte complet incluant le process). Le SOAR
-reçoit deux alertes corrélées par `actor_ip` — information plus riche
-pour la décision de remédiation.
+effective (CRITICAL avec contexte complet). Le SOAR reçoit deux alertes
+corrélées par `actor_ip`.
+
+**YARA en amont** : 249 règles SUSP_*/MAL_* PE filtrées depuis
+Neo23x0/signature-base (voir §1.5). Le scan YARA est systématique sur tout
+`samba_write`, pas uniquement sur cette règle.
 
 ```yaml
-rule_id: YARA_MALICIOUS_FILE_001
+rule_id: SMB_MALICIOUS_FILE_001
 type: 4
 description: >
   Fichier malveillant détecté sur partage Samba par YARA. Alerte immédiate
-  sans condition préalable. Couvre le vecteur phishing/BEC où un employé
-  uploade directement un fichier malveillant reçu par mail.
-  Complémentaire à MALICIOUS_FILE_EXEC_001 qui suit l'exécution.
+  sans condition préalable. 249 règles SUSP_*/MAL_* PE issues de
+  Neo23x0/signature-base. Complémentaire à MALICIOUS_FILE_EXEC_001.
 severity: CRITICAL
 mitre_tactic: "TA0001"
 mitre_technique: "T1566.002"
+source_host_pattern: "*"
 yara_trigger:
   event_type: samba_write
   yara_match: required
@@ -461,12 +496,12 @@ response:
 ## 4. Matrice de couverture
 
 | Vecteur | Règle | Scénario | Couvert |
-|---|---|---|---|
+|---|---|---|---|---|
 | Brute-force SSH (tout outil) | SSH_BRUTEFORCE_001 | S1 | ✓ |
 | Scan réseau + accès SMB | SMB_EXFIL_001 | S2 | ✓ |
 | Kill-chain BEC (dépôt + exécution) | MALICIOUS_FILE_EXEC_001 | S3 | ✓ |
-| Upload direct fichier malveillant | YARA_MALICIOUS_FILE_001 | S3 variante | ✓ |
-| Brute-force ERP web | WEB_BRUTEFORCE_001 | S4 | ✓ |
+| Brute-force ERP web (POST/login) | WEB_BRUTEFORCE_001 | S4 | ✓ |
+| Upload fichier malveillant (YARA) | SMB_MALICIOUS_FILE_001 | S5 | ✓ |
 | Kerberoasting (SPN TGS en rafale) | KERBEROASTING_001 | S6 | ✓ |
 | AS-REP Roasting (TGT sans pré-auth) | ASREP_ROASTING_001 | S6 | ✓ |
 | Slow brute-force SSH (< 10/min) | — | — | ✗ Limite documentée |
