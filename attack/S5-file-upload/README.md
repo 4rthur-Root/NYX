@@ -24,7 +24,7 @@ Kali (10.0.1.50)  ───SMB──→  Debian Server (10.0.1.20)
                                    │
                           ┌────────┴────────┐
                           │ YARA enrichment  │
-                          │ (249 règles PE)  │
+                           │ (236 règles PE)  │
                           └────────┬────────┘
                                    │ match ?
                           ┌────────┴────────┐
@@ -46,7 +46,7 @@ Kali (10.0.1.50)  ───SMB──→  Debian Server (10.0.1.20)
 3. **Détection** : Samba (Debian Server) écrit l'événement dans syslog.
    Rsyslog forwarde vers le SOC. Le parsing produit `event_type: samba_write`.
 4. **YARA** : le Dispatcher appelle `YaraScanner.scan()` sur le fichier
-   (monté en read-only via CIFS sous `/mnt/samba/<partage>/`). 249 règles
+      (monté en read-only via CIFS sous `/mnt/samba/<partage>/`). 236 règles
    SUSP_*/MAL_* PE issues de Neo23x0/signature-base sont compilées.
 5. **Alerte** : match YARA → alerte `SMB_MALICIOUS_FILE_001` (CRITICAL,
    Type 4). Le SOAR bloque l'IP source via `block_ip`.
@@ -64,7 +64,7 @@ Kali (10.0.1.50)  ───SMB──→  Debian Server (10.0.1.20)
 
 ## Règles YARA embarquées
 
-Les 249 règles `SUSP_*` et `MAL_*` ciblant les PE Windows sont filtrées depuis
+Les 236 règles `SUSP_*` et `MAL_*` ciblant les PE Windows sont filtrées depuis
 [Neo23x0/signature-base](https://github.com/Neo23x0/signature-base)
 via `engine/scripts/filter_yara_rules.py` et consolidées dans
 `engine/rules/yara/susp_mal_pe.yar`.
@@ -87,8 +87,8 @@ dans la condition, ou tags PE/WIN/DLL/EXE, ou nom contenant WIN/PE/DLL/EXE).
 | Fichier | Extension | Patterns YARA intégrés | Règle ciblée |
 |---------|-----------|----------------------|--------------|
 | `facture_2026-07.pdf` | .pdf | `main.rc4EncryptDecrypt`, `main.processFile` | MAL_Sindoor_Decryptor_Aug25 |
-| `note_interne.docm` | .docm | `NtQueryInformationThread`, `StackWalk64` | MAL_DevilsTongue_HijackDll |
-| `rapport_financier.xls` | .xls | `/Client/Login?id=`, `Microsoft.CSharp`, `StrReverse` | MAL_DNSPIONAGE + SUSP_NET_Msil |
+| `note_interne.docm` | .docm | `, PublicKeyToken=`, `.NETFramework,Version=`, `Microsoft.CSharp`, `Microsoft.VisualBasic`, `StrReverse` | SUSP_NET_Msil_Suspicious_Use_StrReverse |
+| `rapport_financier.xls` | .xls | `.0ffice36o.com`, `/Client/Login?id=` | MAL_DNSPIONAGE_Malware_Nov18 |
 | `mise_a_jour_critique.exe` | .exe | `You will receive decrypting key after the payment.` | MAL_RANSOM_DarkBit_Feb23_1 |
 
 ## Prérequis
@@ -167,4 +167,4 @@ Le champ `yara_match` dans l'alerte contient :
 | `facture_2026-07.pdf` | `Go build`, `main.rc4EncryptDecrypt`, `main.processFile`, `main.deriveKeyAES`, `use RC4 instead of AES` | `MAL_Sindoor_Decryptor_Aug25` | `uint16(0) == 0x5a4d AND filesize < 100MB AND all of them` |
 | `note_interne.docm` | `, PublicKeyToken=`, `.NETFramework,Version=`, `Microsoft.CSharp`, `Microsoft.VisualBasic`, `StrReverse` | `SUSP_NET_Msil_Suspicious_Use_StrReverse` | `uint16(0) == 0x5a4d AND filesize < 50MB AND all of ($a*) AND $csharp AND $vbnet AND $strreverse` |
 | `rapport_financier.xls` | `.0ffice36o.com`, `/Client/Login?id=` | `MAL_DNSPIONAGE_Malware_Nov18` | `uint16(0) == 0x5a4d AND filesize < 1000KB AND (1 of ($x*) or 2 of them)` |
-| `mise_a_jour_critique.exe` | `You will receive decrypting key after the payment.`, `Go build`, `C:/updatescheck/main.go` | `MAL_RANSOM_DarkBit_Feb23_1` | `filesize < 100KB AND $xn1` |
+| `mise_a_jour_critique.exe` | `You will receive decrypting key after the payment.`, `Go build`, `C:/updatescheck/main.go` | `MAL_RANSOM_DarkBit_Feb23_1` | `uint16(0) == 0x5a4d AND filesize < 10MB AND (1 of ($x*) or 2 of them) OR 4 of them OR (filesize < 10MB AND $xn1)` |
