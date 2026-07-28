@@ -98,8 +98,8 @@ cat > "$METAFILE" <<EOF
 EOF
 
 echo "=================================================="
-echo " Fin (UTC)  : ${TS_END}"
-echo " Durée      : ${DURATION}s"
-echo " Métadonnées: ${METAFILE}"
+echo "         Fin (UTC)  : ${TS_END}"
+echo "         Durée      : ${DURATION}s"
+echo "         Métadonnées: ${METAFILE}"
 echo "=================================================="
 echo "[+] Terminé. Vérifie l'alerte SMB_MALICIOUS_FILE_001 côté SOC."
