@@ -1,18 +1,20 @@
 rule_id: WEB_BRUTEFORCE_001
 type: 1
-description: "Brute force détectée sur l'interface web de dolibarr"
-severity: WARNING
+description: "Brute force détectée sur l'interface web de Dolibarr"
+severity: CRITICAL
 mitre_tactic: "TA0006"
 mitre_technique: "T1110.001"
-source_host_pattern: "debian*"
+source_host_pattern: "localhost"
 
 trigger:
   event_type: http_request
-  threshold: 20
+  threshold: 15
   window_seconds: 120
   group_by: actor_ip
   filter:
-    http_status: [401, 403]
+    extra:
+      http_status: [200]
+      http_method: ["POST"]
 
 response:
   alert: true

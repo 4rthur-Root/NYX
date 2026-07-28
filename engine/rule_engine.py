@@ -440,16 +440,29 @@ class RuleEngine:
     def _check_extra_filter(event: dict, filters: dict) -> bool:
         """Vérifie les filtres optionnels sur le champ extra de l'événement.
 
-        Actuellement supporte le filtre http_status pour WEB_BRUTEFORCE.
+        Supporte deux formats :
+        - Ancien format : {'http_status': [401, 403]} — compatible ascendante.
+        - Nouveau format : {'extra': {'http_status': [200], 'http_method': ['POST']}}
+          Chaque clé doit matcher une valeur dans la liste pour valider le filtre.
 
         Args:
             event: Événement normalisé.
-            filters: Dict de filtres (ex: {'http_status': [401, 403]}).
+            filters: Dict de filtres.
 
         Returns:
             True si tous les filtres sont satisfaits, False sinon.
         """
         extra = event.get("extra") or {}
+
+        # Nouveau format : filtre sur extra.*
+        if "extra" in filters:
+            for field, values in filters["extra"].items():
+                val = extra.get(field)
+                if val not in values:
+                    return False
+            return True
+
+        # Ancien format (rétrocompatibilité)
         if "http_status" in filters:
             status = extra.get("http_status")
             if status not in filters["http_status"]:

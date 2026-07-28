@@ -90,10 +90,21 @@
             "http_status": {
               "type": "array",
               "items": { "type": "integer" },
-              "description": "Filtrer sur des codes HTTP spécifiques (ex: [401, 403] pour les échecs d'auth web)."
+              "description": "Ancien format (déprécié). Filtrer sur des codes HTTP spécifiques via extra.http_status."
+            },
+            "extra": {
+              "type": "object",
+              "description": "Filtre sur les champs de l'objet 'extra' de l'événement. Chaque clé est un nom de champ, la valeur est un tableau de valeurs acceptées. Ex: {'http_status': [200], 'http_method': ['POST']}.",
+              "additionalProperties": {
+                "type": "array"
+              }
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "anyOf": [
+            { "required": ["http_status"] },
+            { "required": ["extra"] }
+          ]
         }
       },
       "additionalProperties": false
