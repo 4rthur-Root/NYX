@@ -2,52 +2,62 @@ S6 — Kerberoasting / AS-REP Roasting : Preuve de détection
 =========================================================
 
 Date : 2026-07-28
-Test  : verification.py
-État  : VALIDÉ
+État  : VALIDÉ (événements synthétiques)
 
 ==========================================================
-  1) Test d'intégration — pipeline complète
+  RÉSULTATS RÉELS (Infrastructure)
 ==========================================================
-  PASS  test_full_kerberoasting ✓
-    engine/tests/integration/test_engine_full.py::test_full_kerberoasting PASSED
+
+  AD — Compte avec SPN créé (Kerberoasting)
+    ✓ svc_backup (CN=Service Backup) — SPNs :
+        cifs/srv-pme.nyx.tg
+        svc_backup/srv-pme.nyx.tg
+        svc_backup/srv-pme
+
+  AD — Compte sans pré-authentification (AS-REP Roasting)
+    ✓ user_nopreauth (userAccountControl: 4260352)
+      (UF_NORMAL_ACCOUNT | UF_DONT_REQUIRE_PREAUTH | UF_PASSWD_NOTREQD)
+
+  AD — DC Samba 4.22.10 — KDC
+    ✗ TGS Ticket Request → KRB_AP_ERR_INAPP_CKSUM
+      (Incompatibilité Impacket/minikerberos ↔ Samba 4.22)
+    ✗ AS-REQ sans pré-auth → ERR_PREAUTH_REQUIRED
+      (KDC ignore le flag UF_DONT_REQUIRE_PREAUTH)
+
+  SOC — Logs DC (rsyslog)
+    ✗ Pas de JSON Samba audit dans /var/log/remote/srv-pme.log
+      (Les logs JSON sont dans /var/log/samba/log.samba, non forwardés)
 
 ==========================================================
-  2) SOAR mappings
+  PIPELINE DE DÉTECTION (validé avec événements synthétiques)
 ==========================================================
-  PASS  PLAYBOOK KERBEROASTING_001
-  PASS  PLAYBOOK ASREP_ROASTING_001
-  PASS  RULE_TO_SCENARIO KERBEROASTING_001
-  PASS  RULE_TO_SCENARIO ASREP_ROASTING_001
-  PASS  SCENARIOS_EXPECTING_IP S6
+
+  PASS  engine/tests/integration/test_engine_full.py ✓
+  PASS  SOAR mappings (PLAYBOOK, RULE_TO_SCENARIO, SCENARIOS_EXPECTING_IP)
+  PASS  Règles YAML (kerberoasting.yaml, asrep_roasting.yaml)
+  PASS  gen_events.py — format valide (RFC 5424, samba-audit, JSON 4768/4769)
+
+  ENGINE — test réel avec gen_events.py :
+    PASS  Parsing → 12 events stockés (6 TGS + 6 TGT)
+    PASS  Règle KERBEROASTING_001 → 2 alertes CRITICAL
+    PASS  Règle ASREP_ROASTING_001 → 2 alertes CRITICAL
+    PASS  Alerte contient : attacker_ip (10.0.1.50), target_ip (10.0.1.20),
+          MITRE TA0006/T1558.003 et T1558.004, événements détaillés
+
+  Flux complet :
+    gen_events.py → syslog_parser._parse_samba_json()
+                  → event_type: tgs_request / tgt_request
+                  → RuleEngine._eval_type1() (seuil 5 en 30s)
+                  → Alerte KERBEROASTING_001 / ASREP_ROASTING_001
+                  → SOAR block_ip
 
 ==========================================================
-  3) Règles YAML — compilation
+  BILAN
 ==========================================================
-  PASS  kerberoasting.yaml → KERBEROASTING_001      type 1
-  PASS  asrep_roasting.yaml → ASREP_ROASTING_001    type 1
-
-==========================================================
-  4) Événements synthétiques — format
-==========================================================
-  PASS  TGS events present (4769)
-  PASS  TGT events present (4768)
-  PASS  Format syslog RFC 5424
-  PASS  samba-audit[2]: present
-  PASS  remoteAddress ipv4:
-
-==========================================================
-  BILAN S6
-==========================================================
-  ✓  Pipeline intégration
-  ✓  Événements synthétiques
-  ✓  SOAR mappings
-  ✓  Règles YAML
-
-  RÉSULTAT : TOUS LES TESTS PASSENT ✓
-
-Flux de détection validé :
-  Log Samba AD (JSON) → syslog_parser._parse_samba_json()
-                     → event_type: tgs_request / tgt_request
-                     → RuleEngine._eval_type1() (seuil 5 en 30s)
-                     → Alerte KERBEROASTING_001 / ASREP_ROASTING_001
-                     → SOAR block_ip
+  Pipeline logicielle :  ✓ (100% fonctionnelle)
+  Infrastructure :        ✗ (KDC Samba 4.22 incompatible)
+  
+  Recommandation :
+    · Remplacer Samba AD par un vrai AD Windows Server
+    · Ou patcher Impacket/minikerberos pour compatibilité Samba 4.22
+    · Configurer rsyslog imfile pour forwarder /var/log/samba/log.samba
