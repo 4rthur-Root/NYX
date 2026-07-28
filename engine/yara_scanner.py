@@ -96,9 +96,10 @@ class YaraScanner:
 
         # On retourne le premier match - le plus significatif
         first_match = matches[0]
+        ruleset = first_match.namespace if hasattr(first_match, "namespace") else "unknown"
         return {
             "rule_name": first_match.rule,
             "file_path": file_path,
             "file_hash": file_hash,
-            "ruleset":   "neo23x0/signature-base",
+            "ruleset":   ruleset,
         }
