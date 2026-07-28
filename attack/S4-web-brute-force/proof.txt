@@ -1,0 +1,81 @@
+                                                                                                                                                                         
+┌──(kali㉿kali)-[~/NYX/S4]
+└─$ python3 web_bruteforce.py --wordlist  wordlist_s4.txt --verbose
+==================================================
+ NyxSOC — Scénario S4 : Brute-force Dolibarr
+==================================================
+ Cible       : http://10.0.1.20
+ Login URL   : /index.php?mainmenu=home
+ Utilisateur : admin
+ Wordlist    : wordlist_s4.txt (20 entrées)
+ Délai       : 0.5s
+ Run ID      : s4_20260728_010632
+ Début (UTC) : 2026-07-28T01:06:32.046Z
+==================================================
+  [DEBUG] Status final: 200
+  [DEBUG] URL finale: http://10.0.1.20/index.php?mainmenu=home
+  [DEBUG] Taille réponse: 6582
+  [DEBUG] Cookies: {'DOLSESSID_318c5ab35764d4a85fb4673bc4e37ad160dd5c36': 'sq8e6kc7p77nie8as0h01fme70'}
+  [DEBUG] Formulaire login détecté → échec
+  [1/20] admin:123456 -> FAIL
+  [2/20] admin:password -> FAIL
+  [3/20] admin:admin123 -> FAIL
+  [4/20] admin:letmein -> FAIL
+  [5/20] admin:qwerty123 -> FAIL
+  [6/20] admin:P@ssw0rd -> FAIL
+  [7/20] admin:welcome1 -> FAIL
+  [8/20] admin:Password1 -> FAIL
+  [9/20] admin:root1234 -> FAIL
+  [10/20] admin:changeme -> FAIL
+  [11/20] admin:admin -> OK
+[+] Mot de passe trouvé : admin:admin
+==================================================
+ Fin (UTC)     : 2026-07-28T01:06:50.675Z
+ Durée         : 18.629s
+ Tentatives    : 11 (10 échecs)
+ Résultat      : admin:admin
+ Log complet   : ./logs/s4_20260728_010632.log
+ Métadonnées   : ./logs/s4_20260728_010632.meta.json
+==================================================
+[+] Terminé. Vérifie les logs Apache sur le serveur et le SOC.
+    Sur le SOC : tail -f /var/log/remote/localhost.log | grep dolibarr
+                                                                                                                                                                         
+┌──(kali㉿kali)-[~/NYX/S4]
+└─$ 
+
+soc@nyx:/var/log/remote$ tail -f localhost.log | grep dolibarr
+2026-07-27T23:56:28+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:56:28 +0000] "GET /admin/index.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete HTTP/1.1" 200 6799 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:56:58+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:56:58 +0000] "GET / HTTP/1.1" 302 404 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:56:59+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:56:58 +0000] "GET /admin/index.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete HTTP/1.1" 200 6799 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:56:59+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:56:59 +0000] "GET /core/js/lib_foot.js.php?lang=en_US&layout=classic&version=19.0.2 HTTP/1.1" 200 13646 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:56:59+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:56:59 +0000] "GET /theme/eldy/style.css.php?lang=en_US&theme=eldy&userid=1&entity=1&layout=classic&version=19.0.2&revision=0 HTTP/1.1" 200 51642 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:57:10+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:57:10 +0000] "GET /favicon.ico HTTP/1.1" 200 2523 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:57:14+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:57:13 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 302 403 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-27T23:57:14+00:00 localhost dolibarr[786]: 10.0.1.50 - - [27/Jul/2026:23:57:14 +0000] "GET /admin/index.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete HTTP/1.1" 200 6798 "http://10.0.1.20/" "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0"
+2026-07-28T00:59:44+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:00:59:44 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2672 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T00:59:45+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:00:59:44 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2592 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:32+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:32 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2670 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:33+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:32 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2589 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:34+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:33 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:35+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:34 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2589 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:35+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:35 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2545 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:36+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:35 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:37+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:37 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2545 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:38+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:37 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:39+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:39 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:40+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:39 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:41+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:41 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:42+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:41 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:43+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:42 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2545 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:44+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:43 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2588 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:44+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:44 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:46+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:44 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:46+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:46 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:47+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:46 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2590 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:48+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:48 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:49+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:48 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 200 2589 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:50+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:50 +0000] "GET /index.php?mainmenu=home HTTP/1.1" 200 2546 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:50+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:50 +0000] "POST /index.php?mainmenu=home HTTP/1.1" 302 403 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+2026-07-28T01:06:50+00:00 localhost dolibarr[786]: 10.0.1.50 - - [28/Jul/2026:01:06:50 +0000] "GET /admin/index.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete HTTP/1.1" 200 6783 "-" "Mozilla/5.0 (X11; Linux x86_64) NyxSOC-S4/1.0"
+
+

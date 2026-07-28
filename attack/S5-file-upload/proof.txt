@@ -1,0 +1,14 @@
+=== NyxSOC — S5 : Preuve de validation YARA ============================
+Date : 2026-07-28
+Conteneur : nyxsoc-engine (podman)
+Règles : 236 SUSP_*/MAL_* PE filtrées depuis Neo23x0/signature-base
+Fichier : engine/rules/yara/susp_mal_pe.yar
+
+=== Résultat du scan YARA =============================================
+
+  PASS  facture_2026-07.pdf                 → MAL_Sindoor_Decryptor_Aug25
+  PASS  mise_a_jour_critique.exe            → MAL_RANSOM_DarkBit_Feb23_1
+  PASS  note_interne.docm                   → SUSP_NET_Msil_Suspicious_Use_StrReverse
+  PASS  rapport_financier.xls               → MAL_DNSPIONAGE_Malware_Nov18
+
+  RÉSULTAT : 4/4 OK — Tous les fichiers détectés ✓

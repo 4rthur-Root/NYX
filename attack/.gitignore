@@ -5,6 +5,9 @@ wordlist_*.txt
 # Ou plus globalement, ignorer tous les wordlists générés
 *.txt
 
+# Exception : proof.txt (preuve de validation, pas un secret)
+!proof.txt
+
 # Logs et métadonnées de runs (peuvent contenir des infos sensibles/volumineuses)
 logs/
 *.meta.json
