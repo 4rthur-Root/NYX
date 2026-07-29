@@ -1,7 +1,8 @@
 """Orchestrateur principal du générateur de trafic NyxSOC.
 
-Coordonne et lance les modules de simulation (Web, Samba, Auth) dans des threads
-indépendants. Permet un arrêt propre via Ctrl+C ou l'option --stop.
+Coordonne et lance les modules de simulation (Web, Samba, Auth) dans des
+threads indépendants. Prévu pour tourner sur Kali (Linux) — gestion de
+signal.SIGTERM/SIGINT compatible.
 """
 
 import argparse
@@ -12,12 +13,11 @@ import threading
 import time
 from pathlib import Path
 
-# Import dynamique des simulateurs du package traffic
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sim_auth import AuthSimulator
-from sim_samba import SambaSimulator
-from sim_web import WebSimulator
+from traffic.sim_auth import AuthSimulator
+from traffic.sim_samba import SambaSimulator
+from traffic.sim_web import WebSimulator
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,7 +35,6 @@ class TrafficOrchestrator:
         self.threads: list[threading.Thread] = []
 
     def stop(self) -> None:
-        """Arrête proprement tous les threads de simulation."""
         logger.info("Signal d'arrêt reçu. Fermeture des simulateurs de bruit...")
         self.stop_event.set()
         for thread in self.threads:
@@ -43,7 +42,6 @@ class TrafficOrchestrator:
         logger.info("Tous les simulateurs sont arrêtés.")
 
     def run(self) -> None:
-        """Lance l'orchestrateur et attend les signaux d'arrêt."""
         logger.info("=== NYX Traffic Noise Generator ===")
         logger.info("Mode sélectionné: %s", self.mode)
 
@@ -78,7 +76,10 @@ class TrafficOrchestrator:
             sys.exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # SIGTERM existe sur Linux/Kali (cible de ce script) ; garde une
+        # protection si jamais lancé sous un interpréteur où il manquerait.
+        if hasattr(signal, "SIGTERM"):
+            signal.signal(signal.SIGTERM, signal_handler)
 
         logger.info("Générateur en cours d'exécution. Appuyez sur Ctrl+C pour arrêter.")
 

@@ -1,19 +1,27 @@
-"""Configuration centralisée pour le générateur de trafic et de bruit de fond NYX."""
+"""Configuration centralisée pour le générateur de trafic et de bruit de fond NYX.
+
+Exécution prévue depuis Kali (10.0.1.50) — cohérent avec les montages CIFS
+côté SOC et l'absence de dépendance signal/SSH spécifique à Windows.
+"""
 
 import os
 
-# Cibles d'infrastructures Nyx
+# Cibles d'infrastructure Nyx
 SERVER_IP = os.getenv("NYX_SERVER_IP", "10.0.1.20")
 DOLIBARR_PORT = int(os.getenv("NYX_DOLIBARR_PORT", "80"))
 SSH_PORT = int(os.getenv("NYX_SSH_PORT", "22"))
 
-# Comptes utilisateurs pour la simulation
+# Comptes utilisateurs légitimes pour le bruit de fond.
+# Volontairement EXCLUS : svc_backup, user_nopreauth (comptes créés pour S6,
+# leur activité web/SSH n'a pas de sens PME réaliste et pollue le dataset).
 USERS = [
-    {"user": "server", "pass": "server1"},
-    {"user": "svc_backup", "pass": "Backup2026!"},
-    {"user": "user_nopreauth", "pass": "User2026!"},
-    {"user": "adrien", "pass": "engine1234"},
+    {"user": "dir1", "pass": "Nyx2026!", "role": "direction"},
+    {"user": "compta1", "pass": "Nyx2026!", "role": "comptabilite"},
+    {"user": "tech1", "pass": "Nyx2026!", "role": "technique"},
 ]
+
+# Compte SSH distinct (accès système, pas un compte AD/métier)
+SSH_USER = {"user": "server", "pass": "server1"}
 
 # URLs et endpoints de navigation Dolibarr / Web
 DOLIBARR_BASE_URL = f"http://{SERVER_IP}:{DOLIBARR_PORT}"
@@ -34,17 +42,24 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
 ]
 
-# Configuration des partages Samba montés
-SAMBA_SHARES = [
-    "commun",
-    "direction",
-    "comptabilite",
-    "technique",
-]
+# Partages Samba, mappés aux comptes qui y ont légitimement accès
+# (cohérent avec Topologie.pdf §4.4.2 : cloisonnement par groupe AD)
+USER_SHARE_MAP = {
+    "dir1": "direction",
+    "compta1": "comptabilite",
+    "tech1": "technique",
+}
+COMMON_SHARE = "commun"
 
-SAMBA_MOUNT_BASE = "/mnt/samba"
+SAMBA_MOUNT_BASE = "/mnt/samba"  # Utilisé si les partages sont montés en CIFS (ex: sur le SOC)
 
-# Intervalles de temps (Jitter) en secondes [min, max]
-JITTER_WEB = (5, 15)       # Entre 5s et 15s entre chaque clic/page
-JITTER_SAMBA = (10, 30)     # Entre 10s et 30s entre chaque opération fichier
-JITTER_AUTH = (20, 45)      # Entre 20s et 45s entre chaque connexion SSH/Auth
+# Intervalles de temps (jitter) en secondes [min, max]
+JITTER_WEB = (5, 15)      # Entre chaque page/clic
+JITTER_SAMBA = (10, 30)   # Entre chaque opération fichier
+JITTER_AUTH = (60, 180)   # Entre chaque session SSH (moins fréquent, plus réaliste qu'un scan)
+
+# Fenêtre d'activité "journée de travail" — hors de cette fenêtre, le bruit
+# de fond ralentit fortement (réalisme PME : pas d'activité à 3h du matin).
+WORKDAY_START_HOUR = 7
+WORKDAY_END_HOUR = 19
+OFF_HOURS_JITTER_MULTIPLIER = 6  # Multiplie les délais en dehors des heures de bureau
