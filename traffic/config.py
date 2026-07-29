@@ -50,6 +50,7 @@ USER_SHARE_MAP = {
     "tech1": "technique",
 }
 COMMON_SHARE = "commun"
+SAMBA_SHARES = list(set(USER_SHARE_MAP.values()) | {COMMON_SHARE})
 
 SAMBA_MOUNT_BASE = "/mnt/samba"  # Utilisé si les partages sont montés en CIFS (ex: sur le SOC)
 
@@ -63,3 +64,6 @@ JITTER_AUTH = (60, 180)   # Entre chaque session SSH (moins fréquent, plus réa
 WORKDAY_START_HOUR = 7
 WORKDAY_END_HOUR = 19
 OFF_HOURS_JITTER_MULTIPLIER = 6  # Multiplie les délais en dehors des heures de bureau
+
+# Forcer l'activité en mode "journée de travail" (ex: pour générer un gros dataset de test la nuit)
+FORCE_WORKDAY = os.getenv("NYX_FORCE_WORKDAY", "0").lower() in ("1", "true", "yes")

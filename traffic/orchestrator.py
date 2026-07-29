@@ -98,7 +98,17 @@ def main() -> None:
         default="all",
         help="Sélectionner le mode de simulation à exécuter (défaut: all)",
     )
+    parser.add_argument(
+        "--force-workday",
+        action="store_true",
+        help="Forcer le rythme diurne élevé même la nuit pour générer un dataset dense de test",
+    )
     args = parser.parse_args()
+
+    if args.force_workday:
+        import traffic.config
+        traffic.config.FORCE_WORKDAY = True
+        logger.info("Option --force-workday activée : fréquence élevée de journée forcée.")
 
     orchestrator = TrafficOrchestrator(mode=args.mode)
     orchestrator.run()

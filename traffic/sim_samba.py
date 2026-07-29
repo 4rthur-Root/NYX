@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 from traffic.config import JITTER_SAMBA, SAMBA_MOUNT_BASE, SAMBA_SHARES
+from traffic.time_utils import sleep_with_workday_jitter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -92,8 +93,7 @@ class SambaSimulator:
             else:
                 self.read_random_file()
 
-            sleep_time = random.uniform(*JITTER_SAMBA)
-            time.sleep(sleep_time)
+            sleep_with_workday_jitter(JITTER_SAMBA, stop_event)
 
         logger.info("Arrêt de la simulation Samba.")
 

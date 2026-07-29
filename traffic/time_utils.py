@@ -12,6 +12,7 @@ import random
 import time
 
 from traffic.config import (
+    FORCE_WORKDAY,
     OFF_HOURS_JITTER_MULTIPLIER,
     WORKDAY_END_HOUR,
     WORKDAY_START_HOUR,
@@ -19,6 +20,8 @@ from traffic.config import (
 
 
 def is_workday_hours(now: datetime.datetime | None = None) -> bool:
+    if FORCE_WORKDAY:
+        return True
     now = now or datetime.datetime.now()
     return WORKDAY_START_HOUR <= now.hour < WORKDAY_END_HOUR
 

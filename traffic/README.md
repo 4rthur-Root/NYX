@@ -1,14 +1,14 @@
 # NYX — Générateur de Bruit de Fond & Trafic (Traffic Generator)
 
-Module autonome de simulation de comportement légitime d'utilisateurs et d'employés pour le SOC NYX.
+Module autonome de simulation du comportement légitime d'utilisateurs et d'employés PME pour le SOC NYX.
 
 ---
 
 ## 🎯 Objectifs
 
-1. **Test de résistance du SOC** : Générer un flux d'activité réseau, web et fichier régulier et légitime.
+1. **Test de résistance du SOC** : Générer un flux d'activité réseau, web et fichiers régulier et légitime.
 2. **Validation anti-faux positifs** : S'assurer que le moteur de corrélation (`engine`) ingère et valide les événements sans déclencher d'alertes intempestives.
-3. **Réalisme** : Délais aléatoires (*jitter*), comptes utilisateurs du domaine et navigation HTTP fluide.
+3. **Réalisme contextuel** : Sessions SSH réelles (`paramiko`), CookieJars indépendants par utilisateur Web, cloisonnement des partages Samba par rôle, et gestion du rythme diurne / nocturne (*workday jitter*).
 
 ---
 
@@ -16,62 +16,77 @@ Module autonome de simulation de comportement légitime d'utilisateurs et d'empl
 
 ```
 traffic/
-├── config.py         # Paramètres centralisés (IPs, comptes, endpoints, délais)
-├── sim_web.py        # Simulation de navigation et formulaires ERP Dolibarr
+├── config.py         # Paramètres centralisés (IPs, comptes rôles, endpoints, délais, partages)
+├── time_utils.py     # Utilitaires de rythme temporel (heures de bureau vs nuit, pas réactifs)
+├── sim_web.py        # Simulation de navigation et sessions ERP Dolibarr (CookieJar par user)
 ├── sim_samba.py      # Simulation de création/lecture de fichiers sains sur partages SMB
-├── sim_auth.py       # Simulation de requêtes réseau et sessions d'administration SSH
-├── orchestrator.py   # Script maître d'orchestration multithreadé
+├── sim_auth.py       # Simulation de sessions d'administration SSH réelles via Paramiko
+├── orchestrator.py   # Script maître d'orchestration multithreadé (gestion signaux & CLI)
+├── Makefile          # Auto-détection Docker/Podman, build automatique & cibles d'exécution
+├── Dockerfile        # Image Docker/Podman Python 3.13-slim alignée avec l'engine
+├── requirements.txt  # Dépendances (paramiko)
 └── README.md         # Documentation d'utilisation
 ```
 
 ---
 
-## 🚀 Utilisation
+## 🚀 Utilisation (Docker / Podman Agnostique)
 
-### Prérequis
-- Python 3.10+
-- Aucune dépendance externe complexe nécessaire (utilise la bibliothèque standard Python).
+Le `Makefile` détecte automatiquement si `docker` ou `podman` est présent sur la machine hôte/Kali et reconstruit automatiquement l'image si nécessaire avant de lancer le conteneur.
 
-### 1. Démarrer tout le bruit de fond (Web + Samba + Auth)
+### 1. Commandes Makefile (Recommandé)
 
 ```bash
-python3 traffic/orchestrator.py
+cd traffic/
+
+# Build l'image + Lance tout le bruit au rythme standard (ralenti la nuit)
+make run
+
+# Build l'image + FORCE le rythme diurne dense (idéal pour tests de nuit / gros dataset)
+make run-workday
+
+# Build l'image + Lance un module spécifique
+make run-web
+make run-samba
+make run-auth
+
+# Exécution locale directe sans conteneur
+make run-local
+
+# Ouvrir un shell interactif dans le conteneur
+make shell
 ```
 
-### 2. Démarrer un module spécifique uniquement
+### 2. Utilisation directe Python CLI
 
 ```bash
-# Tester seulement la simulation Web (Dolibarr)
-python3 traffic/orchestrator.py --mode web
+# Lancer tout le bruit
+python3 -m traffic.orchestrator --mode all
 
-# Tester seulement la simulation des partages Samba
-python3 traffic/orchestrator.py --mode samba
+# Forcer la fréquence diurne dense même la nuit (option --force-workday)
+python3 -m traffic.orchestrator --mode all --force-workday
 
-# Tester seulement l'activité réseau / SSH
-python3 traffic/orchestrator.py --mode auth
+# Variantes par module
+python3 -m traffic.orchestrator --mode web
+python3 -m traffic.orchestrator --mode samba
+python3 -m traffic.orchestrator --mode auth
 ```
 
-### 3. Exécution directe des modules autonomes
+### 3. Arrêt propre
 
-Chaque module peut aussi être exécuté individuellement :
-
-```bash
-python3 traffic/sim_web.py
-python3 traffic/sim_samba.py
-python3 traffic/sim_auth.py
-```
-
-### 4. Arrêt propre
-
-Appuyez simplement sur `Ctrl+C` dans le terminal. L'orchestrateur ferme tous les threads proprement.
+Appuyez simplement sur `Ctrl+C` dans le terminal. L'orchestrateur ferme tous les threads proprement et immédiatement.
 
 ---
 
-## ⚙️ Personnalisation (`config.py`)
+## 🌙 Gestion des Heures de Nuit vs Mode Test Dense
 
-Vous pouvez ajuster les paramètres suivants dans `traffic/config.py` ou via variables d'environnement :
+Par défaut, `time_utils.py` applique la logique suivante :
+- **Journée (07h00 - 19h00)** : Délais standard (`JITTER_WEB` 5-15s, `JITTER_SAMBA` 10-30s, `JITTER_AUTH` 60-180s).
+- **Nuit (19h00 - 07h00)** : Délais multipliés par 6 (activité réduite).
 
-- `NYX_SERVER_IP` : IP du serveur cible (par défaut `10.0.1.20`).
-- `JITTER_WEB` : Plage de temps d'attente (en secondes) entre chaque requête Web (par défaut 5-15s).
-- `JITTER_SAMBA` : Plage de temps d'attente (en secondes) entre chaque action fichier (par défaut 10-30s).
-- `USERS` : Liste des comptes employés simulés.
+💡 **Pour vos tests et rapports réalisés de nuit** :  
+Pour obtenir un **volume élevé de logs normaux** de nuit afin d'enrichir vos tableaux de bord et votre dataset de démonstration, tapez :
+```bash
+make run-workday
+```
+(ou passez l'option `--force-workday`, ou définissez la variable d'environnement `NYX_FORCE_WORKDAY=1`).
